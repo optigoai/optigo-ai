@@ -5,6 +5,7 @@ import 'app/app.dart';
 import 'data/api/api_client.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/business_repository.dart';
+import 'data/repositories/review_repository.dart';
 import 'presentation/auth/auth_provider.dart';
 
 void main() {
@@ -29,10 +30,15 @@ void main() {
   final apiClient = ApiClient();
   final authRepo = AuthRepository(apiClient);
   final bizRepo = BusinessRepository(apiClient);
+  final reviewRepo = ReviewRepository(apiClient);
 
   runApp(
     MultiProvider(
       providers: [
+        Provider<ApiClient>.value(value: apiClient),
+        Provider<AuthRepository>.value(value: authRepo),
+        Provider<BusinessRepository>.value(value: bizRepo),
+        Provider<ReviewRepository>.value(value: reviewRepo),
         ChangeNotifierProvider(
           create: (_) => AppAuthProvider(authRepo, bizRepo)..checkAuth(),
         ),

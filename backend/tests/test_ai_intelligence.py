@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import select
 from app.models.ai_log import AIRequestLog
 from app.core.database import get_async_session
+from tests.conftest import override_get_db
 
 
 @pytest.mark.anyio
@@ -73,7 +74,7 @@ async def test_ai_business_understanding_and_health_scoring(client):
     assert stored_data["ai_profile"]["business_summary"] == intel_data["ai_profile"]["business_summary"]
 
     # 4. Verify AI request was logged in database for auditing
-    async for db in get_async_session():
+    async for db in override_get_db():
         logs_res = await db.execute(
             select(AIRequestLog).where(AIRequestLog.feature.like("business_%"))
         )

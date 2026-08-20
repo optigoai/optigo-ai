@@ -1,80 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../app/theme.dart';
-import '../../data/api/api_client.dart';
-import '../../data/models/review_model.dart';
 import '../../data/models/intelligence_model.dart';
-import '../../data/repositories/review_repository.dart';
 import '../../data/repositories/business_repository.dart';
 import '../auth/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onNavigateToReviews;
+
+  const HomeScreen({super.key, this.onNavigateToReviews});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final ReviewRepository _reviewRepo;
-  late final BusinessRepository _bizRepo;
-  List<ReviewModel> _reviews = [];
+  BusinessRepository? _bizRepo;
   BusinessIntelligenceModel? _intelligence;
-  bool _isLoadingReviews = true;
   bool _isLoadingIntel = true;
   bool _isAnalyzing = false;
-  String _selectedFilter = 'all';
-  bool _isSyncing = false;
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    final apiClient = ApiClient();
-    _reviewRepo = ReviewRepository(apiClient);
-    _bizRepo = BusinessRepository(apiClient);
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    await Future.wait([
-      _loadReviews(),
-      _loadIntelligence(),
-    ]);
-  }
-
-  Future<void> _loadReviews() async {
-    final authProvider = context.read<AppAuthProvider>();
-    final businessId = authProvider.currentBusiness?.id;
-    if (businessId == null) return;
-
-    setState(() => _isLoadingReviews = true);
-    try {
-      final reviews = await _reviewRepo.getReviews(
-        businessId: businessId,
-        sentiment: _selectedFilter == 'positive' || _selectedFilter == 'negative'
-            ? _selectedFilter
-            : null,
-        unansweredOnly: _selectedFilter == 'unanswered',
-      );
-      if (mounted) {
-        setState(() {
-          _reviews = reviews;
-          _isLoadingReviews = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isLoadingReviews = false);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _bizRepo = context.read<BusinessRepository>();
+      _initialized = true;
+      _loadIntelligence();
     }
   }
 
   Future<void> _loadIntelligence() async {
+    if (_bizRepo == null) return;
     final authProvider = context.read<AppAuthProvider>();
     final businessId = authProvider.currentBusiness?.id;
     if (businessId == null) return;
 
     setState(() => _isLoadingIntel = true);
     try {
-      final data = await _bizRepo.getIntelligence(businessId);
+      final data = await _bizRepo!.getIntelligence(businessId);
       if (mounted) {
         setState(() {
           _intelligence = BusinessIntelligenceModel.fromJson(data);
@@ -87,13 +52,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleRunAnalysis() async {
+    if (_bizRepo == null) return;
     final authProvider = context.read<AppAuthProvider>();
     final businessId = authProvider.currentBusiness?.id;
     if (businessId == null) return;
 
     setState(() => _isAnalyzing = true);
     try {
-      final data = await _bizRepo.analyzeBusiness(businessId);
+      final data = await _bizRepo!.analyzeBusiness(businessId);
       if (mounted) {
         setState(() {
           _intelligence = BusinessIntelligenceModel.fromJson(data);
@@ -116,118 +82,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _handleSyncGbp() async {
-    setState(() => _isSyncing = true);
-    final authProvider = context.read<AppAuthProvider>();
-    await authProvider.syncGbp();
-    await _loadReviews();
-    if (mounted) {
-      setState(() => _isSyncing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Google Business Profile data synchronized successfully!'),
-          backgroundColor: OptigoTheme.success,
-        ),
-      );
-    }
-  }
-
-  Future<void> _showReplyDialog(ReviewModel review) async {
-    final controller = TextEditingController(text: review.replyText ?? '');
-    final formKey = GlobalKey<FormState>();
-
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OptigoTheme.radiusMD)),
-        title: Text('Reply to ${review.reviewerName}', style: const TextStyle(fontSize: 18)),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(OptigoTheme.spacingSM),
-                decoration: BoxDecoration(
-                  color: OptigoTheme.surfaceVariant,
-                  borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                ),
-                child: Text(
-                  '"${review.text ?? "No text provided"}"',
-                  style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
-                ),
-              ),
-              const SizedBox(height: OptigoTheme.spacingMD),
-              TextFormField(
-                controller: controller,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText: 'Write your professional reply here...',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Please enter a reply' : null,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final authProvider = context.read<AppAuthProvider>();
-              final bizId = authProvider.currentBusiness?.id;
-              if (bizId == null) return;
-
-              final nav = Navigator.of(ctx);
-              final messenger = ScaffoldMessenger.of(context);
-
-              try {
-                await _reviewRepo.replyToReview(
-                  reviewId: review.id,
-                  businessId: bizId,
-                  replyText: controller.text.trim(),
-                );
-                nav.pop();
-                _loadReviews();
-                messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('Reply posted successfully!'),
-                    backgroundColor: OptigoTheme.success,
-                  ),
-                );
-              } catch (e) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text('Failed: $e'), backgroundColor: OptigoTheme.error),
-                );
-              }
-            },
-            child: const Text('Post Reply'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AppAuthProvider>();
     final user = authProvider.user;
     final business = authProvider.currentBusiness;
 
-    final avgRating = _reviews.isNotEmpty
-        ? (_reviews.map((r) => r.rating).reduce((a, b) => a + b) / _reviews.length).toStringAsFixed(1)
-        : '4.4';
-
     return Scaffold(
       backgroundColor: OptigoTheme.background,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadData,
+          onRefresh: _loadIntelligence,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(OptigoTheme.spacingMD),
@@ -246,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
                       ),
                       child: const Center(
                         child: Text(
@@ -260,27 +125,31 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(width: OptigoTheme.spacingSM + 2),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          business?.name ?? 'OptigoAI',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: OptigoTheme.textPrimary,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            business?.name ?? 'OptigoAI Business',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: OptigoTheme.textPrimary,
+                              letterSpacing: -0.4,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        Text(
-                          user != null ? '${user.fullName} (${user.role.toUpperCase()})' : 'Business Owner',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: OptigoTheme.textSecondary,
+                          Text(
+                            user != null ? '${user.fullName} • ${user.role.toUpperCase()}' : 'Business Owner',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: OptigoTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.logout_outlined, size: 22),
                       color: OptigoTheme.textSecondary,
@@ -292,162 +161,77 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: OptigoTheme.spacingMD),
 
-                // AI Marketing Health Score Card (Phase 4)
+                // AI Marketing Health Score Card
                 _buildHealthScoreCard(),
 
                 const SizedBox(height: OptigoTheme.spacingLG),
 
-                // GBP Connected Status Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(OptigoTheme.spacingMD),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                    border: Border.all(color: OptigoTheme.divider),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: OptigoTheme.success.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.check_circle, size: 14, color: OptigoTheme.success),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Google Profile Connected',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: OptigoTheme.success,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Spacer(),
-                          TextButton.icon(
-                            onPressed: _isSyncing ? null : _handleSyncGbp,
-                            icon: _isSyncing
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.sync, size: 16),
-                            label: Text(_isSyncing ? 'Syncing...' : 'Sync Data'),
-                            style: TextButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              foregroundColor: OptigoTheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: OptigoTheme.spacingMD),
-                      // 4 Key Metrics Grid
-                      Row(
-                        children: [
-                          _buildMetricBox('Average Rating', '⭐ $avgRating', 'Based on ${_reviews.length} reviews'),
-                          const SizedBox(width: OptigoTheme.spacingSM),
-                          _buildMetricBox('Total Reviews', '${_reviews.length}', 'Synced from Google'),
-                        ],
-                      ),
-                      const SizedBox(height: OptigoTheme.spacingSM),
-                      Row(
-                        children: [
-                          _buildMetricBox('Profile Views', '1,420', '+18% this month'),
-                          const SizedBox(width: OptigoTheme.spacingSM),
-                          _buildMetricBox('Customer Calls', '84', 'Direct leads'),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: OptigoTheme.spacingLG),
-
-                // Top Problems & Opportunities from AI CMO
+                // Critical Problems Detected
                 if (_intelligence != null) ...[
                   _buildProblemsSection(),
                   const SizedBox(height: OptigoTheme.spacingLG),
                   _buildOpportunitiesSection(),
                   const SizedBox(height: OptigoTheme.spacingLG),
+                  _buildAIBusinessProfileSection(),
+                  const SizedBox(height: OptigoTheme.spacingLG),
                 ],
 
-                // Customer Reviews Section Header
-                Row(
-                  children: [
-                    Text(
-                      'Customer Reviews (${_reviews.length})',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const Spacer(),
-                    if (_isLoadingReviews)
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                // Quick Reviews Shortcut Banner
+                if (widget.onNavigateToReviews != null)
+                  InkWell(
+                    onTap: widget.onNavigateToReviews,
+                    borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
+                    child: Container(
+                      padding: const EdgeInsets.all(OptigoTheme.spacingMD),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
+                        border: Border.all(color: OptigoTheme.primary.withValues(alpha: 0.2)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: OptigoTheme.primary.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                  ],
-                ),
-                const SizedBox(height: OptigoTheme.spacingSM),
-
-                // Sentiment Filter Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildFilterChip('all', 'All Reviews'),
-                      const SizedBox(width: OptigoTheme.spacingSM),
-                      _buildFilterChip('positive', 'Positive (4-5 ⭐)'),
-                      const SizedBox(width: OptigoTheme.spacingSM),
-                      _buildFilterChip('negative', 'Negative (1-2 ⭐)'),
-                      const SizedBox(width: OptigoTheme.spacingSM),
-                      _buildFilterChip('unanswered', 'Needs Reply'),
-                    ],
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: OptigoTheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                            ),
+                            child: const Icon(Icons.rate_review_rounded, color: OptigoTheme.primary, size: 20),
+                          ),
+                          const SizedBox(width: OptigoTheme.spacingMD),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Manage Customer Reviews',
+                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: OptigoTheme.textPrimary),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'View Google rating, filter sentiment & draft replies',
+                                  style: TextStyle(fontSize: 11, color: OptigoTheme.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: OptigoTheme.primary),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: OptigoTheme.spacingMD),
-
-                // Reviews List
-                if (_reviews.isEmpty && !_isLoadingReviews)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(OptigoTheme.spacingXL),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                      border: Border.all(color: OptigoTheme.divider),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'No reviews found for this filter.',
-                        style: TextStyle(color: OptigoTheme.textSecondary),
-                      ),
-                    ),
-                  )
-                else
-                  ..._reviews.map((r) => _buildReviewCard(r)),
 
                 const SizedBox(height: OptigoTheme.spacingXL),
                 Center(
                   child: Text(
-                    'OptigoAI MVP — Phase 4 AI Understanding Verified ✅',
+                    'OptigoAI CMO Intelligence • Phase 4 Live',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
@@ -487,10 +271,10 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              // Circular Health Score Gauge
+              // Radial Health Score Gauge
               Container(
-                width: 64,
-                height: 64,
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
@@ -503,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         '$score',
                         style: const TextStyle(
-                          fontSize: 22,
+                          fontSize: 24,
                           fontWeight: FontWeight.w800,
                           color: OptigoTheme.primary,
                         ),
@@ -512,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         'HEALTH',
                         style: TextStyle(
                           fontSize: 8,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                           color: OptigoTheme.textSecondary,
                         ),
                       ),
@@ -532,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                         if (_isLoadingIntel) ...[
@@ -545,13 +329,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Reputation: ${intel?.reputationScore ?? 82}% | Visibility: ${intel?.visibilityScore ?? 74}%',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                      ),
+                      child: Text(
+                        'Reputation: ${intel?.reputationScore ?? 82}%  •  Visibility: ${intel?.visibilityScore ?? 74}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -562,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: OptigoTheme.spacingMD),
           Text(
             intel?.healthSummary ??
-                'Your business has strong customer satisfaction signals but has unanswered reviews and high-intent keyword gaps.',
+                'Your business has strong customer satisfaction signals but suffers from visibility drop-off and unanswered customer reviews.',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.95),
               fontSize: 13,
@@ -570,10 +361,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: OptigoTheme.spacingMD),
-          // Action button
           SizedBox(
             width: double.infinity,
-            height: 40,
+            height: 44,
             child: ElevatedButton.icon(
               onPressed: _isAnalyzing ? null : _handleRunAnalysis,
               icon: _isAnalyzing
@@ -584,10 +374,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   : const Icon(Icons.auto_awesome, size: 16, color: OptigoTheme.primary),
               label: Text(
-                _isAnalyzing ? 'Analyzing Business with AI...' : 'Re-Run AI Marketing Audit',
+                _isAnalyzing ? 'Analyzing Business with Gemini AI...' : 'Re-Run AI Marketing Audit',
                 style: const TextStyle(
                   color: OptigoTheme.primary,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   fontSize: 13,
                 ),
               ),
@@ -612,67 +402,124 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, size: 20, color: OptigoTheme.error),
-            const SizedBox(width: 6),
+            const Icon(Icons.warning_amber_rounded, size: 22, color: OptigoTheme.error),
+            const SizedBox(width: 8),
             Text(
-              'Problems Detected by AI (${problems.length})',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+              'Critical Problems Detected (${problems.length})',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
                     color: OptigoTheme.error,
+                    letterSpacing: -0.5,
                   ),
             ),
           ],
         ),
-        const SizedBox(height: OptigoTheme.spacingSM),
+        const SizedBox(height: OptigoTheme.spacingMD),
         ...problems.map((p) => Container(
-              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingSM),
+              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingMD),
               padding: const EdgeInsets.all(OptigoTheme.spacingMD),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                border: Border.all(color: OptigoTheme.error.withValues(alpha: 0.3)),
+                border: Border.all(color: OptigoTheme.error.withValues(alpha: 0.1)),
+                boxShadow: [
+                  BoxShadow(
+                    color: OptigoTheme.error.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          p.title,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                        ),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 4,
+                      decoration: BoxDecoration(
+                        color: OptigoTheme.error,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: OptigoTheme.error.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                        ),
-                        child: Text(
-                          p.severity.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: OptigoTheme.error,
+                    ),
+                    const SizedBox(width: OptigoTheme.spacingMD),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  p.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 15,
+                                    color: OptigoTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: OptigoTheme.error.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                                ),
+                                child: Text(
+                                  p.severity.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: OptigoTheme.error,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            p.explanation,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: OptigoTheme.textSecondary,
+                              height: 1.4,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          if (p.impact.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: OptigoTheme.surfaceVariant.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.info_outline_rounded, size: 14, color: OptigoTheme.error),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(fontSize: 12, color: OptigoTheme.textPrimary, height: 1.3),
+                                        children: [
+                                          const TextSpan(text: 'Impact: ', style: TextStyle(fontWeight: FontWeight.w800)),
+                                          TextSpan(text: p.impact, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    p.explanation,
-                    style: const TextStyle(fontSize: 12, color: OptigoTheme.textSecondary, height: 1.3),
-                  ),
-                  if (p.impact.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Impact: ${p.impact}',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: OptigoTheme.textPrimary),
                     ),
                   ],
-                ],
+                ),
               ),
             )),
       ],
@@ -688,253 +535,195 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.rocket_launch_outlined, size: 20, color: OptigoTheme.success),
-            const SizedBox(width: 6),
+            const Icon(Icons.rocket_launch_rounded, size: 22, color: OptigoTheme.success),
+            const SizedBox(width: 8),
             Text(
               'High-Impact Opportunities (${opportunities.length})',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
                     color: OptigoTheme.success,
+                    letterSpacing: -0.5,
                   ),
             ),
           ],
         ),
-        const SizedBox(height: OptigoTheme.spacingSM),
+        const SizedBox(height: OptigoTheme.spacingMD),
         ...opportunities.map((o) => Container(
-              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingSM),
+              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingMD),
               padding: const EdgeInsets.all(OptigoTheme.spacingMD),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                border: Border.all(color: OptigoTheme.success.withValues(alpha: 0.3)),
+                border: Border.all(color: OptigoTheme.success.withValues(alpha: 0.1)),
+                boxShadow: [
+                  BoxShadow(
+                    color: OptigoTheme.success.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          o.title,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                        ),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 4,
+                      decoration: BoxDecoration(
+                        color: OptigoTheme.success,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: OptigoTheme.success.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                        ),
-                        child: Text(
-                          '${o.priority.toUpperCase()} IMPACT',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: OptigoTheme.success,
+                    ),
+                    const SizedBox(width: OptigoTheme.spacingMD),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  o.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 15,
+                                    color: OptigoTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: OptigoTheme.success.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                                ),
+                                child: Text(
+                                  '${o.priority.toUpperCase()} IMPACT',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: OptigoTheme.success,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            o.suggestedAction,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: OptigoTheme.textSecondary,
+                              height: 1.4,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          if (o.potentialImpact.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: OptigoTheme.success.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.auto_awesome_rounded, size: 14, color: OptigoTheme.success),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(fontSize: 12, color: OptigoTheme.textPrimary, height: 1.3),
+                                        children: [
+                                          const TextSpan(text: 'Potential: ', style: TextStyle(fontWeight: FontWeight.w800, color: OptigoTheme.success)),
+                                          TextSpan(text: o.potentialImpact, style: const TextStyle(fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    o.suggestedAction,
-                    style: const TextStyle(fontSize: 12, color: OptigoTheme.textSecondary, height: 1.3),
-                  ),
-                  if (o.potentialImpact.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Potential: ${o.potentialImpact}',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: OptigoTheme.success),
                     ),
                   ],
-                ],
+                ),
               ),
             )),
       ],
     );
   }
 
-  Widget _buildMetricBox(String title, String value, String subtitle) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(OptigoTheme.spacingSM + 2),
-        decoration: BoxDecoration(
-          color: OptigoTheme.surfaceVariant,
-          borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, color: OptigoTheme.textSecondary),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: OptigoTheme.textPrimary),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: const TextStyle(fontSize: 10, color: OptigoTheme.textTertiary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildAIBusinessProfileSection() {
+    final profile = _intelligence?.aiProfile;
+    if (profile == null) return const SizedBox.shrink();
 
-  Widget _buildFilterChip(String key, String label) {
-    final isSelected = _selectedFilter == key;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) {
-        setState(() => _selectedFilter = key);
-        _loadReviews();
-      },
-      selectedColor: OptigoTheme.primary,
-      backgroundColor: Colors.white,
-      labelStyle: TextStyle(
-        fontSize: 12,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-        color: isSelected ? Colors.white : OptigoTheme.textSecondary,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-        side: BorderSide(
-          color: isSelected ? OptigoTheme.primary : OptigoTheme.divider,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReviewCard(ReviewModel review) {
-    Color sentimentColor = OptigoTheme.success;
-    String sentimentLabel = 'Positive';
-    if (review.rating <= 2 || review.sentiment == 'negative') {
-      sentimentColor = OptigoTheme.error;
-      sentimentLabel = 'Negative';
-    } else if (review.rating == 3 || review.sentiment == 'neutral') {
-      sentimentColor = OptigoTheme.warning;
-      sentimentLabel = 'Neutral';
-    }
+    final summary = profile['business_summary'] as String? ?? '';
+    final brandTone = profile['brand_tone'] as String? ?? '';
+    final growthAreas = (profile['initial_growth_areas'] as List?)?.map((e) => e.toString()).toList() ?? [];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: OptigoTheme.spacingMD),
+      width: double.infinity,
       padding: const EdgeInsets.all(OptigoTheme.spacingMD),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-        border: Border.all(
-          color: review.rating <= 2 && !review.isReplied
-              ? OptigoTheme.error.withValues(alpha: 0.5)
-              : OptigoTheme.divider,
-          width: review.rating <= 2 && !review.isReplied ? 1.5 : 1.0,
-        ),
+        border: Border.all(color: OptigoTheme.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              // Stars
-              Row(
-                children: List.generate(
-                  5,
-                  (index) => Icon(
-                    index < review.rating ? Icons.star : Icons.star_border,
-                    size: 16,
-                    color: Colors.amber,
-                  ),
-                ),
-              ),
-              const SizedBox(width: OptigoTheme.spacingSM),
+              const Icon(Icons.psychology_outlined, color: OptigoTheme.primary, size: 20),
+              const SizedBox(width: 8),
               Text(
-                review.reviewerName,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: sentimentColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                ),
-                child: Text(
-                  sentimentLabel,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: sentimentColor,
-                  ),
-                ),
+                'AI Business Understanding',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
               ),
             ],
           ),
-          if (review.reviewDate != null) ...[
-            const SizedBox(height: 2),
+          if (summary.isNotEmpty) ...[
+            const SizedBox(height: 10),
             Text(
-              review.reviewDate!,
-              style: const TextStyle(fontSize: 11, color: OptigoTheme.textTertiary),
+              summary,
+              style: const TextStyle(fontSize: 13, color: OptigoTheme.textSecondary, height: 1.4),
             ),
           ],
-          const SizedBox(height: OptigoTheme.spacingSM),
-          Text(
-            review.text ?? 'No text provided',
-            style: const TextStyle(fontSize: 13, height: 1.4, color: OptigoTheme.textPrimary),
-          ),
-          if (review.isReplied && review.replyText != null) ...[
-            const SizedBox(height: OptigoTheme.spacingSM),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(OptigoTheme.spacingSM),
-              decoration: BoxDecoration(
-                color: OptigoTheme.surfaceVariant,
-                borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                border: const Border(
-                  left: BorderSide(color: OptigoTheme.primary, width: 3),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
+          if (brandTone.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Text('Brand Tone: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                Text(brandTone, style: const TextStyle(fontSize: 12, color: OptigoTheme.primary, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ],
+          if (growthAreas.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Text('Strategic Growth Levers:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            ...growthAreas.map((g) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.reply, size: 14, color: OptigoTheme.primary),
-                      SizedBox(width: 4),
-                      Text(
-                        'Your Reply:',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: OptigoTheme.primary),
+                      const Text('• ', style: TextStyle(color: OptigoTheme.primary, fontWeight: FontWeight.w800)),
+                      Expanded(
+                        child: Text(g, style: const TextStyle(fontSize: 12, color: OptigoTheme.textSecondary, height: 1.3)),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    review.replyText!,
-                    style: const TextStyle(fontSize: 12, color: OptigoTheme.textPrimary),
-                  ),
-                ],
-              ),
-            ),
+                )),
           ],
-          const SizedBox(height: OptigoTheme.spacingSM),
-          Row(
-            children: [
-              const Spacer(),
-              OutlinedButton.icon(
-                onPressed: () => _showReplyDialog(review),
-                icon: Icon(review.isReplied ? Icons.edit : Icons.reply, size: 14),
-                label: Text(review.isReplied ? 'Edit Reply' : 'Reply to Review', style: const TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

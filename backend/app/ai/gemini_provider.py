@@ -1,3 +1,4 @@
+import os
 import json
 import time
 import re
@@ -14,14 +15,16 @@ logger = get_logger("app.ai.gemini")
 
 class GeminiAIProvider(AIProvider):
     def __init__(self):
-        self.api_key = settings.gemini_api_key
         self.model_name = settings.gemini_model or "gemini-2.0-flash"
-        self._client = None
-        if self.api_key and self.api_key != "YOUR_GEMINI_API_KEY_HERE":
+
+    def _get_client(self) -> Optional[genai.Client]:
+        api_key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        if api_key and api_key not in ("YOUR_GEMINI_API_KEY_HERE", ""):
             try:
-                self._client = genai.Client(api_key=self.api_key)
+                return genai.Client(api_key=api_key)
             except Exception as e:
                 logger.warning("Failed to initialize Google GenAI Client", error=str(e))
+        return None
 
     async def generate_text(
         self,
@@ -31,7 +34,8 @@ class GeminiAIProvider(AIProvider):
         max_tokens: int = 4096,
     ) -> dict[str, Any]:
         start_time = time.time()
-        if not self._client:
+        client = self._get_client()
+        if not client:
             return {
                 "text": "Gemini API key is not configured. Please set GEMINI_API_KEY in your environment.",
                 "usage": {"input_tokens": 0, "output_tokens": 0, "latency_ms": 10},
@@ -44,7 +48,7 @@ class GeminiAIProvider(AIProvider):
                 temperature=temperature,
                 max_output_tokens=max_tokens,
             )
-            response = self._client.models.generate_content(
+            response = client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
                 config=config,
@@ -72,16 +76,17 @@ class GeminiAIProvider(AIProvider):
         temperature: float = 0.2,
     ) -> dict[str, Any]:
         start_time = time.time()
+        client = self._get_client()
         
-        # When client is available, use Gemini's native JSON output
-        if self._client:
+        # When live client is available, call Gemini API
+        if client:
             try:
                 config = types.GenerateContentConfig(
                     system_instruction=system_instruction,
                     temperature=temperature,
                     response_mime_type="application/json",
                 )
-                response = self._client.models.generate_content(
+                response = client.models.generate_content(
                     model=self.model_name,
                     contents=prompt,
                     config=config,

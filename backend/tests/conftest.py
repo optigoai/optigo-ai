@@ -17,13 +17,15 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy import text
 
 from app.core.config import settings
-from app.core.database import get_async_session
+from app.core.database import Base, get_async_session
 from app.api.v1.deps import get_db
 from app.main import app
 
-# Create test engine using NullPool
+# Point test engine to dedicated optigoai_test database (replace only database name at end)
+test_db_url = settings.database_url.rsplit("/optigoai", 1)[0] + "/optigoai_test"
+
 test_engine = create_async_engine(
-    settings.database_url,
+    test_db_url,
     poolclass=NullPool,
     echo=False,
 )
@@ -58,8 +60,9 @@ def anyio_backend():
 
 @pytest.fixture(autouse=True)
 async def clean_database():
-    """Truncate tables before each test for clean isolation."""
+    """Ensure tables exist and truncate before each test in optigoai_test."""
     async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
         await conn.execute(
             text(
                 "TRUNCATE TABLE users, organizations, businesses, reviews, recommendations, "

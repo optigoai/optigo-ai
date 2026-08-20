@@ -4,7 +4,7 @@ import 'theme.dart';
 import '../presentation/auth/auth_provider.dart';
 import '../presentation/auth/login_screen.dart';
 import '../presentation/onboarding/business_onboarding_screen.dart';
-import '../presentation/home/home_screen.dart';
+import '../presentation/main_shell.dart';
 
 class OptigoAIApp extends StatelessWidget {
   const OptigoAIApp({super.key});
@@ -81,6 +81,6 @@ class AuthRouter extends StatelessWidget {
       return const BusinessOnboardingScreen();
     }
 
-    return const HomeScreen();
+    return const MainShell();
   }
 }
