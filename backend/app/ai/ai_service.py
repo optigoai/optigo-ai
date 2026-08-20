@@ -1,4 +1,5 @@
 import time
+import json
 from typing import Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,12 +7,18 @@ from app.core.logging import get_logger
 from app.models.ai_log import AIRequestLog
 from app.providers.base import AIProvider
 from app.ai.gemini_provider import GeminiAIProvider
-from app.ai.schemas import AIBusinessProfileOutput, AIBusinessIntelligenceOutput
+from app.ai.schemas import (
+    AIBusinessProfileOutput,
+    AIBusinessIntelligenceOutput,
+    AICMORecommendationsOutput,
+)
 from app.ai.prompts.business_prompts import (
     BUSINESS_PROFILE_SYSTEM_PROMPT,
-    build_business_profile_prompt,
     BUSINESS_INTELLIGENCE_SYSTEM_PROMPT,
+    CMO_RECOMMENDATIONS_SYSTEM_PROMPT,
+    build_business_profile_prompt,
     build_business_intelligence_prompt,
+    build_cmo_recommendations_prompt,
 )
 
 logger = get_logger("app.ai.service")
@@ -120,6 +127,67 @@ class AIService:
                 organization_id=organization_id,
                 user_id=user_id,
                 model="gemini-2.0-flash",
+                prompt_preview=prompt,
+                response_preview="",
+                usage={"latency_ms": 0},
+                is_success=False,
+                error_message=str(e),
+            )
+            raise e
+
+    async def generate_cmo_recommendations(
+        self,
+        organization_id: Optional[str],
+        user_id: Optional[str],
+        business_name: str,
+        category: str,
+        location: str,
+        health_score: int,
+        problems: list[dict[str, Any]],
+        opportunities: list[dict[str, Any]],
+        reviews_count: int,
+        unanswered_count: int,
+    ) -> AICMORecommendationsOutput:
+        prompt = build_cmo_recommendations_prompt(
+            business_name=business_name,
+            category=category,
+            location=location,
+            health_score=health_score,
+            problems=problems,
+            opportunities=opportunities,
+            reviews_count=reviews_count,
+            unanswered_count=unanswered_count,
+        )
+
+        try:
+            res = await self.provider.generate_structured(
+                prompt=prompt,
+                response_schema=AICMORecommendationsOutput.model_json_schema(),
+                system_instruction=CMO_RECOMMENDATIONS_SYSTEM_PROMPT,
+                temperature=0.3,
+            )
+            data = res.get("data", {})
+            output = AICMORecommendationsOutput.model_validate(data)
+            usage = res.get("usage", {})
+
+            await self._log_ai_request(
+                feature="cmo_recommendations_generation",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=res.get("model", getattr(self.provider, "model_name", "gemini-2.0-flash")),
+                prompt_preview=prompt,
+                response_preview=json.dumps(data),
+                usage=usage,
+                is_success=True,
+            )
+            return output
+        except Exception as e:
+            logger.error("AI CMO Recommendations generation failed", error=str(e))
+            await self._log_ai_request(
+                feature="cmo_recommendations_generation",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=getattr(self.provider, "model_name", "gemini-2.0-flash"),
                 prompt_preview=prompt,
                 response_preview="",
                 usage={"latency_ms": 0},

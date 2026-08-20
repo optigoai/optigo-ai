@@ -46,3 +46,19 @@ class AIBusinessIntelligenceOutput(BaseModel):
     top_problems: List[BusinessProblem] = Field(default_factory=list)
     top_opportunities: List[BusinessOpportunity] = Field(default_factory=list)
     strategic_advice: str
+
+
+class AIRecommendationItem(BaseModel):
+    title: str
+    explanation: str
+    reason: str
+    priority: str = Field("important", description="urgent, important, opportunity")
+    impact: str = Field("High", description="Estimated business return or metric increase")
+    effort: str = Field("Low (5 mins)", description="Effort required: Low, Medium, High")
+    suggested_action: str
+    related_feature: Optional[str] = Field("reviews", description="reviews, campaigns, posts, seo")
+
+
+class AICMORecommendationsOutput(BaseModel):
+    recommendations: List[AIRecommendationItem] = Field(default_factory=list)
+    cmo_note: str = Field(..., description="Personalized strategic note from the AI CMO")

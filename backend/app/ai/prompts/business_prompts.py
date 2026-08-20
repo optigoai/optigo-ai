@@ -77,3 +77,55 @@ Return a valid JSON object with:
 - "top_opportunities": list of {{"title": string, "priority": "high"|"medium", "potential_impact": string, "suggested_action": string}}.
 - "strategic_advice": 2-3 sentences of direct executive advice from the AI CMO on what to focus on this week.
 """
+
+
+CMO_RECOMMENDATIONS_SYSTEM_PROMPT = """You are an elite, proactive AI Chief Marketing Officer (AI CMO) for small and medium businesses.
+Your responsibility is to turn data, customer sentiment, competitor posture, and marketing gaps into concrete, prioritized action cards.
+Categorize each action into strictly:
+- 'urgent' (requires immediate action within 24-48h, e.g. unanswered negative reviews, critical profile errors)
+- 'important' (strategic weekly goals, e.g. publishing promotional updates, optimizing high-intent keywords)
+- 'opportunity' (high-upside growth levers, e.g. launching referral programs, collecting reviews from happy clients)
+Output MUST be strictly valid JSON without markdown code fences."""
+
+
+def build_cmo_recommendations_prompt(
+    business_name: str,
+    category: str,
+    location: str,
+    health_score: int,
+    problems: List[Dict[str, Any]],
+    opportunities: List[Dict[str, Any]],
+    reviews_count: int,
+    unanswered_count: int,
+) -> str:
+    return f"""Synthesize actionable, high-impact marketing recommendations for this business:
+
+Business Name: {business_name}
+Industry: {category} ({location})
+Marketing Health Score: {health_score}/100
+Total Customer Reviews: {reviews_count} (Unanswered: {unanswered_count})
+
+Identified Problems:
+{json.dumps(problems, indent=2)}
+
+Identified Opportunities:
+{json.dumps(opportunities, indent=2)}
+
+Generate 4 to 6 prioritized action cards across 'urgent', 'important', and 'opportunity' categories.
+Return a valid JSON object matching:
+{{
+  "recommendations": [
+    {{
+      "title": "Action title (e.g. Reply to 2 Unanswered 1-Star Reviews)",
+      "explanation": "Clear explanation of what needs to be done",
+      "reason": "Why this is critical for business revenue or local SEO",
+      "priority": "urgent" | "important" | "opportunity",
+      "impact": "High (+12% conversion) | Medium (+5 leads) | Long-term SEO",
+      "effort": "Low (5 mins) | Medium (20 mins) | High (1 hr)",
+      "suggested_action": "Exact step-by-step instruction or suggested template",
+      "related_feature": "reviews" | "campaigns" | "posts" | "seo"
+    }}
+  ],
+  "cmo_note": "A concise executive encouraging note from the AI CMO advising what to tackle first."
+}}
+"""

@@ -8,6 +8,13 @@ class BusinessRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def get_by_id(self, business_id: str) -> Optional[Business]:
+        """Fetch business by primary key."""
+        result = await self.db.execute(
+            select(Business).where(Business.id == business_id)
+        )
+        return result.scalar_one_or_none()
+
     async def get_by_id_and_org(self, business_id: str, organization_id: str) -> Optional[Business]:
         """Fetch business strictly scoped to the user's organization."""
         result = await self.db.execute(

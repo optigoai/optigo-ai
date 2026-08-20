@@ -77,6 +77,34 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> patch(String path, {Map<String, dynamic>? body}) async {
+    final url = Uri.parse('$baseUrl$path');
+    try {
+      final headers = await _buildHeaders();
+      final response = await http.patch(
+        url,
+        headers: headers,
+        body: body != null ? jsonEncode(body) : null,
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Network error. Please check your connection.');
+    }
+  }
+
+  Future<dynamic> delete(String path) async {
+    final url = Uri.parse('$baseUrl$path');
+    try {
+      final headers = await _buildHeaders();
+      final response = await http.delete(url, headers: headers);
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Network error. Please check your connection.');
+    }
+  }
+
   dynamic _handleResponse(http.Response response) {
     dynamic data;
     try {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app/theme.dart';
 import 'home/home_screen.dart';
+import 'recommendations/recommendations_screen.dart';
 import 'reviews/reviews_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -20,7 +21,13 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final screens = [
-      HomeScreen(onNavigateToReviews: () => _navigateToTab(1)),
+      HomeScreen(
+        onNavigateToRecommendations: () => _navigateToTab(1),
+        onNavigateToReviews: () => _navigateToTab(2),
+      ),
+      RecommendationsScreen(
+        onNavigateToReviews: () => _navigateToTab(2),
+      ),
       const ReviewsScreen(),
     ];
 
@@ -57,6 +64,11 @@ class _MainShellState extends State<MainShell> {
                 icon: Icon(Icons.analytics_outlined),
                 selectedIcon: Icon(Icons.analytics_rounded, color: OptigoTheme.primary),
                 label: 'Insights',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.auto_awesome_outlined),
+                selectedIcon: Icon(Icons.auto_awesome_rounded, color: OptigoTheme.primary),
+                label: 'AI Actions',
               ),
               NavigationDestination(
                 icon: Icon(Icons.rate_review_outlined),

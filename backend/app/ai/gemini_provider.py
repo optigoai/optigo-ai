@@ -199,4 +199,50 @@ class GeminiAIProvider(AIProvider):
                 ],
                 "strategic_advice": "Focus immediately on clearing the unanswered reviews backlog and posting 2 high-value Google updates this week to re-engage local searchers.",
             }
+        elif "recommendations" in props or "recommendations" in schema or "cmo_note" in props:
+            return {
+                "recommendations": [
+                    {
+                        "title": "Resolve 3 Unanswered Negative Google Reviews",
+                        "explanation": "Addressing customer friction signals attentiveness and recovers lost conversion trust.",
+                        "reason": "Unanswered negative reviews suppress conversion by up to 22% and negatively impact local map rank.",
+                        "priority": "urgent",
+                        "impact": "High (+15% Conversion Rate)",
+                        "effort": "Low (5 mins)",
+                        "suggested_action": "Publish professional, empathetic replies acknowledging customer concerns and inviting offline resolution.",
+                        "related_feature": "reviews",
+                    },
+                    {
+                        "title": "Publish Weekly Google Business High-Intent Update",
+                        "explanation": "Active GBP posts increase algorithmic freshness and boost local search impressions.",
+                        "reason": "Businesses posting weekly see a 2.4x increase in direct phone calls and direction requests.",
+                        "priority": "important",
+                        "impact": "Medium (+25% Profile Views)",
+                        "effort": "Low (10 mins)",
+                        "suggested_action": "Draft an educational spotlight highlighting top services, certifications, and a limited-time booking consultation.",
+                        "related_feature": "posts",
+                    },
+                    {
+                        "title": "Launch Automated 5-Star Review Request Campaign",
+                        "explanation": "Consistently collecting verified reviews improves your overall rating above 4.7 stars.",
+                        "reason": "Top 3 local search map pack spots are overwhelmingly held by businesses with >25 recent positive reviews.",
+                        "priority": "opportunity",
+                        "impact": "High (Top 3 Map Pack Rank)",
+                        "effort": "Medium (15 mins)",
+                        "suggested_action": "Send automated SMS review requests to customers right after completed service delivery.",
+                        "related_feature": "reviews",
+                    },
+                    {
+                        "title": "Target High-Volume Local Service Keywords",
+                        "explanation": "Optimize business description and category tags for high purchase-intent neighborhood terms.",
+                        "reason": "Over 60% of nearby searchers use specific service names rather than generic business terms.",
+                        "priority": "opportunity",
+                        "impact": "High (+40% Discovery Search)",
+                        "effort": "Medium (20 mins)",
+                        "suggested_action": "Update service catalog descriptions to incorporate localized high-ranking keywords.",
+                        "related_feature": "seo",
+                    },
+                ],
+                "cmo_note": "Your primary growth bottleneck right now is review responsiveness. Clearing unanswered reviews today will yield immediate trust dividends!",
+            }
         return {}

@@ -7,7 +7,7 @@ Request/response schemas. Never expose ORM models directly.
 
 from datetime import datetime
 from typing import Optional, Any
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 # ---- Generic ----
@@ -159,3 +159,31 @@ class BusinessIntelligenceResponse(BaseModel):
     health_score: Optional[int] = None
     ai_profile: Optional[dict[str, Any]] = None
     health_analysis: Optional[dict[str, Any]] = None
+
+
+class RecommendationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    id: str
+    business_id: str
+    title: str
+    explanation: str
+    reason: str
+    priority: str
+    impact: str
+    effort: str
+    suggested_action: str
+    related_feature: Optional[str] = None
+    status: str
+    sort_order: int = 0
+    created_at: Optional[datetime] = None
+
+
+class RecommendationStatusUpdateRequest(BaseModel):
+    status: str = Field(..., description="completed, dismissed, in_progress, pending")
+
+
+class CMOGenerateRecommendationsResponse(BaseModel):
+    business_id: str
+    cmo_note: str
+    recommendations: list[RecommendationResponse]

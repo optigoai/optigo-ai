@@ -71,17 +71,25 @@
 - [x] Flutter Phase 4 UI: AI CMO Health Score Card (radial score, Reputation/Visibility sub-scores, strategic advice, Problems Detected with severity tags, High-Impact Opportunities with actions, and "Re-Run AI Audit" button)
 - [x] Backend integration tests in `test_ai_intelligence.py` (10/10 tests passed)
 
+### Phase 5 — AI CMO Engine & Actionable Recommendations (COMPLETED)
+- [x] Central AI CMO Engine analyzing marketing health, customer reviews, and goals
+- [x] Prioritized Recommendation Engine producing structured action cards (`URGENT`, `IMPORTANT`, `OPPORTUNITY`)
+- [x] PostgreSQL `recommendations` table with status tracking (`pending`, `completed`, `dismissed`)
+- [x] Endpoints: `POST /api/v1/recommendations/generate`, `GET /api/v1/recommendations`, `PATCH /api/v1/recommendations/{id}/status`
+- [x] Integration tests in `test_cmo_recommendations.py` (11/11 tests passed in Docker)
+- [x] Flutter Mobile 3-tab Bottom Navigation (`Insights`, `AI Actions`, `Reviews`) with real-time status transitions and priority filtering
+
 ---
 
 ## Remaining Work
 
-### Phase 5 — AI CMO Engine & Actionable Recommendations (WAITING FOR USER INSTRUCTION TO START)
-- [ ] Central AI CMO Engine analyzing marketing priorities
-- [ ] Recommendation Engine producing prioritized action cards (`Urgent`, `Important`, `Opportunity`)
-- [ ] One-click action triggers from recommendations
-- [ ] Flutter AI CMO Recommendation Feed & Action Handlers
+### Phase 6 — Content Engine: Social Media & Marketing Posts (WAITING FOR USER INSTRUCTION TO START)
+- [ ] Multi-channel social content generator (Google Business posts, Instagram, Facebook, LinkedIn)
+- [ ] Holiday and event-driven promotional calendar
+- [ ] Post scheduler and status tracking
+- [ ] Flutter Post Studio & Calendar UI
 
-### Phase 6-13 — See README.md
+### Phase 7-13 — See README.md
 
 ## Known Issues
 

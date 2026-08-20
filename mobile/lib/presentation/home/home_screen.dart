@@ -6,9 +6,14 @@ import '../../data/repositories/business_repository.dart';
 import '../auth/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
+  final VoidCallback? onNavigateToRecommendations;
   final VoidCallback? onNavigateToReviews;
 
-  const HomeScreen({super.key, this.onNavigateToReviews});
+  const HomeScreen({
+    super.key,
+    this.onNavigateToRecommendations,
+    this.onNavigateToReviews,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -160,6 +165,63 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: OptigoTheme.spacingLG),
                 ],
 
+                // AI CMO Actions Shortcut Banner
+                if (widget.onNavigateToRecommendations != null) ...[
+                  InkWell(
+                    onTap: widget.onNavigateToRecommendations,
+                    borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
+                    child: Container(
+                      padding: const EdgeInsets.all(OptigoTheme.spacingMD),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                            ),
+                            child: const Icon(Icons.auto_awesome, color: Color(0xFF38BDF8), size: 20),
+                          ),
+                          const SizedBox(width: OptigoTheme.spacingMD),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'AI CMO Action Plan',
+                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'View prioritized tactical cards & one-click actions',
+                                  style: TextStyle(fontSize: 11, color: Colors.white70),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.white70),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: OptigoTheme.spacingMD),
+                ],
+
                 // Quick Reviews Shortcut Banner
                 if (widget.onNavigateToReviews != null)
                   InkWell(
@@ -215,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: OptigoTheme.spacingXL),
                 Center(
                   child: Text(
-                    'OptigoAI CMO Intelligence • Phase 4 Live',
+                    'OptigoAI CMO Intelligence • Phase 5 Live',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
