@@ -448,124 +448,80 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, size: 22, color: OptigoTheme.error),
+            const Icon(Icons.warning_amber_rounded, size: 20, color: OptigoTheme.error),
             const SizedBox(width: 8),
             Text(
-              'Critical Problems Detected (${problems.length})',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              'Critical Bottlenecks (${problems.length})',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    fontSize: 18,
+                    fontSize: 16,
                     color: OptigoTheme.error,
-                    letterSpacing: -0.5,
+                    letterSpacing: -0.4,
                   ),
             ),
           ],
         ),
-        const SizedBox(height: OptigoTheme.spacingMD),
+        const SizedBox(height: OptigoTheme.spacingSM),
         ...problems.map((p) => Container(
-              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingMD),
+              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingSM),
               padding: const EdgeInsets.all(OptigoTheme.spacingMD),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                border: Border.all(color: OptigoTheme.error.withValues(alpha: 0.1)),
+                border: Border.all(color: OptigoTheme.error.withValues(alpha: 0.2)),
                 boxShadow: [
                   BoxShadow(
-                    color: OptigoTheme.error.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 4,
-                      decoration: BoxDecoration(
-                        color: OptigoTheme.error,
-                        borderRadius: BorderRadius.circular(2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          p.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: OptigoTheme.textPrimary,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: OptigoTheme.spacingMD),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  p.title,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15,
-                                    color: OptigoTheme.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: OptigoTheme.error.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                                ),
-                                child: Text(
-                                  p.severity.toUpperCase(),
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    color: OptigoTheme.error,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: OptigoTheme.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                        ),
+                        child: Text(
+                          p.severity.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: OptigoTheme.error,
+                            letterSpacing: 0.4,
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            p.explanation,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: OptigoTheme.textSecondary,
-                              height: 1.4,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          if (p.impact.isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: OptigoTheme.surfaceVariant.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(Icons.info_outline_rounded, size: 14, color: OptigoTheme.error),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: RichText(
-                                      text: TextSpan(
-                                        style: const TextStyle(fontSize: 12, color: OptigoTheme.textPrimary, height: 1.3),
-                                        children: [
-                                          const TextSpan(text: 'Impact: ', style: TextStyle(fontWeight: FontWeight.w800)),
-                                          TextSpan(text: p.impact, style: const TextStyle(fontWeight: FontWeight.w500)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (p.impact.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Impact: ${p.impact}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: OptigoTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
             )),
       ],
@@ -581,124 +537,80 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.rocket_launch_rounded, size: 22, color: OptigoTheme.success),
+            const Icon(Icons.rocket_launch_rounded, size: 20, color: OptigoTheme.success),
             const SizedBox(width: 8),
             Text(
-              'High-Impact Opportunities (${opportunities.length})',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              'High-Impact Growth Levers (${opportunities.length})',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    fontSize: 18,
+                    fontSize: 16,
                     color: OptigoTheme.success,
-                    letterSpacing: -0.5,
+                    letterSpacing: -0.4,
                   ),
             ),
           ],
         ),
-        const SizedBox(height: OptigoTheme.spacingMD),
+        const SizedBox(height: OptigoTheme.spacingSM),
         ...opportunities.map((o) => Container(
-              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingMD),
+              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingSM),
               padding: const EdgeInsets.all(OptigoTheme.spacingMD),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                border: Border.all(color: OptigoTheme.success.withValues(alpha: 0.1)),
+                border: Border.all(color: OptigoTheme.success.withValues(alpha: 0.2)),
                 boxShadow: [
                   BoxShadow(
-                    color: OptigoTheme.success.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 4,
-                      decoration: BoxDecoration(
-                        color: OptigoTheme.success,
-                        borderRadius: BorderRadius.circular(2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          o.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: OptigoTheme.textPrimary,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: OptigoTheme.spacingMD),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  o.title,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15,
-                                    color: OptigoTheme.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: OptigoTheme.success.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                                ),
-                                child: Text(
-                                  '${o.priority.toUpperCase()} IMPACT',
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    color: OptigoTheme.success,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: OptigoTheme.success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                        ),
+                        child: Text(
+                          '${o.priority.toUpperCase()} ROI',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: OptigoTheme.success,
+                            letterSpacing: 0.4,
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            o.suggestedAction,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: OptigoTheme.textSecondary,
-                              height: 1.4,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          if (o.potentialImpact.isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: OptigoTheme.success.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(Icons.auto_awesome_rounded, size: 14, color: OptigoTheme.success),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: RichText(
-                                      text: TextSpan(
-                                        style: const TextStyle(fontSize: 12, color: OptigoTheme.textPrimary, height: 1.3),
-                                        children: [
-                                          const TextSpan(text: 'Potential: ', style: TextStyle(fontWeight: FontWeight.w800, color: OptigoTheme.success)),
-                                          TextSpan(text: o.potentialImpact, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (o.suggestedAction.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      o.suggestedAction,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: OptigoTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
             )),
       ],
