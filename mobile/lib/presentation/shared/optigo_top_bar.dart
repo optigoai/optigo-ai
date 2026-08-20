@@ -142,67 +142,28 @@ class OptigoTopBar extends StatelessWidget {
 
           const SizedBox(width: 8),
 
-          // Center-Left: Official App Logo + Title/Subtitle
+          // Center-Left: Official App Logo Image (No duplicate text) + Subtitle
           Expanded(
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
                   'assets/images/logo.png',
-                  height: 38,
+                  height: 26,
                   fit: BoxFit.contain,
+                  alignment: Alignment.centerLeft,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Optigo',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: -0.4,
-                            ),
-                          ),
-                          const Text(
-                            'AI',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF2563EB),
-                              letterSpacing: -0.4,
-                            ),
-                          ),
-                          Transform.translate(
-                            offset: const Offset(1, -4),
-                            child: const Text(
-                              '✦',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFF38BDF8),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        displaySubtitle,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Color(0xFF64748B),
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.1,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                const SizedBox(height: 2),
+                Text(
+                  displaySubtitle,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.1,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

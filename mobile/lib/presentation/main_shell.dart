@@ -55,26 +55,62 @@ class _MainShellState extends State<MainShell> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 12,
+              offset: const Offset(0, -3),
             ),
           ],
         ),
         child: SafeArea(
           child: SizedBox(
-            height: 62,
+            height: 64,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(0, Icons.home_rounded, 'Home'),
-                _buildNavItem(1, Icons.lightbulb_outline_rounded, 'Insights'),
-                _buildNavItem(2, Icons.add_box_outlined, 'Create'),
-                _buildNavItem(3, Icons.travel_explore_rounded, 'SEO'),
+                _buildNavItem(1, Icons.insights_rounded, 'Insights'),
+                _buildCreateNavItem(2),
+                _buildNavItem(3, Icons.search_rounded, 'SEO'),
                 _buildNavItem(4, Icons.more_horiz_rounded, 'More'),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCreateNavItem(int index) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () => _navigateToTab(index),
+      borderRadius: BorderRadius.circular(24),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                color: Color(0xFF2563EB),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(Icons.add, color: Colors.white, size: 20),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Create',
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -86,7 +122,7 @@ class _MainShellState extends State<MainShell> {
       onTap: () => _navigateToTab(index),
       borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -109,8 +145,8 @@ class _MainShellState extends State<MainShell> {
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
               ),
             ),
