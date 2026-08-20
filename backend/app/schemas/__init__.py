@@ -69,8 +69,6 @@ class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ---- Organization ----
-
 class OrganizationResponse(BaseModel):
     id: str
     name: str
@@ -79,6 +77,12 @@ class OrganizationResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class AuthResponse(BaseModel):
+    user: UserResponse
+    organization: Optional[OrganizationResponse] = None
+    tokens: TokenResponse
 
 
 # ---- Business ----

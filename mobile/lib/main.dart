@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'app/app.dart';
+import 'data/api/api_client.dart';
+import 'data/repositories/auth_repository.dart';
+import 'data/repositories/business_repository.dart';
+import 'presentation/auth/auth_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,5 +25,19 @@ void main() {
     ),
   );
 
-  runApp(const OptigoAIApp());
+  // Core dependencies
+  final apiClient = ApiClient();
+  final authRepo = AuthRepository(apiClient);
+  final bizRepo = BusinessRepository(apiClient);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AppAuthProvider(authRepo, bizRepo)..checkAuth(),
+        ),
+      ],
+      child: const OptigoAIApp(),
+    ),
+  );
 }

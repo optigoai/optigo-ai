@@ -4,16 +4,18 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health
+from app.api.v1.endpoints import health, auth, businesses
 
 api_router = APIRouter(prefix="/api/v1")
 
 # Health check (public)
 api_router.include_router(health.router)
 
-# Future phase routers will be added here:
-# api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-# api_router.include_router(businesses.router, prefix="/businesses", tags=["Businesses"])
+# Authentication & Users
+api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+
+# Businesses & Onboarding
+api_router.include_router(businesses.router, prefix="/businesses", tags=["Businesses"])
 # api_router.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
 # api_router.include_router(seo.router, prefix="/seo", tags=["SEO"])
 # api_router.include_router(competitors.router, prefix="/competitors", tags=["Competitors"])

@@ -1,6 +1,4 @@
-# OptigoAI — Development Status
-
-## Current Phase: 1 — Foundation ✅
+## Current Phase: 2 — Authentication & Onboarding ✅ (Ready for Phase 3)
 
 **Last Updated:** 2026-08-20
 
@@ -40,19 +38,31 @@
 - [x] `README.md`
 - [x] `DEVELOPMENT_STATUS.md`
 
+### Phase 2 — Authentication & Business Onboarding
+- [x] Auth endpoints (`POST /signup`, `POST /login`, `POST /refresh`, `GET /me`, `POST /logout`)
+- [x] Business endpoints (`GET /businesses`, `POST /businesses`, `GET /businesses/{id}`, `POST /businesses/{id}/onboarding`)
+- [x] Multi-tenant organization isolation (repositories, services, authorization dependency)
+- [x] Flutter ApiClient with auth header handling and base URL resolution
+- [x] Flutter AuthRepository with secure token persistence (`flutter_secure_storage`)
+- [x] Flutter BusinessRepository
+- [x] Flutter AppAuthProvider state management
+- [x] Flutter LoginScreen with validation & error feedback
+- [x] Flutter SignupScreen for user and organization registration
+- [x] Flutter Multi-Step BusinessOnboardingScreen (Business, Audience, Goals)
+- [x] Flutter AuthRouter dynamic screen routing
+- [x] Automated tests for signup, duplicate email handling, login validation, token auth, business creation, and cross-organization isolation (100% pass)
+
 ---
 
 ## Remaining Work
 
-### Phase 2 — Authentication + Onboarding
-- [ ] Auth endpoints (signup, login, logout, refresh)
-- [ ] Auth middleware
-- [ ] Flutter auth screens (login, signup)
-- [ ] Flutter secure token storage
-- [ ] Business onboarding flow (Flutter + backend)
-- [ ] Tests for auth + org isolation
+### Phase 3 — Business Data & MockGBP Provider Seeding
+- [ ] GBP data synchronization service
+- [ ] Initial business metrics, reviews, and posts seeding from MockGBPProvider
+- [ ] Endpoints for business intelligence metrics and GBP status
+- [ ] Flutter Business Data & GBP status integration
 
-### Phase 3-13 — See README.md
+### Phase 4-13 — See README.md
 
 ---
 
