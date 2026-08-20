@@ -3,8 +3,9 @@
 # ==================================================
 
 import uuid
+from datetime import datetime
 from enum import Enum as PyEnum
-from sqlalchemy import String, Text, ForeignKey, Enum, JSON
+from sqlalchemy import String, Text, ForeignKey, Enum, JSON, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional, Any, TYPE_CHECKING
 
@@ -18,6 +19,8 @@ class ContentType(str, PyEnum):
     GOOGLE_POST = "google_post"
     INSTAGRAM = "instagram"
     FACEBOOK = "facebook"
+    LINKEDIN = "linkedin"
+    TWITTER = "twitter"
     ADVERTISEMENT = "advertisement"
     WEBSITE = "website"
     SEO_ARTICLE = "seo_article"
@@ -26,8 +29,10 @@ class ContentType(str, PyEnum):
 
 class ContentStatus(str, PyEnum):
     DRAFT = "draft"
+    SCHEDULED = "scheduled"
     APPROVED = "approved"
     PUBLISHED = "published"
+    FAILED = "failed"
 
 
 class Content(Base, TimestampMixin):
@@ -42,7 +47,7 @@ class Content(Base, TimestampMixin):
     )
 
     content_type: Mapped[ContentType] = mapped_column(
-        Enum(ContentType), nullable=False
+        Enum(ContentType, values_callable=lambda obj: [e.value for e in obj]), nullable=False
     )
     title: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     body: Mapped[str] = mapped_column(Text, nullable=False)
@@ -51,9 +56,14 @@ class Content(Base, TimestampMixin):
     marketing_goal: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     hashtags: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     call_to_action: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    image_prompt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    image_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    
     status: Mapped[ContentStatus] = mapped_column(
-        Enum(ContentStatus), default=ContentStatus.DRAFT, nullable=False
+        Enum(ContentStatus, values_callable=lambda obj: [e.value for e in obj]), default=ContentStatus.DRAFT, nullable=False
     )
+    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     generation_metadata: Mapped[Optional[dict[str, Any]]] = mapped_column(
         JSON, nullable=True
     )
@@ -69,4 +79,4 @@ class Content(Base, TimestampMixin):
     )
 
     def __repr__(self) -> str:
-        return f"<Content(id={self.id}, type={self.content_type})>"
+        return f"<Content(id={self.id}, type={self.content_type}, status={self.status})>"

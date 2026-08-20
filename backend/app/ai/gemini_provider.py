@@ -245,4 +245,51 @@ class GeminiAIProvider(AIProvider):
                 ],
                 "cmo_note": "Your primary growth bottleneck right now is review responsiveness. Clearing unanswered reviews today will yield immediate trust dividends!",
             }
+        elif "campaign_theme" in props or "posts" in props or "posts" in schema:
+            return {
+                "campaign_theme": "Authentic Local Flavor & Exclusive Weekend Special",
+                "posts": [
+                    {
+                        "channel": "google_post",
+                        "title": "Weekend Feast Special - 20% Off",
+                        "body": "Craving authentic flavors? Treat yourself and your family this weekend with our special menu. Enjoy freshly prepared delights made with premium local ingredients. Book early to secure your spot!",
+                        "hashtags": "#LocalDining #WeekendSpecial #FoodieFavorites",
+                        "call_to_action": "Call now or visit our website to reserve your table today.",
+                        "image_prompt": "A warm, beautifully lit dining table with appetizing signature dishes, modern restaurant ambiance, shot on 50mm lens.",
+                        "best_time_to_post": "Friday at 11:30 AM",
+                    },
+                    {
+                        "channel": "instagram",
+                        "title": "Taste the Tradition ✨",
+                        "body": "Behind every dish is a story of passion and heritage. 🥘✨\n\nJoin us this weekend for an unforgettable culinary experience! Tag a friend who needs to try this with you. 👇",
+                        "hashtags": "#FoodLovers #WeekendVibes #InstaFood #LocalEats #ChefSpecial #DeliciousMoments #FoodGasm #FoodPhotography",
+                        "call_to_action": "Link in bio to explore our full menu & reserve!",
+                        "image_prompt": "Close-up macro shot of sizzling signature dish with steam rising, vibrant garnish, dark stone tabletop.",
+                        "best_time_to_post": "Saturday at 1:00 PM",
+                    },
+                    {
+                        "channel": "facebook",
+                        "title": "Special Community Weekend Offer! 🎉",
+                        "body": "We love serving our local community! As a thank you for your incredible support, enjoy an exclusive 20% discount on all weekend family platters. Bring the whole family for an afternoon of great food and great memories.",
+                        "hashtags": "#CommunityFirst #LocalBusiness #WeekendOffer #FamilyDining",
+                        "call_to_action": "Comment below or message us directly to claim your table!",
+                        "image_prompt": "Happy family enjoying a lively dinner at a cozy modern restaurant, warm ambient lighting.",
+                        "best_time_to_post": "Thursday at 6:00 PM",
+                    },
+                    {
+                        "channel": "linkedin",
+                        "title": "Elevating Quality and Craftsmanship in Local Hospitality",
+                        "body": "In today's fast-paced environment, maintaining consistency in quality, sustainable sourcing, and genuine customer care is what sets local businesses apart.\n\nWe are proud to partner with local producers to bring fresh, authentic experiences to our customers every single day.",
+                        "hashtags": "#HospitalityLeadership #SmallBusinessGrowth #LocalEconomy #Sustainability",
+                        "call_to_action": "Connect with our corporate catering team for your next company gathering.",
+                        "image_prompt": "Professional head chef inspecting fresh organic ingredients in modern kitchen.",
+                        "best_time_to_post": "Wednesday at 9:00 AM",
+                    },
+                ],
+                "calendar_suggestions": [
+                    {"day": "Friday", "channel": "google_post", "focus": "Weekend booking announcement"},
+                    {"day": "Saturday", "channel": "instagram", "focus": "Visual showcase & chef story"},
+                    {"day": "Sunday", "channel": "facebook", "focus": "Customer spotlight & community engagement"},
+                ],
+            }
         return {}

@@ -187,3 +187,84 @@ class CMOGenerateRecommendationsResponse(BaseModel):
     business_id: str
     cmo_note: str
     recommendations: list[RecommendationResponse]
+
+
+# ---- Content & Social Posts ----
+
+class GeneratedPostItem(BaseModel):
+    channel: str
+    title: Optional[str] = None
+    body: str
+    hashtags: Optional[str] = None
+    call_to_action: Optional[str] = None
+    image_prompt: Optional[str] = None
+    best_time_to_post: Optional[str] = None
+
+
+class ContentGenerateRequest(BaseModel):
+    business_id: str
+    channels: list[str] = Field(default_factory=lambda: ["google_post", "instagram", "facebook", "linkedin"])
+    topic: Optional[str] = None
+    tone: Optional[str] = "engaging & professional"
+    goal: Optional[str] = "drive traffic & sales"
+    offer_details: Optional[str] = None
+    include_hashtags: bool = True
+    include_image_prompt: bool = True
+
+
+class ContentGenerateResponse(BaseModel):
+    business_id: str
+    campaign_theme: str
+    posts: list[GeneratedPostItem]
+    calendar_suggestions: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ContentCreateRequest(BaseModel):
+    business_id: str
+    content_type: str = "google_post"
+    title: Optional[str] = None
+    body: str = Field(..., min_length=1)
+    tone: Optional[str] = None
+    target_audience: Optional[str] = None
+    marketing_goal: Optional[str] = None
+    hashtags: Optional[str] = None
+    call_to_action: Optional[str] = None
+    image_prompt: Optional[str] = None
+    image_url: Optional[str] = None
+    status: str = "draft"
+    scheduled_at: Optional[datetime] = None
+
+
+class ContentUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    body: Optional[str] = None
+    tone: Optional[str] = None
+    target_audience: Optional[str] = None
+    marketing_goal: Optional[str] = None
+    hashtags: Optional[str] = None
+    call_to_action: Optional[str] = None
+    image_url: Optional[str] = None
+    status: Optional[str] = None
+    scheduled_at: Optional[datetime] = None
+
+
+class ContentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    id: str
+    business_id: str
+    content_type: str
+    title: Optional[str] = None
+    body: str
+    tone: Optional[str] = None
+    target_audience: Optional[str] = None
+    marketing_goal: Optional[str] = None
+    hashtags: Optional[str] = None
+    call_to_action: Optional[str] = None
+    image_prompt: Optional[str] = None
+    image_url: Optional[str] = None
+    status: str
+    scheduled_at: Optional[datetime] = None
+    published_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None

@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 BUSINESS_PROFILE_SYSTEM_PROMPT = """You are an expert Chief Marketing Officer and small business strategist.
 Your task is to analyze onboarding information from a local business owner and produce a highly structured, actionable marketing profile.
@@ -128,4 +128,50 @@ Return a valid JSON object matching:
   ],
   "cmo_note": "A concise executive encouraging note from the AI CMO advising what to tackle first."
 }}
+"""
+
+
+CONTENT_SYSTEM_PROMPT = """You are an elite, highly creative Chief Marketing Officer (CMO) and Master Copywriter for small and medium businesses.
+You craft high-converting, punchy, channel-optimized social media posts, Google Business updates, Instagram captions, Facebook ads, and LinkedIn thought-leadership posts.
+Your writing is engaging, culturally attuned, uses modern copywriting psychology (hook, value, call-to-action), and includes natural, high-reach hashtags and rich image generation prompts.
+Always respond with strictly valid JSON matching the requested schema.
+"""
+
+
+def build_content_generation_prompt(
+    business_name: str,
+    category: str,
+    location: str,
+    channels: list[str],
+    topic: Optional[str] = None,
+    tone: Optional[str] = "engaging & professional",
+    goal: Optional[str] = "drive customer engagement & foot traffic",
+    offer_details: Optional[str] = None,
+    business_summary: Optional[str] = None,
+) -> str:
+    channels_str = ", ".join(channels)
+    return f"""Create high-performing social media and marketing posts for this business:
+
+Business: {business_name}
+Category: {category}
+Location: {location}
+Business Overview: {business_summary or "Local business providing quality products/services to local customers."}
+
+Target Channels: {channels_str}
+Requested Topic / Theme: {topic or "General brand awareness and high-value customer engagement"}
+Desired Brand Tone: {tone}
+Marketing Objective: {goal}
+Special Offer / Details: {offer_details or "None specified - highlight core services and quality value proposition."}
+
+Instructions:
+1. For each channel in [{channels_str}], generate a tailor-made post:
+   - For 'google_post': Focus on local search visibility, clear offer, address/phone CTA, and concise 100-150 words.
+   - For 'instagram': Hook the reader with 1st line, use spacing/emojis, strong visual description in image_prompt, and 8-15 high-reach hashtags.
+   - For 'facebook': Community-oriented, conversational storytelling, clear link/contact CTA.
+   - For 'linkedin': Professional insight, business milestone, or B2B/local economic value proposition.
+   - For 'twitter': Under 280 characters, punchy hook, trending hashtags.
+2. Formulate an overarching creative campaign theme.
+3. Suggest a 3-day posting calendar schedule.
+
+Return a valid JSON object matching the requested schema.
 """

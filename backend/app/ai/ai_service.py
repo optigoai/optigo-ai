@@ -11,14 +11,17 @@ from app.ai.schemas import (
     AIBusinessProfileOutput,
     AIBusinessIntelligenceOutput,
     AICMORecommendationsOutput,
+    AIContentGenerationOutput,
 )
 from app.ai.prompts.business_prompts import (
     BUSINESS_PROFILE_SYSTEM_PROMPT,
     BUSINESS_INTELLIGENCE_SYSTEM_PROMPT,
     CMO_RECOMMENDATIONS_SYSTEM_PROMPT,
+    CONTENT_SYSTEM_PROMPT,
     build_business_profile_prompt,
     build_business_intelligence_prompt,
     build_cmo_recommendations_prompt,
+    build_content_generation_prompt,
 )
 
 logger = get_logger("app.ai.service")
@@ -244,6 +247,69 @@ class AIService:
                 organization_id=organization_id,
                 user_id=user_id,
                 model="gemini-2.0-flash",
+                prompt_preview=prompt,
+                response_preview="",
+                usage={"latency_ms": 0},
+                is_success=False,
+                error_message=str(e),
+            )
+            raise e
+
+    async def generate_content(
+        self,
+        organization_id: Optional[str],
+        user_id: Optional[str],
+        business_name: str,
+        category: str,
+        location: str,
+        channels: List[str],
+        topic: Optional[str] = None,
+        tone: Optional[str] = "engaging & professional",
+        goal: Optional[str] = "drive customer engagement & foot traffic",
+        offer_details: Optional[str] = None,
+        business_summary: Optional[str] = None,
+    ) -> AIContentGenerationOutput:
+        prompt = build_content_generation_prompt(
+            business_name=business_name,
+            category=category,
+            location=location,
+            channels=channels,
+            topic=topic,
+            tone=tone,
+            goal=goal,
+            offer_details=offer_details,
+            business_summary=business_summary,
+        )
+
+        try:
+            res = await self.provider.generate_structured(
+                prompt=prompt,
+                response_schema=AIContentGenerationOutput.model_json_schema(),
+                system_instruction=CONTENT_SYSTEM_PROMPT,
+                temperature=0.7,
+            )
+            data = res.get("data", {})
+            output = AIContentGenerationOutput.model_validate(data)
+            usage = res.get("usage", {})
+
+            await self._log_ai_request(
+                feature="content_generation_multi_channel",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=res.get("model", getattr(self.provider, "model_name", "gemini-2.0-flash")),
+                prompt_preview=prompt,
+                response_preview=json.dumps(data),
+                usage=usage,
+                is_success=True,
+            )
+            return output
+        except Exception as e:
+            logger.error("AI Content generation failed", error=str(e))
+            await self._log_ai_request(
+                feature="content_generation_multi_channel",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=getattr(self.provider, "model_name", "gemini-2.0-flash"),
                 prompt_preview=prompt,
                 response_preview="",
                 usage={"latency_ms": 0},

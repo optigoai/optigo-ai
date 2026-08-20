@@ -62,3 +62,19 @@ class AIRecommendationItem(BaseModel):
 class AICMORecommendationsOutput(BaseModel):
     recommendations: List[AIRecommendationItem] = Field(default_factory=list)
     cmo_note: str = Field(..., description="Personalized strategic note from the AI CMO")
+
+
+class AIGeneratedPostItem(BaseModel):
+    channel: str = Field(..., description="google_post, instagram, facebook, linkedin, twitter")
+    title: Optional[str] = Field(None, description="Catchy headline or subject line")
+    body: str = Field(..., description="Channel-optimized body content with engaging copy")
+    hashtags: Optional[str] = Field(None, description="Relevant high-reach hashtags separated by spaces")
+    call_to_action: Optional[str] = Field(None, description="Clear, compelling call to action")
+    image_prompt: Optional[str] = Field(None, description="DALL-E / Imagen prompt for marketing visual")
+    best_time_to_post: Optional[str] = Field(None, description="Recommended time e.g., 'Tuesday at 11:00 AM'")
+
+
+class AIContentGenerationOutput(BaseModel):
+    campaign_theme: str = Field(..., description="Unifying creative marketing angle or theme")
+    posts: List[AIGeneratedPostItem] = Field(default_factory=list)
+    calendar_suggestions: List[Dict[str, Any]] = Field(default_factory=list, description="Suggested schedule dates and post ideas")

@@ -77,19 +77,27 @@
 - [x] PostgreSQL `recommendations` table with status tracking (`pending`, `completed`, `dismissed`)
 - [x] Endpoints: `POST /api/v1/recommendations/generate`, `GET /api/v1/recommendations`, `PATCH /api/v1/recommendations/{id}/status`
 - [x] Integration tests in `test_cmo_recommendations.py` (11/11 tests passed in Docker)
-- [x] Flutter Mobile 3-tab Bottom Navigation (`Insights`, `AI Actions`, `Reviews`) with real-time status transitions and priority filtering
+- [x] Flutter Mobile Bottom Navigation with real-time status transitions and priority filtering
+
+### Phase 6 — Content Engine: Social Media & Marketing Posts (COMPLETED)
+- [x] Multi-channel social content generator with Gemini 2.0 Flash (Google Business, Instagram, Facebook, LinkedIn)
+- [x] Promotional theme synthesizer and calendar schedule planner
+- [x] PostgreSQL `contents` table with scheduling and post status tracking (`draft`, `scheduled`, `published`, `failed`)
+- [x] Endpoints: `POST /api/v1/contents/generate`, `POST /api/v1/contents`, `GET /api/v1/contents`, `GET /api/v1/contents/{id}`, `PATCH /api/v1/contents/{id}`, `POST /api/v1/contents/{id}/publish`, `DELETE /api/v1/contents/{id}`
+- [x] Integration tests in `test_content_engine.py` (12/12 tests passed in Docker)
+- [x] Flutter `ContentStudioScreen` integrated into `MainShell` (Tab 2: `Create`) and `HomeScreen` (`Create Content` Quick Action)
 
 ---
 
 ## Remaining Work
 
-### Phase 6 — Content Engine: Social Media & Marketing Posts (WAITING FOR USER INSTRUCTION TO START)
-- [ ] Multi-channel social content generator (Google Business posts, Instagram, Facebook, LinkedIn)
-- [ ] Holiday and event-driven promotional calendar
-- [ ] Post scheduler and status tracking
-- [ ] Flutter Post Studio & Calendar UI
+### Phase 7 — SEO & Visibility Optimizer (WAITING FOR USER INSTRUCTION TO START)
+- [ ] Keyword tracking & local search ranking engine
+- [ ] On-page SEO recommendations & Google Business Profile attribute optimizer
+- [ ] Local citation & map pack presence analyzer
+- [ ] Flutter SEO & Visibility UI
 
-### Phase 7-13 — See README.md
+### Phase 8-13 — See README.md
 
 ## Known Issues
 

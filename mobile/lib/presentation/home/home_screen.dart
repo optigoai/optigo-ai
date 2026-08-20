@@ -707,7 +707,11 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildQuickActionButton(
                 icon: Icons.edit_note_rounded,
                 label: 'Create\nContent',
-                onTap: () => _showComingSoonDialog('Content Engine & Social Posts', 'Phase 6'),
+                onTap: () {
+                  if (widget.onNavigateToTab != null) {
+                    widget.onNavigateToTab!(2);
+                  }
+                },
               ),
               const SizedBox(width: 10),
               _buildQuickActionButton(
