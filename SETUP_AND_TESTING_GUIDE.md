@@ -203,19 +203,22 @@ Here is the exact sequence to test the entire customer journey via API:
 
 The mobile application is built with responsive layout and light-blue SaaS theme.
 
-### Run on Windows / Android / Chrome:
+### Run on Physical Android Phone (e.g. Motorola Edge 50 Pro):
+Your computer's Wi-Fi IP is **`10.51.25.138`**.
+
+1. **Ensure Phone and Computer are on the same Wi-Fi network**.
+2. **Android Permissions**: `android.permission.INTERNET` and `usesCleartextTraffic="true"` have been configured.
+3. **Run the App**:
+   ```powershell
+   flutter run -d ZD222L867X
+   ```
+
+💡 **Alternative (USB Cable ADB Reverse)**:
+If you are connected via USB cable, you can forward phone traffic directly over USB by running:
 ```powershell
-cd "C:\Optigo Works\optigoai\mobile"
-
-# 1. Verify dependencies and analyzer
-flutter analyze
-
-# 2. Run on connected Android device or emulator
-flutter run
-
-# Or run on Chrome for quick browser testing
-flutter run -d chrome
+adb reverse tcp:8000 tcp:8000
 ```
+This routes all requests on port 8000 directly through the USB cable without needing Wi-Fi!
 
 ### What You Can Do in the App:
 1. **Sign Up**: Enter your name, organization name, email, and password.
