@@ -150,6 +150,11 @@ class AppAuthProvider extends ChangeNotifier {
         marketingChannels: marketingChannels,
       );
 
+      // Trigger GBP Provider sync
+      try {
+        await _bizRepo.syncGbp(newBiz.id);
+      } catch (_) {}
+
       _currentBusiness = onboarded;
       _businesses = [onboarded, ..._businesses];
       notifyListeners();
@@ -159,5 +164,13 @@ class AppAuthProvider extends ChangeNotifier {
       notifyListeners();
       return null;
     }
+  }
+
+  Future<void> syncGbp() async {
+    if (_currentBusiness == null) return;
+    try {
+      await _bizRepo.syncGbp(_currentBusiness!.id);
+      notifyListeners();
+    } catch (_) {}
   }
 }

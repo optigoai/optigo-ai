@@ -114,6 +114,41 @@ class BusinessResponse(BaseModel):
     health_score: Optional[int] = None
     onboarding_completed: bool
     ai_business_profile: Optional[dict[str, Any]] = None
+    gbp_account_id: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ---- Reviews ----
+
+class ReviewResponse(BaseModel):
+    id: str
+    business_id: str
+    reviewer_name: str
+    rating: int
+    text: Optional[str] = None
+    review_date: Optional[str] = None
+    sentiment: Optional[str] = None
+    ai_summary: Optional[str] = None
+    key_themes: Optional[str] = None
+    reply_text: Optional[str] = None
+    ai_generated_reply: Optional[str] = None
+    is_replied: bool
+    source: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ReviewReplyRequest(BaseModel):
+    reply_text: str = Field(..., min_length=1)
+
+
+class GBPSyncResponse(BaseModel):
+    business_id: str
+    gbp_id: Optional[str] = None
+    reviews_synced: int
+    total_reviews: int
+    average_rating: float
+    metrics: dict[str, Any]

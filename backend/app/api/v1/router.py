@@ -4,7 +4,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health, auth, businesses
+from app.api.v1.endpoints import health, auth, businesses, reviews
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -16,7 +16,9 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 # Businesses & Onboarding
 api_router.include_router(businesses.router, prefix="/businesses", tags=["Businesses"])
-# api_router.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
+
+# Reviews & Reputation
+api_router.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
 # api_router.include_router(seo.router, prefix="/seo", tags=["SEO"])
 # api_router.include_router(competitors.router, prefix="/competitors", tags=["Competitors"])
 # api_router.include_router(recommendations.router, prefix="/recommendations", tags=["Recommendations"])

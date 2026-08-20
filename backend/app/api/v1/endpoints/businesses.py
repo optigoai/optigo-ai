@@ -8,6 +8,7 @@ from app.schemas import (
     BusinessCreateRequest,
     BusinessOnboardingRequest,
     BusinessResponse,
+    GBPSyncResponse,
 )
 from app.services.business_service import BusinessService
 
@@ -79,3 +80,17 @@ async def submit_business_onboarding(
         marketing_channels=req.marketing_channels,
     )
     return BusinessResponse.model_validate(business)
+
+
+@router.post("/{business_id}/sync-gbp", response_model=GBPSyncResponse)
+async def sync_business_gbp(
+    business_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Synchronize Google Business Profile data (reviews, metrics, profile) using Provider layer."""
+    from app.services.gbp_sync_service import GBPSyncService
+    org_id = get_org_id(current_user)
+    sync_service = GBPSyncService(db)
+    result = await sync_service.sync_business_data(business_id, org_id)
+    return GBPSyncResponse(**result)

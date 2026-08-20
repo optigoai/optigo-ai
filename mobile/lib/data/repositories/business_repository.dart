@@ -55,4 +55,11 @@ class BusinessRepository {
     );
     return BusinessModel.fromJson(response);
   }
+
+  Future<Map<String, dynamic>> syncGbp(String businessId) async {
+    final response = await _apiClient.post(
+      '${ApiConstants.businesses}/$businessId/sync-gbp',
+    );
+    return response as Map<String, dynamic>;
+  }
 }

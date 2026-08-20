@@ -1,4 +1,4 @@
-## Current Phase: 2 — Authentication & Onboarding ✅ (Ready for Phase 3)
+## Current Phase: 3 — Business Data & MockGBP Provider Seeding ✅ (Ready for Phase 4)
 
 **Last Updated:** 2026-08-20
 
@@ -52,17 +52,24 @@
 - [x] Flutter AuthRouter dynamic screen routing
 - [x] Automated tests for signup, duplicate email handling, login validation, token auth, business creation, and cross-organization isolation (100% pass)
 
+### Phase 3 — Business Data & MockGBP Provider Seeding
+- [x] ReviewRepository for multi-tenant review querying, sentiment filtering, and rating aggregation
+- [x] GBPSyncService for ingesting external profile, reviews, and analytics from MockGBPProvider into PostgreSQL
+- [x] `POST /api/v1/businesses/{id}/sync-gbp` endpoint for provider synchronization
+- [x] `GET /api/v1/reviews`, `GET /api/v1/reviews/{id}`, `POST /api/v1/reviews/{id}/reply` endpoints
+- [x] Flutter ReviewModel, ReviewRepository, and automatic GBP sync on onboarding
+- [x] Automated tests for GBP provider sync, review querying by sentiment, and review reply workflows (100% pass)
+
 ---
 
 ## Remaining Work
 
-### Phase 3 — Business Data & MockGBP Provider Seeding
-- [ ] GBP data synchronization service
-- [ ] Initial business metrics, reviews, and posts seeding from MockGBPProvider
-- [ ] Endpoints for business intelligence metrics and GBP status
-- [ ] Flutter Business Data & GBP status integration
-
-### Phase 4-13 — See README.md
+### Phase 4 — AI Business Understanding & Health Scoring
+- [ ] Gemini AI Provider integration behind AIProvider interface
+- [ ] AI prompt management layer (versioned, structured schemas)
+- [ ] AI Business Profile generator from onboarding inputs
+- [ ] AI Health Scoring engine (score 0-100, problems, opportunities)
+- [ ] AI request logging and cost/token tracking
 
 ---
 
