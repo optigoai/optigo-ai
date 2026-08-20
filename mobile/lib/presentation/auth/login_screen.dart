@@ -64,27 +64,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   // App Icon & Brand
                   Center(
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [OptigoTheme.primary, OptigoTheme.primaryDark],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'O',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(height: OptigoTheme.spacingMD),

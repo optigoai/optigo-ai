@@ -102,27 +102,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Top App Bar
                 Row(
                   children: [
-                    Container(
+                    Image.asset(
+                      'assets/images/logo.png',
                       width: 44,
                       height: 44,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [OptigoTheme.primary, OptigoTheme.primaryDark],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'O',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
+                      fit: BoxFit.contain,
                     ),
                     const SizedBox(width: OptigoTheme.spacingSM + 2),
                     Expanded(
