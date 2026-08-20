@@ -75,8 +75,9 @@ class AIService:
                 "response_preview": response_preview[:300] if response_preview else None,
             },
         )
-        self.db.add(log)
-        await self.db.flush()
+        if self.db:
+            self.db.add(log)
+            await self.db.flush()
 
     async def generate_business_profile(
         self,

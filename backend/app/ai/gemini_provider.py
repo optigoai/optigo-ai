@@ -80,34 +80,50 @@ class GeminiAIProvider(AIProvider):
         
         # When live client is available, call Gemini API
         if client:
-            try:
-                config = types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    temperature=temperature,
-                    response_mime_type="application/json",
-                )
-                response = client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt,
-                    config=config,
-                )
-                raw_text = response.text or "{}"
-                # Clean up any potential markdown fences
-                cleaned = re.sub(r"^```json\s*", "", raw_text.strip())
-                cleaned = re.sub(r"\s*```$", "", cleaned)
-                data = json.loads(cleaned)
-                latency_ms = int((time.time() - start_time) * 1000)
-                return {
-                    "data": data,
-                    "usage": {
-                        "input_tokens": getattr(response.usage_metadata, "prompt_token_count", 0),
-                        "output_tokens": getattr(response.usage_metadata, "candidates_token_count", 0),
-                        "latency_ms": latency_ms,
-                    },
-                    "model": self.model_name,
-                }
-            except Exception as e:
-                logger.error("Gemini structured call failed, utilizing deterministic fallback engine", error=str(e))
+            candidate_models = [
+                self.model_name or "gemini-3.5-flash",
+                "gemini-3.5-flash",
+                "gemini-2.5-flash",
+            ]
+            # De-duplicate while preserving order
+            seen = set()
+            ordered_models = []
+            for m in candidate_models:
+                if m not in seen:
+                    seen.add(m)
+                    ordered_models.append(m)
+
+            for m in ordered_models:
+                try:
+                    config = types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        temperature=temperature,
+                        response_mime_type="application/json",
+                    )
+                    response = client.models.generate_content(
+                        model=m,
+                        contents=prompt,
+                        config=config,
+                    )
+                    raw_text = response.text or "{}"
+                    # Clean up any potential markdown fences
+                    cleaned = re.sub(r"^```json\s*", "", raw_text.strip())
+                    cleaned = re.sub(r"\s*```$", "", cleaned)
+                    data = json.loads(cleaned)
+                    latency_ms = int((time.time() - start_time) * 1000)
+                    return {
+                        "data": data,
+                        "usage": {
+                            "input_tokens": getattr(response.usage_metadata, "prompt_token_count", 0),
+                            "output_tokens": getattr(response.usage_metadata, "candidates_token_count", 0),
+                            "latency_ms": latency_ms,
+                        },
+                        "model": m,
+                    }
+                except Exception as e:
+                    logger.warning(f"Gemini call to model {m} encountered error: {e}")
+
+            logger.error("All Gemini live model calls failed, utilizing deterministic fallback engine")
 
         # Fallback structured generator when offline or before API key configuration
         latency_ms = int((time.time() - start_time) * 1000)
