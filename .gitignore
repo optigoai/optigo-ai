@@ -29,6 +29,8 @@ env/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+celerybeat-schedule*
+*.db
 
 # ---- Flutter / Dart ----
 mobile/.dart_tool/
