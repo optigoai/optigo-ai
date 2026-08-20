@@ -4,15 +4,18 @@ import '../../app/theme.dart';
 import '../../data/models/intelligence_model.dart';
 import '../../data/repositories/business_repository.dart';
 import '../auth/auth_provider.dart';
+import 'widgets/gauge_wave_painter.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onNavigateToRecommendations;
   final VoidCallback? onNavigateToReviews;
+  final Function(int)? onNavigateToTab;
 
   const HomeScreen({
     super.key,
     this.onNavigateToRecommendations,
     this.onNavigateToReviews,
+    this.onNavigateToTab,
   });
 
   @override
@@ -23,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   BusinessRepository? _bizRepo;
   BusinessIntelligenceModel? _intelligence;
   bool _isLoadingIntel = true;
-  bool _isAnalyzing = false;
   bool _initialized = false;
 
   @override
@@ -56,35 +58,75 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _handleRunAnalysis() async {
-    if (_bizRepo == null) return;
-    final authProvider = context.read<AppAuthProvider>();
-    final businessId = authProvider.currentBusiness?.id;
-    if (businessId == null) return;
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
 
-    setState(() => _isAnalyzing = true);
-    try {
-      final data = await _bizRepo!.analyzeBusiness(businessId);
-      if (mounted) {
-        setState(() {
-          _intelligence = BusinessIntelligenceModel.fromJson(data);
-          _isAnalyzing = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('AI Marketing Health Audit completed!'),
-            backgroundColor: OptigoTheme.success,
+  void _showComingSoonDialog(String featureName, String phaseNumber) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OptigoTheme.radiusLG)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: OptigoTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
+              ),
+              child: const Icon(Icons.auto_awesome, color: OptigoTheme.primary, size: 22),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                featureName,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This AI capability is scheduled for $phaseNumber of development.',
+              style: const TextStyle(fontSize: 13, color: OptigoTheme.textSecondary, height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: OptigoTheme.surfaceVariant.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.check_circle_outline, size: 16, color: OptigoTheme.primary),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Ready to be unlocked upon phase launch instruction.',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: OptigoTheme.textPrimary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Got it', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isAnalyzing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Analysis failed: $e'), backgroundColor: OptigoTheme.error),
-        );
-      }
-    }
+        ],
+      ),
+    );
   }
 
   @override
@@ -93,195 +135,72 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = authProvider.user;
     final business = authProvider.currentBusiness;
 
+    final firstName = user?.fullName.split(' ').first ?? 'Naveen';
+    final healthScore = _intelligence?.healthScore ?? 78;
+
     return Scaffold(
-      backgroundColor: OptigoTheme.background,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadIntelligence,
+          color: const Color(0xFF2563EB),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(OptigoTheme.spacingMD),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top App Bar
-                Row(
-                  children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      width: 88,
-                      height: 88,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(width: OptigoTheme.spacingSM),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            business?.name ?? 'OptigoAI Business',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: OptigoTheme.textPrimary,
-                              letterSpacing: -0.4,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            user != null ? '${user.fullName} • ${user.role.toUpperCase()}' : 'Business Owner',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: OptigoTheme.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.logout_outlined, size: 22),
-                      color: OptigoTheme.textSecondary,
-                      onPressed: () => context.read<AppAuthProvider>().logout(),
-                      tooltip: 'Log out',
-                    ),
-                  ],
-                ),
+                // 1. Top App Bar Header
+                _buildTopAppBar(context, authProvider),
 
-                const SizedBox(height: OptigoTheme.spacingMD),
+                const SizedBox(height: 18),
 
-                // AI Marketing Health Score Card
-                _buildHealthScoreCard(),
-
-                const SizedBox(height: OptigoTheme.spacingLG),
-
-                // Critical Problems Detected
-                if (_intelligence != null) ...[
-                  _buildProblemsSection(),
-                  const SizedBox(height: OptigoTheme.spacingLG),
-                  _buildOpportunitiesSection(),
-                  const SizedBox(height: OptigoTheme.spacingLG),
-                  _buildAIBusinessProfileSection(),
-                  const SizedBox(height: OptigoTheme.spacingLG),
-                ],
-
-                // AI CMO Actions Shortcut Banner
-                if (widget.onNavigateToRecommendations != null) ...[
-                  InkWell(
-                    onTap: widget.onNavigateToRecommendations,
-                    borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                    child: Container(
-                      padding: const EdgeInsets.all(OptigoTheme.spacingMD),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                            ),
-                            child: const Icon(Icons.auto_awesome, color: Color(0xFF38BDF8), size: 20),
-                          ),
-                          const SizedBox(width: OptigoTheme.spacingMD),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'AI CMO Action Plan',
-                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'View prioritized tactical cards & one-click actions',
-                                  style: TextStyle(fontSize: 11, color: Colors.white70),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.white70),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: OptigoTheme.spacingMD),
-                ],
-
-                // Quick Reviews Shortcut Banner
-                if (widget.onNavigateToReviews != null)
-                  InkWell(
-                    onTap: widget.onNavigateToReviews,
-                    borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                    child: Container(
-                      padding: const EdgeInsets.all(OptigoTheme.spacingMD),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                        border: Border.all(color: OptigoTheme.primary.withValues(alpha: 0.2)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: OptigoTheme.primary.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: OptigoTheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                            ),
-                            child: const Icon(Icons.rate_review_rounded, color: OptigoTheme.primary, size: 20),
-                          ),
-                          const SizedBox(width: OptigoTheme.spacingMD),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Manage Customer Reviews',
-                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: OptigoTheme.textPrimary),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  'View Google rating, filter sentiment & draft replies',
-                                  style: TextStyle(fontSize: 11, color: OptigoTheme.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: OptigoTheme.primary),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: OptigoTheme.spacingXL),
-                Center(
-                  child: Text(
-                    'OptigoAI CMO Intelligence • Phase 5 Live',
-                    style: Theme.of(context).textTheme.bodySmall,
+                // 2. Greeting Header
+                Text(
+                  '${_getGreeting()}, $firstName! 👋',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: OptigoTheme.spacingMD),
+                const SizedBox(height: 3),
+                const Text(
+                  "Here's what's happening with your business today.",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // 3. Active Business Selector Card
+                _buildBusinessSelectorCard(business?.name, business?.location),
+
+                const SizedBox(height: 16),
+
+                // 4. Marketing Health Score Hero Card
+                _buildMarketingHealthScoreCard(healthScore),
+
+                const SizedBox(height: 22),
+
+                // 5. Top Priority for You Section
+                _buildTopPrioritySection(),
+
+                const SizedBox(height: 22),
+
+                // 6. Quick Actions Section
+                _buildQuickActionsSection(),
+
+                const SizedBox(height: 22),
+
+                // 7. Other Opportunities Section
+                _buildOtherOpportunitiesSection(),
+
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -290,147 +209,403 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHealthScoreCard() {
-    final intel = _intelligence;
-    final score = intel?.healthScore ?? 78;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(OptigoTheme.spacingLG),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [OptigoTheme.primary, OptigoTheme.primaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _buildTopAppBar(BuildContext context, AppAuthProvider authProvider) {
+    return Row(
+      children: [
+        // Drawer / Menu icon
+        InkWell(
+          onTap: () {},
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            child: const Icon(Icons.menu_rounded, size: 26, color: Color(0xFF1E293B)),
+          ),
         ),
-        borderRadius: BorderRadius.circular(OptigoTheme.radiusLG),
+        const Spacer(),
+
+        // Brand Logo & Subtitle
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Optigo',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const Text(
+                  'AI',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF2563EB),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                Transform.translate(
+                  offset: const Offset(1, -5),
+                  child: const Text(
+                    '✦',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF38BDF8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Text(
+              'AI Marketing Manager',
+              style: TextStyle(
+                fontSize: 10,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+
+        const Spacer(),
+
+        // Notification Bell with Badge
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            InkWell(
+              onTap: widget.onNavigateToRecommendations,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                child: const Icon(Icons.notifications_none_rounded, size: 26, color: Color(0xFF334155)),
+              ),
+            ),
+            Positioned(
+              top: 3,
+              right: 3,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF2563EB),
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                child: const Center(
+                  child: Text(
+                    '3',
+                    style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(width: 8),
+
+        // User Avatar
+        InkWell(
+          onTap: () => authProvider.logout(),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+              color: const Color(0xFFF1F5F9),
+            ),
+            child: const Center(
+              child: Icon(Icons.person_rounded, size: 20, color: Color(0xFF475569)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBusinessSelectorCard(String? businessName, String? location) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
         boxShadow: [
           BoxShadow(
-            color: OptigoTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Business Logo Thumbnail
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: 44,
+              height: 44,
+              color: const Color(0xFFF1F5F9),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Icon(Icons.storefront_rounded, color: Color(0xFF2563EB)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        businessName ?? "Naveen's Cafe",
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF64748B)),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  location ?? 'Kochi, Kerala',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Growing Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFECFDF5),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF10B981)),
+                SizedBox(width: 4),
+                Text(
+                  'Growing',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF10B981),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMarketingHealthScoreCard(int score) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2563EB).withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Row
           Row(
             children: [
-              // Radial Health Score Gauge
-              Container(
-                width: 68,
-                height: 68,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '$score',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: OptigoTheme.primary,
-                        ),
-                      ),
-                      const Text(
-                        'HEALTH',
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w800,
-                          color: OptigoTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+              const Text(
+                'Marketing Health Score',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF334155),
                 ),
               ),
-              const SizedBox(width: OptigoTheme.spacingMD),
+              const SizedBox(width: 4),
+              const Icon(Icons.info_outline_rounded, size: 15, color: Color(0xFF94A3B8)),
+              const Spacer(),
+              if (_isLoadingIntel)
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
+                ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Score and Semicircle Gauge Row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Left: Numeric Score & Quality assessment
               Expanded(
+                flex: 5,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'AI CMO Health Score',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '$score',
+                            style: const TextStyle(
+                              fontSize: 38,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -1,
+                            ),
                           ),
-                        ),
-                        if (_isLoadingIntel) ...[
-                          const SizedBox(width: 8),
-                          const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          const TextSpan(
+                            text: ' /100',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF94A3B8),
+                            ),
                           ),
                         ],
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
+                    const Text(
+                      'Good',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF2563EB),
                       ),
-                      child: Text(
-                        'Reputation: ${intel?.reputationScore ?? 82}%  •  Visibility: ${intel?.visibilityScore ?? 74}%',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      "You're doing well! Let's make it excellent.",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF64748B),
+                        height: 1.3,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: OptigoTheme.spacingMD),
-          Text(
-            intel?.healthSummary ??
-                'Your business has strong customer satisfaction signals but suffers from visibility drop-off and unanswered customer reviews.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.95),
-              fontSize: 13,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: OptigoTheme.spacingMD),
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: ElevatedButton.icon(
-              onPressed: _isAnalyzing ? null : _handleRunAnalysis,
-              icon: _isAnalyzing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: OptigoTheme.primary),
-                    )
-                  : const Icon(Icons.auto_awesome, size: 16, color: OptigoTheme.primary),
-              label: Text(
-                _isAnalyzing ? 'Analyzing Business with Gemini AI...' : 'Re-Run AI Marketing Audit',
-                style: const TextStyle(
-                  color: OptigoTheme.primary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
+
+              // Right: Arc Gauge with Sparkline Wave
+              Expanded(
+                flex: 5,
+                child: SizedBox(
+                  height: 95,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CustomPaint(
+                        size: const Size(130, 85),
+                        painter: GaugeWavePainter(
+                          score: score.toDouble(),
+                          trackColor: const Color(0xFFE2E8F0),
+                          progressColor: const Color(0xFF2563EB),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        left: 12,
+                        child: const Text('0', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600)),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 12,
+                        child: const Text('100', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OptigoTheme.radiusMD)),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          // Bottom Inside Banner: Score Improvement Pill
+          InkWell(
+            onTap: widget.onNavigateToRecommendations,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your score improved by 12 points',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        Text(
+                          'Keep following the recommendations!',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF2563EB)),
+                ],
               ),
             ),
           ),
@@ -439,250 +614,444 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProblemsSection() {
-    final problems = _intelligence?.topProblems ?? [];
-    if (problems.isEmpty) return const SizedBox.shrink();
-
+  Widget _buildTopPrioritySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.warning_amber_rounded, size: 20, color: OptigoTheme.error),
-            const SizedBox(width: 8),
-            Text(
-              'Critical Bottlenecks (${problems.length})',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    color: OptigoTheme.error,
-                    letterSpacing: -0.4,
+            const Text(
+              'Top Priority for You',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+                letterSpacing: -0.3,
+              ),
+            ),
+            InkWell(
+              onTap: widget.onNavigateToRecommendations,
+              child: const Row(
+                children: [
+                  Text(
+                    'View all',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
                   ),
+                  SizedBox(width: 2),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFF2563EB)),
+                ],
+              ),
             ),
           ],
         ),
-        const SizedBox(height: OptigoTheme.spacingSM),
-        ...problems.map((p) => Container(
-              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingSM),
-              padding: const EdgeInsets.all(OptigoTheme.spacingMD),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                border: Border.all(color: OptigoTheme.error.withValues(alpha: 0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          p.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: OptigoTheme.textPrimary,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: OptigoTheme.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                        ),
-                        child: Text(
-                          p.severity.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            color: OptigoTheme.error,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (p.impact.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Impact: ${p.impact}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: OptigoTheme.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            )),
-      ],
-    );
-  }
+        const SizedBox(height: 10),
 
-  Widget _buildOpportunitiesSection() {
-    final opportunities = _intelligence?.topOpportunities ?? [];
-    if (opportunities.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.rocket_launch_rounded, size: 20, color: OptigoTheme.success),
-            const SizedBox(width: 8),
-            Text(
-              'High-Impact Growth Levers (${opportunities.length})',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    color: OptigoTheme.success,
-                    letterSpacing: -0.4,
-                  ),
-            ),
-          ],
-        ),
-        const SizedBox(height: OptigoTheme.spacingSM),
-        ...opportunities.map((o) => Container(
-              margin: const EdgeInsets.only(bottom: OptigoTheme.spacingSM),
-              padding: const EdgeInsets.all(OptigoTheme.spacingMD),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                border: Border.all(color: OptigoTheme.success.withValues(alpha: 0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          o.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: OptigoTheme.textPrimary,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: OptigoTheme.success.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(OptigoTheme.radiusSM),
-                        ),
-                        child: Text(
-                          '${o.priority.toUpperCase()} ROI',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            color: OptigoTheme.success,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (o.suggestedAction.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      o.suggestedAction,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: OptigoTheme.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            )),
-      ],
-    );
-  }
-
-  Widget _buildAIBusinessProfileSection() {
-    final profile = _intelligence?.aiProfile;
-    if (profile == null) return const SizedBox.shrink();
-
-    final summary = profile['business_summary'] as String? ?? '';
-    final brandTone = profile['brand_tone'] as String? ?? '';
-    final growthAreas = (profile['initial_growth_areas'] as List?)?.map((e) => e.toString()).toList() ?? [];
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(OptigoTheme.spacingMD),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-        border: Border.all(color: OptigoTheme.divider),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.psychology_outlined, color: OptigoTheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'AI Business Understanding',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                    ),
+        // Hero Priority Card with Left Red Accent
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          if (summary.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              summary,
-              style: const TextStyle(fontSize: 13, color: OptigoTheme.textSecondary, height: 1.4),
-            ),
-          ],
-          if (brandTone.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Row(
+          clipBehavior: Clip.antiAlias,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Brand Tone: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                Text(brandTone, style: const TextStyle(fontSize: 12, color: OptigoTheme.primary, fontWeight: FontWeight.w600)),
+                // Left Coral/Red Accent Bar
+                Container(
+                  width: 4,
+                  color: const Color(0xFFEF4444),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Icon with Badge
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF2563EB), size: 20),
+                                ),
+                                Positioned(
+                                  top: -4,
+                                  right: -4,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFEF4444),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                    child: const Center(
+                                      child: Text(
+                                        '3',
+                                        style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Respond to 3 unhappy reviews',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  const Text(
+                                    'Unanswered negative reviews can hurt your reputation and trust.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF64748B),
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            // Impact Tag
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.trending_up_rounded, size: 12, color: Color(0xFF2563EB)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'High impact • Takes 5 min',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Spacer(),
+
+                            // Take Action Button
+                            ElevatedButton(
+                              onPressed: widget.onNavigateToReviews,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2563EB),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Text('Take Action', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF0F172A),
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildQuickActionButton(
+                icon: Icons.auto_awesome,
+                label: 'Ask AI CMO',
+                onTap: () {
+                  if (widget.onNavigateToRecommendations != null) {
+                    widget.onNavigateToRecommendations!();
+                  }
+                },
+              ),
+              const SizedBox(width: 10),
+              _buildQuickActionButton(
+                icon: Icons.edit_note_rounded,
+                label: 'Create\nContent',
+                onTap: () => _showComingSoonDialog('Content Engine & Social Posts', 'Phase 6'),
+              ),
+              const SizedBox(width: 10),
+              _buildQuickActionButton(
+                icon: Icons.campaign_outlined,
+                label: 'Build\nCampaign',
+                onTap: () => _showComingSoonDialog('AI Multi-Channel Campaigns', 'Phase 8'),
+              ),
+              const SizedBox(width: 10),
+              _buildQuickActionButton(
+                icon: Icons.analytics_outlined,
+                label: 'View\nAnalytics',
+                onTap: () => _showComingSoonDialog('Advanced ROI Analytics', 'Phase 10'),
+              ),
+              const SizedBox(width: 10),
+              _buildQuickActionButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                label: 'Manage\nReviews',
+                onTap: () {
+                  if (widget.onNavigateToReviews != null) {
+                    widget.onNavigateToReviews!();
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 76,
+        height: 84,
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
           ],
-          if (growthAreas.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            const Text('Strategic Growth Levers:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 22, color: const Color(0xFF2563EB)),
             const SizedBox(height: 6),
-            ...growthAreas.map((g) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('• ', style: TextStyle(color: OptigoTheme.primary, fontWeight: FontWeight.w800)),
-                      Expanded(
-                        child: Text(g, style: const TextStyle(fontSize: 12, color: OptigoTheme.textSecondary, height: 1.3)),
-                      ),
-                    ],
-                  ),
-                )),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF334155),
+                height: 1.1,
+              ),
+            ),
           ],
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOtherOpportunitiesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Other Opportunities',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+                letterSpacing: -0.3,
+              ),
+            ),
+            InkWell(
+              onTap: widget.onNavigateToRecommendations,
+              child: const Row(
+                children: [
+                  Text(
+                    'View all',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
+                  ),
+                  SizedBox(width: 2),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFF2563EB)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Column(
+            children: [
+              _buildOpportunityRow(
+                icon: Icons.manage_search_rounded,
+                iconColor: const Color(0xFF10B981),
+                iconBg: const Color(0xFFECFDF5),
+                title: 'Improve Local SEO',
+                subtitle: 'Rank higher for 5 important keywords',
+                tagText: 'High Impact',
+                tagBg: const Color(0xFFECFDF5),
+                tagColor: const Color(0xFF10B981),
+                onTap: () => _showComingSoonDialog('Local SEO & Keyword Ranking', 'Phase 7'),
+              ),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              _buildOpportunityRow(
+                icon: Icons.description_outlined,
+                iconColor: const Color(0xFFA855F7),
+                iconBg: const Color(0xFFFAF5FF),
+                title: 'Post on Google',
+                subtitle: "You haven't posted in 12 days",
+                tagText: 'Medium Impact',
+                tagBg: const Color(0xFFFEF3C7),
+                tagColor: const Color(0xFFD97706),
+                onTap: () => _showComingSoonDialog('Automated Google Business Posts', 'Phase 6'),
+              ),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              _buildOpportunityRow(
+                icon: Icons.group_outlined,
+                iconColor: const Color(0xFF38BDF8),
+                iconBg: const Color(0xFFF0F9FF),
+                title: 'Check Competitors',
+                subtitle: 'See what your competitors are doing',
+                tagText: 'Low Impact',
+                tagBg: const Color(0xFFEFF6FF),
+                tagColor: const Color(0xFF2563EB),
+                onTap: () => _showComingSoonDialog('Competitor Benchmarking Engine', 'Phase 9'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOpportunityRow({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    required String subtitle,
+    required String tagText,
+    required Color tagBg,
+    required Color tagColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: iconBg,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 18, color: iconColor),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: tagBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                tagText,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: tagColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF94A3B8)),
+          ],
+        ),
       ),
     );
   }
