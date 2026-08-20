@@ -4,7 +4,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health, auth, businesses, reviews, recommendations, contents
+from app.api.v1.endpoints import health, auth, businesses, reviews, recommendations, contents, seo
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -25,6 +25,9 @@ api_router.include_router(recommendations.router, prefix="/recommendations", tag
 
 # AI Content Engine & Social Posts
 api_router.include_router(contents.router)
+
+# SEO & Visibility Optimizer
+api_router.include_router(seo.router)
 # api_router.include_router(content.router, prefix="/content", tags=["Content"])
 # api_router.include_router(campaigns.router, prefix="/campaigns", tags=["Campaigns"])
 # api_router.include_router(creatives.router, prefix="/creatives", tags=["Creatives"])

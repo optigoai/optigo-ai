@@ -8,6 +8,7 @@ import 'data/repositories/business_repository.dart';
 import 'data/repositories/review_repository.dart';
 import 'data/repositories/recommendation_repository.dart';
 import 'data/repositories/content_repository.dart';
+import 'data/repositories/seo_repository.dart';
 import 'presentation/auth/auth_provider.dart';
 
 void main() async {
@@ -33,6 +34,7 @@ void main() async {
   final reviewRepo = ReviewRepository(apiClient);
   final recRepo = RecommendationRepository(apiClient);
   final contentRepo = ContentRepository(apiClient);
+  final seoRepo = SeoRepository(apiClient);
 
   runApp(
     MultiProvider(
@@ -43,6 +45,7 @@ void main() async {
         Provider<ReviewRepository>.value(value: reviewRepo),
         Provider<RecommendationRepository>.value(value: recRepo),
         Provider<ContentRepository>.value(value: contentRepo),
+        Provider<SeoRepository>.value(value: seoRepo),
         ChangeNotifierProvider<AppAuthProvider>(
           create: (_) => AppAuthProvider(authRepo, bizRepo)..checkAuth(),
         ),

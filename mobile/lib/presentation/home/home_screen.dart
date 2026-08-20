@@ -744,6 +744,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     widget.onNavigateToReviews!();
                                   } else if (topRec.relatedFeature == 'posts' && widget.onNavigateToTab != null) {
                                     widget.onNavigateToTab!(2);
+                                  } else if (topRec.relatedFeature == 'seo' && widget.onNavigateToTab != null) {
+                                    widget.onNavigateToTab!(3);
                                   } else if (widget.onNavigateToRecommendations != null) {
                                     widget.onNavigateToRecommendations!();
                                   }
@@ -812,15 +814,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(width: 10),
               _buildQuickActionButton(
-                icon: Icons.campaign_outlined,
-                label: 'Build\nCampaign',
-                onTap: () => _showComingSoonDialog('AI Multi-Channel Campaigns', 'Phase 8'),
+                icon: Icons.travel_explore_rounded,
+                label: 'Optimize\nSEO',
+                onTap: () {
+                  if (widget.onNavigateToTab != null) {
+                    widget.onNavigateToTab!(3);
+                  }
+                },
               ),
               const SizedBox(width: 10),
               _buildQuickActionButton(
-                icon: Icons.analytics_outlined,
-                label: 'View\nAnalytics',
-                onTap: () => _showComingSoonDialog('Advanced ROI Analytics', 'Phase 10'),
+                icon: Icons.campaign_outlined,
+                label: 'Build\nCampaign',
+                onTap: () => _showComingSoonDialog('AI Multi-Channel Campaigns', 'Phase 8'),
               ),
               const SizedBox(width: 10),
               _buildQuickActionButton(
@@ -995,6 +1001,8 @@ class _HomeScreenState extends State<HomeScreen> {
           widget.onNavigateToReviews!();
         } else if (rec.relatedFeature == 'posts' && widget.onNavigateToTab != null) {
           widget.onNavigateToTab!(2);
+        } else if (rec.relatedFeature == 'seo' && widget.onNavigateToTab != null) {
+          widget.onNavigateToTab!(3);
         } else if (widget.onNavigateToRecommendations != null) {
           widget.onNavigateToRecommendations!();
         }

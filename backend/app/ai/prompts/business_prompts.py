@@ -214,3 +214,117 @@ Return valid JSON matching:
   "sentiment_detected": "positive | neutral | negative",
   "key_points_addressed": ["list", "of", "points"]
 }}"""
+
+
+SEO_AUDIT_SYSTEM_PROMPT = """You are a world-class Local SEO & Google Business Profile (GBP) optimization expert.
+You audit local businesses to maximize their visibility in Google Local 3-Pack, Google Maps, and nearby local search queries.
+Keep all analysis concise, direct, and actionable without buzzwords or fluff.
+Output MUST be strictly valid JSON without markdown code fences."""
+
+
+def build_seo_audit_prompt(
+    business_name: str,
+    category: str,
+    location: str,
+    description: Optional[str] = None,
+    current_keywords: Optional[List[str]] = None,
+    rating: float = 4.5,
+    reviews_count: int = 10,
+) -> str:
+    keywords_str = ", ".join(current_keywords) if current_keywords else "None tracked yet"
+    return f"""Perform a comprehensive Local SEO and Google Maps Pack visibility audit for this business:
+
+Business: {business_name}
+Category: {category}
+Location: {location}
+Current Description: {description or 'Not specified'}
+Rating: {rating}★ ({reviews_count} reviews)
+Current Tracked Keywords: {keywords_str}
+
+Instructions:
+1. Evaluate scores (0-100) for overall_seo_score, map_pack_score, keyword_score, citation_score.
+2. Identify 3-4 specific missing_attributes in their GBP (e.g. 'Wheelchair accessible', 'Online appointments', 'Exact operating hours on holidays', 'Secondary category: organic store').
+3. Suggest 4-6 high-intent local search keywords with realistic search volume and rank potential.
+4. Give 3 actionable, high-impact recommendations (short 1-sentence tasks).
+5. Provide competitor insights comparing their local position against typical top 3 local pack competitors.
+
+Return JSON in this format:
+{{
+  "overall_seo_score": 78,
+  "map_pack_score": 72,
+  "keyword_score": 80,
+  "citation_score": 85,
+  "missing_attributes": ["attribute 1", "attribute 2"],
+  "suggested_keywords": [
+    {{
+      "keyword": "cold pressed oil near me",
+      "search_volume": "1.4K / mo",
+      "difficulty": "Low",
+      "intent": "Local Intent",
+      "estimated_rank": 3
+    }}
+  ],
+  "actionable_recommendations": [
+    "Add secondary GBP category to capture 25% more local searches.",
+    "Include location keyword in profile description."
+  ],
+  "competitor_insights": [
+    "Competitors in your area average 45 reviews and post 3x per week on Google."
+  ]
+}}"""
+
+
+def build_seo_keyword_generator_prompt(
+    business_name: str,
+    category: str,
+    location: str,
+    target_services: Optional[List[str]] = None,
+) -> str:
+    services_str = ", ".join(target_services) if target_services else category
+    return f"""Generate 6 high-conversion, hyper-local SEO keywords for this business to rank on Google Search & Google Maps:
+
+Business: {business_name}
+Category: {category}
+Location: {location}
+Focus Services/Products: {services_str}
+
+Ensure a mix of:
+- 'Near me' local intent
+- High commercial intent (e.g. 'best {category} in {location}')
+- Product/service specific terms
+
+Return JSON in this format:
+{{
+  "keywords": [
+    {{
+      "keyword": "keyword text",
+      "search_volume": "1.2K / mo",
+      "difficulty": "Low | Medium | High",
+      "intent": "Local Intent | Commercial | Transactional",
+      "estimated_rank": 4
+    }}
+  ]
+}}"""
+
+
+def build_gbp_profile_optimizer_prompt(
+    business_name: str,
+    category: str,
+    location: str,
+    current_description: Optional[str] = None,
+) -> str:
+    return f"""Generate an optimized Google Business Profile configuration to achieve maximum local search visibility:
+
+Business: {business_name}
+Category: {category}
+Location: {location}
+Current Description: {current_description or 'None'}
+
+Return JSON matching:
+{{
+  "optimized_title": "Business Name - Primary Keyword | Location",
+  "optimized_description": "Compelling 750-character max description infused with top local keywords and strong CTA.",
+  "primary_category": "Primary category",
+  "secondary_categories": ["Category 1", "Category 2"],
+  "recommended_attributes": ["Attr 1", "Attr 2", "Attr 3"]
+}}"""

@@ -66,7 +66,7 @@ async def clean_database():
         await conn.execute(
             text(
                 "TRUNCATE TABLE users, organizations, businesses, reviews, recommendations, "
-                "contents, campaigns, competitors, seo_analyses, creatives, notifications, "
+                "contents, campaigns, competitors, seo_keywords, seo_audits, creatives, notifications, "
                 "business_analytics, ai_request_logs, feature_toggles CASCADE;"
             )
         )

@@ -13,16 +13,23 @@ from app.ai.schemas import (
     AICMORecommendationsOutput,
     AIContentGenerationOutput,
     AIReviewReplyOutput,
+    AISeoAuditOutput,
+    AIKeywordListOutput,
+    AIGbpProfileOptimizationOutput,
 )
 from app.ai.prompts.business_prompts import (
     BUSINESS_PROFILE_SYSTEM_PROMPT,
     BUSINESS_INTELLIGENCE_SYSTEM_PROMPT,
     CMO_RECOMMENDATIONS_SYSTEM_PROMPT,
     CONTENT_SYSTEM_PROMPT,
+    SEO_AUDIT_SYSTEM_PROMPT,
     build_business_profile_prompt,
     build_business_intelligence_prompt,
     build_cmo_recommendations_prompt,
     build_content_generation_prompt,
+    build_seo_audit_prompt,
+    build_seo_keyword_generator_prompt,
+    build_gbp_profile_optimizer_prompt,
 )
 
 logger = get_logger("app.ai.service")
@@ -367,6 +374,171 @@ class AIService:
             logger.error("AI Review reply generation failed", error=str(e))
             await self._log_ai_request(
                 feature="review_reply_generation",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=getattr(self.provider, "model_name", "gemini-3.5-flash-lite"),
+                prompt_preview=prompt,
+                response_preview="",
+                usage={"latency_ms": 0},
+                is_success=False,
+                error_message=str(e),
+            )
+            raise e
+
+    async def generate_seo_audit(
+        self,
+        organization_id: Optional[str],
+        user_id: Optional[str],
+        business_name: str,
+        category: str,
+        location: str,
+        description: Optional[str] = None,
+        current_keywords: Optional[List[str]] = None,
+        rating: float = 4.5,
+        reviews_count: int = 10,
+    ) -> AISeoAuditOutput:
+        prompt = build_seo_audit_prompt(
+            business_name=business_name,
+            category=category,
+            location=location,
+            description=description,
+            current_keywords=current_keywords,
+            rating=rating,
+            reviews_count=reviews_count,
+        )
+
+        try:
+            res = await self.provider.generate_structured(
+                prompt=prompt,
+                response_schema=AISeoAuditOutput.model_json_schema(),
+                system_instruction=SEO_AUDIT_SYSTEM_PROMPT,
+                temperature=0.4,
+            )
+            data = res.get("data", {})
+            output = AISeoAuditOutput.model_validate(data)
+            usage = res.get("usage", {})
+
+            await self._log_ai_request(
+                feature="seo_local_audit",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=res.get("model", getattr(self.provider, "model_name", "gemini-3.5-flash-lite")),
+                prompt_preview=prompt,
+                response_preview=json.dumps(data),
+                usage=usage,
+                is_success=True,
+            )
+            return output
+        except Exception as e:
+            logger.error("AI SEO Audit generation failed", error=str(e))
+            await self._log_ai_request(
+                feature="seo_local_audit",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=getattr(self.provider, "model_name", "gemini-3.5-flash-lite"),
+                prompt_preview=prompt,
+                response_preview="",
+                usage={"latency_ms": 0},
+                is_success=False,
+                error_message=str(e),
+            )
+            raise e
+
+    async def discover_keywords(
+        self,
+        organization_id: Optional[str],
+        user_id: Optional[str],
+        business_name: str,
+        category: str,
+        location: str,
+        target_services: Optional[List[str]] = None,
+    ) -> AIKeywordListOutput:
+        prompt = build_seo_keyword_generator_prompt(
+            business_name=business_name,
+            category=category,
+            location=location,
+            target_services=target_services,
+        )
+
+        try:
+            res = await self.provider.generate_structured(
+                prompt=prompt,
+                response_schema=AIKeywordListOutput.model_json_schema(),
+                system_instruction=SEO_AUDIT_SYSTEM_PROMPT,
+                temperature=0.5,
+            )
+            data = res.get("data", {})
+            output = AIKeywordListOutput.model_validate(data)
+            usage = res.get("usage", {})
+
+            await self._log_ai_request(
+                feature="seo_keyword_discovery",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=res.get("model", getattr(self.provider, "model_name", "gemini-3.5-flash-lite")),
+                prompt_preview=prompt,
+                response_preview=json.dumps(data),
+                usage=usage,
+                is_success=True,
+            )
+            return output
+        except Exception as e:
+            logger.error("AI SEO Keyword discovery failed", error=str(e))
+            await self._log_ai_request(
+                feature="seo_keyword_discovery",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=getattr(self.provider, "model_name", "gemini-3.5-flash-lite"),
+                prompt_preview=prompt,
+                response_preview="",
+                usage={"latency_ms": 0},
+                is_success=False,
+                error_message=str(e),
+            )
+            raise e
+
+    async def optimize_gbp_profile(
+        self,
+        organization_id: Optional[str],
+        user_id: Optional[str],
+        business_name: str,
+        category: str,
+        location: str,
+        current_description: Optional[str] = None,
+    ) -> AIGbpProfileOptimizationOutput:
+        prompt = build_gbp_profile_optimizer_prompt(
+            business_name=business_name,
+            category=category,
+            location=location,
+            current_description=current_description,
+        )
+
+        try:
+            res = await self.provider.generate_structured(
+                prompt=prompt,
+                response_schema=AIGbpProfileOptimizationOutput.model_json_schema(),
+                system_instruction=SEO_AUDIT_SYSTEM_PROMPT,
+                temperature=0.5,
+            )
+            data = res.get("data", {})
+            output = AIGbpProfileOptimizationOutput.model_validate(data)
+            usage = res.get("usage", {})
+
+            await self._log_ai_request(
+                feature="seo_gbp_profile_optimization",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=res.get("model", getattr(self.provider, "model_name", "gemini-3.5-flash-lite")),
+                prompt_preview=prompt,
+                response_preview=json.dumps(data),
+                usage=usage,
+                is_success=True,
+            )
+            return output
+        except Exception as e:
+            logger.error("AI GBP Profile optimization failed", error=str(e))
+            await self._log_ai_request(
+                feature="seo_gbp_profile_optimization",
                 organization_id=organization_id,
                 user_id=user_id,
                 model=getattr(self.provider, "model_name", "gemini-3.5-flash-lite"),

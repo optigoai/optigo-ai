@@ -202,3 +202,94 @@ class AIReviewReplyOutput(BaseModel):
             if "sentiment_detected" not in data:
                 data["sentiment_detected"] = data.get("sentiment") or "neutral"
         return data
+
+
+class AIKeywordItem(BaseModel):
+    keyword: str
+    search_volume: str = "500 / mo"
+    difficulty: str = "Medium"
+    intent: str = "Local Intent"
+    estimated_rank: Optional[int] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_keyword_item(cls, data: Any) -> Any:
+        if isinstance(data, str):
+            return {
+                "keyword": data,
+                "search_volume": "800 / mo",
+                "difficulty": "Low",
+                "intent": "Local Intent",
+                "estimated_rank": 3,
+            }
+        if isinstance(data, dict):
+            if "keyword" not in data or not data["keyword"]:
+                data["keyword"] = data.get("name") or data.get("term") or "local service near me"
+        return data
+
+
+class AIKeywordListOutput(BaseModel):
+    keywords: List[AIKeywordItem] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_keywords_list(cls, data: Any) -> Any:
+        if isinstance(data, list):
+            return {"keywords": data}
+        if isinstance(data, dict):
+            if "keywords" not in data:
+                # check if there's any list value
+                for k, v in data.items():
+                    if isinstance(v, list):
+                        data["keywords"] = v
+                        break
+        return data
+
+
+class AISeoAuditOutput(BaseModel):
+    overall_seo_score: int = Field(75, ge=0, le=100)
+    map_pack_score: int = Field(70, ge=0, le=100)
+    keyword_score: int = Field(75, ge=0, le=100)
+    citation_score: int = Field(80, ge=0, le=100)
+    missing_attributes: List[str] = Field(default_factory=list)
+    suggested_keywords: List[AIKeywordItem] = Field(default_factory=list)
+    actionable_recommendations: List[str] = Field(default_factory=list)
+    competitor_insights: List[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_seo_audit(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "overall_seo_score" not in data:
+                data["overall_seo_score"] = data.get("seo_score") or data.get("score") or 75
+            if "map_pack_score" not in data:
+                data["map_pack_score"] = data.get("maps_score") or 70
+            if "keyword_score" not in data:
+                data["keyword_score"] = 75
+            if "citation_score" not in data:
+                data["citation_score"] = 80
+            if "missing_attributes" not in data:
+                data["missing_attributes"] = []
+            if "actionable_recommendations" not in data:
+                data["actionable_recommendations"] = data.get("recommendations") or []
+        return data
+
+
+class AIGbpProfileOptimizationOutput(BaseModel):
+    optimized_title: str
+    optimized_description: str
+    primary_category: str
+    secondary_categories: List[str] = Field(default_factory=list)
+    recommended_attributes: List[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_gbp_profile(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "optimized_title" not in data:
+                data["optimized_title"] = data.get("title") or "Optimized Business Profile"
+            if "optimized_description" not in data:
+                data["optimized_description"] = data.get("description") or ""
+            if "primary_category" not in data:
+                data["primary_category"] = data.get("category") or "Local Business"
+        return data

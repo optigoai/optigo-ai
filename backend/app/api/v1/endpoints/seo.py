@@ -1,0 +1,97 @@
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.v1.deps import get_db, get_current_user
+from app.models.user import User
+from app.services.seo_service import SEOService
+from app.schemas.seo import (
+    SEOKeywordCreate,
+    SEOKeywordResponse,
+    SEOAuditResponse,
+    SEODiscoverKeywordsRequest,
+    SEOGbpOptimizationResponse,
+)
+
+router = APIRouter(prefix="/seo", tags=["SEO & Visibility Optimizer"])
+
+
+@router.get("/keywords", response_model=List[SEOKeywordResponse])
+async def list_tracked_keywords(
+    business_id: str = Query(..., description="Business ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List all tracked local SEO keywords and their current rankings for a business."""
+    service = SEOService(db)
+    return await service.list_keywords(business_id)
+
+
+@router.post("/keywords", response_model=SEOKeywordResponse, status_code=status.HTTP_201_CREATED)
+async def add_tracked_keyword(
+    data: SEOKeywordCreate,
+    business_id: str = Query(..., description="Business ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Add a new keyword to track."""
+    service = SEOService(db)
+    return await service.add_keyword(business_id, data)
+
+
+@router.delete("/keywords/{keyword_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_tracked_keyword(
+    keyword_id: str,
+    business_id: str = Query(..., description="Business ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Stop tracking and remove a keyword."""
+    service = SEOService(db)
+    await service.delete_keyword(business_id, keyword_id)
+
+
+@router.post("/audit", response_model=SEOAuditResponse)
+async def run_seo_audit(
+    business_id: str = Query(..., description="Business ID"),
+    force_fresh: bool = Query(False, description="Force re-generation with Gemini"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Run an AI-powered Local SEO and Google Maps Pack visibility audit."""
+    service = SEOService(db)
+    return await service.get_or_generate_audit(
+        business_id=business_id,
+        user_id=current_user.id,
+        force_fresh=force_fresh,
+    )
+
+
+@router.post("/discover-keywords", response_model=List[dict])
+async def discover_keywords(
+    data: SEODiscoverKeywordsRequest,
+    business_id: str = Query(..., description="Business ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Discover high-intent local SEO keywords using Gemini AI."""
+    service = SEOService(db)
+    return await service.discover_keywords(
+        business_id=business_id,
+        user_id=current_user.id,
+        target_services=data.target_services,
+    )
+
+
+@router.post("/optimize-profile", response_model=SEOGbpOptimizationResponse)
+async def optimize_gbp_profile(
+    business_id: str = Query(..., description="Business ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generate AI-optimized GBP profile description, categories, and attributes."""
+    service = SEOService(db)
+    return await service.optimize_gbp(
+        business_id=business_id,
+        user_id=current_user.id,
+    )

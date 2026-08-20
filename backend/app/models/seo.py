@@ -1,53 +1,42 @@
-# ==================================================
-# OptigoAI Backend — SEO Analysis Model
-# ==================================================
-
 import uuid
-from sqlalchemy import String, Text, Integer, ForeignKey, JSON
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import Optional, Any, TYPE_CHECKING
+from datetime import datetime
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy.orm import relationship
 
-from app.core.database import Base, TimestampMixin
-
-if TYPE_CHECKING:
-    from app.models.business import Business
+from app.core.database import Base
 
 
-class SEOAnalysis(Base, TimestampMixin):
-    __tablename__ = "seo_analyses"
+class SEOKeyword(Base):
+    __tablename__ = "seo_keywords"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
-    business_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("businesses.id", ondelete="CASCADE"),
-        nullable=False, index=True,
-    )
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    business_id = Column(String, ForeignKey("businesses.id", ondelete="CASCADE"), nullable=False, index=True)
+    keyword = Column(String, nullable=False, index=True)
+    target_location = Column(String, nullable=True)
+    current_rank = Column(Integer, nullable=True)
+    previous_rank = Column(Integer, nullable=True)
+    search_volume = Column(String, nullable=True, default="500 / mo")
+    difficulty = Column(String, nullable=True, default="Medium")
+    intent = Column(String, nullable=True, default="Local Intent")
+    is_tracked = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    seo_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    keyword_opportunities: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSON, nullable=True
-    )
-    missing_topics: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSON, nullable=True
-    )
-    content_opportunities: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSON, nullable=True
-    )
-    profile_optimizations: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSON, nullable=True
-    )
-    local_presence_analysis: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSON, nullable=True
-    )
-    full_analysis: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSON, nullable=True
-    )
+    business = relationship("Business", back_populates="seo_keywords")
 
-    # Relationships
-    business: Mapped["Business"] = relationship(
-        "Business", back_populates="seo_analyses", lazy="selectin"
-    )
 
-    def __repr__(self) -> str:
-        return f"<SEOAnalysis(id={self.id}, score={self.seo_score})>"
+class SEOAudit(Base):
+    __tablename__ = "seo_audits"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    business_id = Column(String, ForeignKey("businesses.id", ondelete="CASCADE"), nullable=False, index=True)
+    overall_seo_score = Column(Integer, nullable=False, default=70)
+    map_pack_score = Column(Integer, nullable=False, default=65)
+    keyword_score = Column(Integer, nullable=False, default=75)
+    citation_score = Column(Integer, nullable=False, default=80)
+    missing_attributes = Column(JSON, nullable=False, default=list)
+    actionable_recommendations = Column(JSON, nullable=False, default=list)
+    competitor_insights = Column(JSON, nullable=False, default=list)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    business = relationship("Business", back_populates="seo_audits")

@@ -18,7 +18,7 @@ from app.models.recommendation import (
 from app.models.content import Content, ContentType, ContentStatus
 from app.models.campaign import Campaign, CampaignStatus
 from app.models.competitor import Competitor
-from app.models.seo import SEOAnalysis
+from app.models.seo import SEOKeyword, SEOAudit
 from app.models.creative import Creative, CreativeStatus
 from app.models.notification import Notification, NotificationType
 from app.models.analytics import BusinessAnalytics
@@ -41,7 +41,8 @@ __all__ = [
     "Campaign",
     "CampaignStatus",
     "Competitor",
-    "SEOAnalysis",
+    "SEOKeyword",
+    "SEOAudit",
     "Creative",
     "CreativeStatus",
     "Notification",

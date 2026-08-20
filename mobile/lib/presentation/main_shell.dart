@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home/home_screen.dart';
 import 'recommendations/recommendations_screen.dart';
 import 'content/content_studio_screen.dart';
+import 'seo/seo_optimizer_screen.dart';
 import 'reviews/reviews_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -33,35 +34,9 @@ class _MainShellState extends State<MainShell> {
       ContentStudioScreen(
         onNavigateToRecommendations: () => _navigateToTab(1),
       ),
-      // Reports Tab screen
-      Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEFF6FF),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.insert_chart_outlined_rounded, size: 48, color: Color(0xFF2563EB)),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Marketing Reports & ROI',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Deep-dive traffic analytics, search ranking trends, and conversion attribution.\nScheduled for Phase 10.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Color(0xFF64748B), height: 1.4),
-              ),
-            ],
-          ),
-        ),
+      // Tab 3: Phase 7 SEO & Visibility Optimizer
+      SeoOptimizerScreen(
+        onNavigateToRecommendations: () => _navigateToTab(1),
       ),
       // More Tab (Reviews & Settings)
       const ReviewsScreen(),
@@ -95,7 +70,7 @@ class _MainShellState extends State<MainShell> {
                 _buildNavItem(0, Icons.home_rounded, 'Home'),
                 _buildNavItem(1, Icons.lightbulb_outline_rounded, 'Insights'),
                 _buildNavItem(2, Icons.add_box_outlined, 'Create'),
-                _buildNavItem(3, Icons.insert_chart_outlined_rounded, 'Reports'),
+                _buildNavItem(3, Icons.travel_explore_rounded, 'SEO'),
                 _buildNavItem(4, Icons.more_horiz_rounded, 'More'),
               ],
             ),

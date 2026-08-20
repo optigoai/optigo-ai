@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from app.models.content import Content
     from app.models.campaign import Campaign
     from app.models.competitor import Competitor
-    from app.models.seo import SEOAnalysis
+    from app.models.seo import SEOKeyword, SEOAudit
     from app.models.analytics import BusinessAnalytics
     from app.models.notification import Notification
     from app.models.creative import Creative
@@ -99,8 +99,12 @@ class Business(Base, TimestampMixin):
         "Competitor", back_populates="business", lazy="select",
         cascade="all, delete-orphan",
     )
-    seo_analyses: Mapped[List["SEOAnalysis"]] = relationship(
-        "SEOAnalysis", back_populates="business", lazy="select",
+    seo_keywords: Mapped[List["SEOKeyword"]] = relationship(
+        "SEOKeyword", back_populates="business", lazy="select",
+        cascade="all, delete-orphan",
+    )
+    seo_audits: Mapped[List["SEOAudit"]] = relationship(
+        "SEOAudit", back_populates="business", lazy="select",
         cascade="all, delete-orphan",
     )
     analytics: Mapped[List["BusinessAnalytics"]] = relationship(
