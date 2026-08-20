@@ -58,6 +58,7 @@
 - [x] `POST /api/v1/businesses/{id}/sync-gbp` endpoint for provider synchronization
 - [x] `GET /api/v1/reviews`, `GET /api/v1/reviews/{id}`, `POST /api/v1/reviews/{id}/reply` endpoints
 - [x] Flutter ReviewModel, ReviewRepository, and automatic GBP sync on onboarding
+- [x] Flutter Phase 3 UI: Google Profile card, 4-metric grid (rating, reviews, views, calls), sentiment filter chips (All, Positive, Negative, Needs Reply), and in-app review reply dialog
 - [x] Automated tests for GBP provider sync, review querying by sentiment, and review reply workflows (100% pass)
 
 ---
