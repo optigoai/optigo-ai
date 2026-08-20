@@ -81,7 +81,8 @@ class GeminiAIProvider(AIProvider):
         # When live client is available, call Gemini API
         if client:
             candidate_models = [
-                self.model_name or "gemini-3.5-flash",
+                self.model_name or "gemini-3.5-flash-lite",
+                "gemini-3.5-flash-lite",
                 "gemini-3.5-flash",
                 "gemini-2.5-flash",
             ]
