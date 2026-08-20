@@ -37,8 +37,8 @@ class AuthRouter extends StatelessWidget {
             children: [
               Image.asset(
                 'assets/images/logo.png',
-                width: 80,
-                height: 80,
+                width: 160,
+                height: 160,
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: OptigoTheme.spacingLG),

@@ -104,11 +104,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Image.asset(
                       'assets/images/logo.png',
-                      width: 44,
-                      height: 44,
+                      width: 88,
+                      height: 88,
                       fit: BoxFit.contain,
                     ),
-                    const SizedBox(width: OptigoTheme.spacingSM + 2),
+                    const SizedBox(width: OptigoTheme.spacingSM),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
