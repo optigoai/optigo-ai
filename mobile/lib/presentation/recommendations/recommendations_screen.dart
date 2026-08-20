@@ -520,17 +520,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
     if (rec.isUrgent) {
       themeColor = const Color(0xFFEF4444);
-      priorityTag = '🚨 URGENT';
-      leadingIcon = Icons.chat_bubble_outline_rounded;
+      priorityTag = 'URGENT';
+      leadingIcon = Icons.emergency_rounded;
       iconBg = const Color(0xFFFEF2F2);
     } else if (rec.isOpportunity) {
       themeColor = const Color(0xFF10B981);
-      priorityTag = '🎯 OPPORTUNITY';
-      leadingIcon = Icons.rocket_launch_outlined;
+      priorityTag = 'OPPORTUNITY';
+      leadingIcon = Icons.rocket_launch_rounded;
       iconBg = const Color(0xFFECFDF5);
     } else {
       themeColor = const Color(0xFFD97706);
-      priorityTag = '⚡ IMPORTANT';
+      priorityTag = 'IMPORTANT';
       leadingIcon = Icons.bolt_rounded;
       iconBg = const Color(0xFFFFFBEB);
     }
@@ -540,14 +540,14 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: rec.isUrgent ? const Color(0xFFFCA5A5) : const Color(0xFFE2E8F0),
-          width: 1,
+          width: rec.isUrgent ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -556,25 +556,21 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Leading Icon + Title + Impact Box
+          // 1. Top Badges Row (Priority on left, Impact on right)
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Icon Box
               Container(
-                width: 44,
-                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: iconBg,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.3)),
                 ),
-                child: Icon(leadingIcon, color: themeColor, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    Icon(leadingIcon, color: themeColor, size: 13),
+                    const SizedBox(width: 5),
                     Text(
                       priorityTag,
                       style: TextStyle(
@@ -584,63 +580,30 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                         letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      rec.title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      rec.explanation,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF64748B),
-                        height: 1.3,
-                      ),
-                    ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-
-              // Right Impact Badge Box
+              const Spacer(),
               if (rec.impact.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(10),
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                  child: Column(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      const Icon(Icons.trending_up_rounded, size: 13, color: Color(0xFF059669)),
+                      const SizedBox(width: 4),
                       Text(
-                        'High Impact',
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: themeColor),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.trending_up_rounded, size: 12, color: themeColor),
-                          const SizedBox(width: 2),
-                          Text(
-                            rec.impact.replaceAll(RegExp(r'High|\(|\)|ROI|Rate'), '').trim(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              color: themeColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Text(
-                        'Conversion Rate',
-                        style: TextStyle(fontSize: 8, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                        rec.impact.length > 28 ? rec.impact.substring(0, 28) : rec.impact,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF334155),
+                        ),
                       ),
                     ],
                   ),
@@ -650,54 +613,97 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
           const SizedBox(height: 12),
 
-          // Suggested Action Highlight Box
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.arrow_forward_rounded, size: 14, color: themeColor),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    rec.suggestedAction,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: themeColor,
-                      height: 1.3,
-                    ),
-                  ),
-                ),
-              ],
+          // 2. Full-Width Title (Never squished)
+          Text(
+            rec.title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0F172A),
+              letterSpacing: -0.3,
+              height: 1.25,
             ),
           ),
 
+          const SizedBox(height: 6),
+
+          // 3. Full-Width Concise Explanation
+          Text(
+            rec.explanation,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF475569),
+              height: 1.4,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // 4. Action Recommendation Pill
+          if (rec.suggestedAction.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: themeColor.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(Icons.check_circle_outline_rounded, size: 14, color: themeColor),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      rec.suggestedAction,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: themeColor,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           const SizedBox(height: 14),
 
-          // Bottom Action Row
+          // 5. Footer Row with Estimated Time and Action Buttons
           Row(
             children: [
-              const Icon(Icons.schedule_rounded, size: 14, color: Color(0xFF94A3B8)),
-              const SizedBox(width: 4),
-              Text(
-                rec.effort.isNotEmpty ? rec.effort.replaceAll(RegExp(r'Low|Medium|High|\(|\)'), '').trim() : '5 min',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.timer_outlined, size: 12, color: Color(0xFF64748B)),
+                    const SizedBox(width: 4),
+                    Text(
+                      rec.effort.isNotEmpty ? rec.effort : '5 mins',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
               ),
               const Spacer(),
 
               if (rec.relatedFeature == 'reviews' && widget.onNavigateToReviews != null)
                 Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: 6),
                   child: OutlinedButton(
                     onPressed: widget.onNavigateToReviews,
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       side: const BorderSide(color: Color(0xFF2563EB)),
@@ -710,14 +716,14 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               TextButton(
                 onPressed: () => _handleUpdateStatus(rec, 'dismissed'),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   foregroundColor: const Color(0xFF64748B),
                 ),
                 child: const Text('Dismiss', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
 
               ElevatedButton(
                 onPressed: () => _handleUpdateStatus(rec, 'completed'),
@@ -725,12 +731,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                   backgroundColor: const Color(0xFF2563EB),
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text('Take Action', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                child: const Text('Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
               ),
             ],
           ),

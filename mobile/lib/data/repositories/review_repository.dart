@@ -38,4 +38,18 @@ class ReviewRepository {
     );
     return ReviewModel.fromJson(response);
   }
+
+  Future<String> generateAiReviewReply({
+    required String reviewId,
+    required String businessId,
+    String tone = 'warm & professional',
+  }) async {
+    final response = await _apiClient.post(
+      '${ApiConstants.reviews}/$reviewId/generate-reply?business_id=$businessId&tone=${Uri.encodeComponent(tone)}',
+    );
+    if (response is Map && response['reply_text'] != null) {
+      return response['reply_text'] as String;
+    }
+    return '';
+  }
 }

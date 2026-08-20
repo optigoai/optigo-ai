@@ -186,3 +186,19 @@ class AIContentGenerationOutput(BaseModel):
             else:
                 data["posts"] = []
         return data
+
+
+class AIReviewReplyOutput(BaseModel):
+    reply_text: str = Field(..., description="Customized response to customer review")
+    sentiment_detected: str = Field("neutral", description="positive, neutral, negative")
+    key_points_addressed: List[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_reply_output(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "reply_text" not in data or not data["reply_text"]:
+                data["reply_text"] = data.get("reply") or data.get("response") or data.get("message") or ""
+            if "sentiment_detected" not in data:
+                data["sentiment_detected"] = data.get("sentiment") or "neutral"
+        return data

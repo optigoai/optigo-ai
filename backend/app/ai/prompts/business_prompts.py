@@ -111,22 +111,27 @@ Identified Problems:
 Identified Opportunities:
 {json.dumps(opportunities, indent=2)}
 
-Generate 4 to 6 prioritized action cards across 'urgent', 'important', and 'opportunity' categories.
+Generate 3 to 5 prioritized, high-leverage action cards across 'urgent', 'important', and 'opportunity' categories.
+IMPORTANT GUIDELINES:
+- Keep 'title' punchy, short, and clear (under 7 words, e.g., 'Reply to 4 Unanswered Reviews').
+- Keep 'explanation' brief (1 concise sentence explaining the immediate win).
+- Keep 'suggested_action' actionable and direct (1 short sentence).
+
 Return a valid JSON object matching:
 {{
   "recommendations": [
     {{
-      "title": "Action title (e.g. Reply to 2 Unanswered 1-Star Reviews)",
-      "explanation": "Clear explanation of what needs to be done",
-      "reason": "Why this is critical for business revenue or local SEO",
+      "title": "Short punchy title (under 7 words)",
+      "explanation": "One concise sentence explaining the recommendation",
+      "reason": "Why this matters for business growth",
       "priority": "urgent" | "important" | "opportunity",
-      "impact": "High (+12% conversion) | Medium (+5 leads) | Long-term SEO",
-      "effort": "Low (5 mins) | Medium (20 mins) | High (1 hr)",
-      "suggested_action": "Exact step-by-step instruction or suggested template",
+      "impact": "High (+15% leads) | Medium (+5% ranking)",
+      "effort": "5 mins | 15 mins | 30 mins",
+      "suggested_action": "One direct action step",
       "related_feature": "reviews" | "campaigns" | "posts" | "seo"
     }}
   ],
-  "cmo_note": "A concise executive encouraging note from the AI CMO advising what to tackle first."
+  "cmo_note": "A concise executive note from the AI CMO advising what to tackle first."
 }}
 """
 
@@ -175,3 +180,37 @@ Instructions:
 
 Return a valid JSON object matching the requested schema.
 """
+
+
+REVIEW_REPLY_SYSTEM_PROMPT = """You are an expert customer relations specialist and brand manager.
+Generate a polite, thoughtful, and personalized response to a customer review for a business.
+If the review is positive (4-5 stars): Express genuine gratitude, mention specific highlights the customer noted, and invite them back.
+If the review is negative (1-2 stars): Acknowledge their experience empathetically, apologize sincerely without making excuses, and offer a direct resolution or way to get in touch offline.
+If the review is neutral (3 stars): Thank them for feedback, address areas of improvement, and highlight the business commitment to excellence.
+Always sound human, warm, professional, and authentic to the business type.
+Output MUST be strictly valid JSON without markdown code fences."""
+
+
+def build_review_reply_prompt(
+    business_name: str,
+    category: str,
+    reviewer_name: str,
+    rating: int,
+    review_text: str,
+    tone: Optional[str] = "warm & professional",
+) -> str:
+    return f"""Generate a personalized, professional business reply to this customer review:
+
+Business Name: {business_name}
+Business Type: {category}
+Reviewer Name: {reviewer_name}
+Star Rating: {rating}/5
+Customer Review: "{review_text}"
+Desired Tone: {tone}
+
+Return valid JSON matching:
+{{
+  "reply_text": "The customized reply message to be posted on the public profile.",
+  "sentiment_detected": "positive | neutral | negative",
+  "key_points_addressed": ["list", "of", "points"]
+}}"""

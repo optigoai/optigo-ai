@@ -90,3 +90,45 @@ async def reply_to_review(
     await db.flush()
 
     return ReviewResponse.model_validate(review)
+
+
+@router.post("/{review_id}/generate-reply")
+async def generate_ai_review_reply(
+    review_id: str,
+    business_id: str = Query(..., description="Business ID"),
+    tone: Optional[str] = Query("warm & professional", description="Desired tone"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generate a high-converting, personalized AI review reply using Google Gemini."""
+    from app.ai.ai_service import AIService
+    org_id = get_org_id(current_user)
+    biz_service = BusinessService(db)
+    business = await biz_service.get_business(business_id, org_id)
+
+    review_repo = ReviewRepository(db)
+    review = await review_repo.get_by_id(review_id, business_id)
+    if not review:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Review not found.",
+        )
+
+    ai_service = AIService(db=db)
+    ai_reply = await ai_service.generate_review_reply(
+        organization_id=org_id,
+        user_id=current_user.id,
+        business_name=business.name,
+        category=business.category or "Local Business",
+        reviewer_name=review.reviewer_name or "Valued Customer",
+        rating=review.rating or 5,
+        review_text=review.text or "Great service!",
+        tone=tone,
+    )
+
+    return {
+        "review_id": review.id,
+        "reply_text": ai_reply.reply_text,
+        "sentiment_detected": ai_reply.sentiment_detected,
+        "key_points_addressed": ai_reply.key_points_addressed,
+    }

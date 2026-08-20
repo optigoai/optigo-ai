@@ -12,6 +12,7 @@ from app.ai.schemas import (
     AIBusinessIntelligenceOutput,
     AICMORecommendationsOutput,
     AIContentGenerationOutput,
+    AIReviewReplyOutput,
 )
 from app.ai.prompts.business_prompts import (
     BUSINESS_PROFILE_SYSTEM_PROMPT,
@@ -310,7 +311,65 @@ class AIService:
                 feature="content_generation_multi_channel",
                 organization_id=organization_id,
                 user_id=user_id,
-                model=getattr(self.provider, "model_name", "gemini-2.0-flash"),
+                model=getattr(self.provider, "model_name", "gemini-3.5-flash-lite"),
+                prompt_preview=prompt,
+                response_preview="",
+                usage={"latency_ms": 0},
+                is_success=False,
+                error_message=str(e),
+            )
+            raise e
+
+    async def generate_review_reply(
+        self,
+        organization_id: Optional[str],
+        user_id: Optional[str],
+        business_name: str,
+        category: str,
+        reviewer_name: str,
+        rating: int,
+        review_text: str,
+        tone: Optional[str] = "warm & professional",
+    ) -> AIReviewReplyOutput:
+        from app.ai.prompts.business_prompts import REVIEW_REPLY_SYSTEM_PROMPT, build_review_reply_prompt
+        prompt = build_review_reply_prompt(
+            business_name=business_name,
+            category=category,
+            reviewer_name=reviewer_name,
+            rating=rating,
+            review_text=review_text,
+            tone=tone,
+        )
+
+        try:
+            res = await self.provider.generate_structured(
+                prompt=prompt,
+                response_schema=AIReviewReplyOutput.model_json_schema(),
+                system_instruction=REVIEW_REPLY_SYSTEM_PROMPT,
+                temperature=0.7,
+            )
+            data = res.get("data", {})
+            output = AIReviewReplyOutput.model_validate(data)
+            usage = res.get("usage", {})
+
+            await self._log_ai_request(
+                feature="review_reply_generation",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=res.get("model", getattr(self.provider, "model_name", "gemini-3.5-flash-lite")),
+                prompt_preview=prompt,
+                response_preview=json.dumps(data),
+                usage=usage,
+                is_success=True,
+            )
+            return output
+        except Exception as e:
+            logger.error("AI Review reply generation failed", error=str(e))
+            await self._log_ai_request(
+                feature="review_reply_generation",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=getattr(self.provider, "model_name", "gemini-3.5-flash-lite"),
                 prompt_preview=prompt,
                 response_preview="",
                 usage={"latency_ms": 0},

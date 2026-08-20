@@ -76,150 +76,250 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   Future<void> _showReplyDialog(ReviewModel review) async {
     final controller = TextEditingController(text: review.replyText ?? '');
     final formKey = GlobalKey<FormState>();
+    bool isGenerating = false;
+    String selectedTone = 'warm & professional';
 
     await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OptigoTheme.radiusLG)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-        title: Row(
-          children: [
-            const Icon(Icons.reply_rounded, color: OptigoTheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Reply to ${review.reviewerName}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.5),
-              ),
-            ),
-          ],
-        ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OptigoTheme.radiusLG)),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          title: Row(
             children: [
-              const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: OptigoTheme.surfaceVariant,
-                  borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                  border: Border.all(color: OptigoTheme.divider),
+                  color: OptigoTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                child: const Icon(Icons.reply_rounded, color: OptigoTheme.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      review.reviewerName,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: OptigoTheme.textSecondary),
+                      'Reply to ${review.reviewerName}',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: -0.5),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '"${review.text ?? "No text provided"}"',
-                      style: const TextStyle(
-                        fontStyle: FontStyle.italic,
-                        fontSize: 13,
-                        color: OptigoTheme.textPrimary,
-                        height: 1.4,
-                      ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        ...List.generate(5, (i) => Icon(
+                          Icons.star_rounded,
+                          size: 14,
+                          color: i < review.rating ? const Color(0xFFF59E0B) : const Color(0xFFCBD5E1),
+                        )),
+                        const SizedBox(width: 6),
+                        Text('${review.rating}/5 Rating', style: const TextStyle(fontSize: 11, color: OptigoTheme.textSecondary, fontWeight: FontWeight.w600)),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'Professional Response',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: OptigoTheme.textPrimary),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: controller,
-                maxLines: 5,
-                style: const TextStyle(fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Write your response here...',
-                  hintStyle: const TextStyle(color: OptigoTheme.textTertiary),
-                  fillColor: Colors.white,
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                    borderSide: const BorderSide(color: OptigoTheme.divider),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                    borderSide: const BorderSide(color: OptigoTheme.divider),
-                  ),
-                ),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Please enter a reply' : null,
-              ),
-              const SizedBox(height: 24),
             ],
           ),
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OptigoTheme.radiusMD)),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: OptigoTheme.surfaceVariant,
+                      borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
+                      border: Border.all(color: OptigoTheme.divider),
+                    ),
+                    child: Text(
+                      '"${review.text ?? "No review comment provided."}"',
+                      style: const TextStyle(
+                        fontStyle: FontStyle.italic,
+                        fontSize: 12,
+                        color: OptigoTheme.textPrimary,
+                        height: 1.4,
+                      ),
+                    ),
                   ),
-                  child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w700, color: OptigoTheme.textSecondary)),
-                ),
+                  const SizedBox(height: 16),
+
+                  // AI Gemini Quick Action Bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFEFF6FF), Color(0xFFF0FDF4)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.auto_awesome, color: Color(0xFF2563EB), size: 18),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'AI Gemini Auto-Draft',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF1E40AF)),
+                          ),
+                        ),
+                        if (isGenerating)
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
+                          )
+                        else
+                          InkWell(
+                            onTap: () async {
+                              final authProvider = context.read<AppAuthProvider>();
+                              final bizId = authProvider.currentBusiness?.id;
+                              if (bizId == null || _reviewRepo == null) return;
+
+                              setDialogState(() => isGenerating = true);
+                              try {
+                                final aiText = await _reviewRepo!.generateAiReviewReply(
+                                  reviewId: review.id,
+                                  businessId: bizId,
+                                  tone: selectedTone,
+                                );
+                                controller.text = aiText;
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('AI Generation Error: $e'), backgroundColor: OptigoTheme.error),
+                                  );
+                                }
+                              } finally {
+                                setDialogState(() => isGenerating = false);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2563EB),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.flash_on, size: 12, color: Colors.white),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Generate',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Your Response',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: OptigoTheme.textPrimary),
+                  ),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: controller,
+                    maxLines: 4,
+                    style: const TextStyle(fontSize: 13, height: 1.4),
+                    decoration: InputDecoration(
+                      hintText: 'Type or generate your response with Gemini...',
+                      hintStyle: const TextStyle(color: OptigoTheme.textTertiary, fontSize: 12),
+                      fillColor: Colors.white,
+                      filled: true,
+                      contentPadding: const EdgeInsets.all(12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
+                        borderSide: const BorderSide(color: OptigoTheme.divider),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
+                        borderSide: const BorderSide(color: OptigoTheme.divider),
+                      ),
+                    ),
+                    validator: (val) => val == null || val.trim().isEmpty ? 'Please enter a reply' : null,
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-                    final authProvider = context.read<AppAuthProvider>();
-                    final bizId = authProvider.currentBusiness?.id;
-                    if (bizId == null) return;
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OptigoTheme.radiusMD)),
+                    ),
+                    child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w700, color: OptigoTheme.textSecondary)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (!formKey.currentState!.validate()) return;
+                      final authProvider = context.read<AppAuthProvider>();
+                      final bizId = authProvider.currentBusiness?.id;
+                      if (bizId == null) return;
 
-                    final nav = Navigator.of(ctx);
-                    final messenger = ScaffoldMessenger.of(context);
+                      final nav = Navigator.of(ctx);
+                      final messenger = ScaffoldMessenger.of(context);
 
-                    try {
-                      if (_reviewRepo != null) {
-                        await _reviewRepo!.replyToReview(
-                          reviewId: review.id,
-                          businessId: bizId,
-                          replyText: controller.text.trim(),
+                      try {
+                        if (_reviewRepo != null) {
+                          await _reviewRepo!.replyToReview(
+                            reviewId: review.id,
+                            businessId: bizId,
+                            replyText: controller.text.trim(),
+                          );
+                        }
+                        nav.pop();
+                        _loadReviews();
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Reply posted successfully!'),
+                            backgroundColor: OptigoTheme.success,
+                          ),
+                        );
+                      } catch (e) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Failed: $e'), backgroundColor: OptigoTheme.error),
                         );
                       }
-                      nav.pop();
-                      _loadReviews();
-                      messenger.showSnackBar(
-                        const SnackBar(
-                          content: Text('Reply posted successfully!'),
-                          backgroundColor: OptigoTheme.success,
-                        ),
-                      );
-                    } catch (e) {
-                      messenger.showSnackBar(
-                        SnackBar(content: Text('Failed: $e'), backgroundColor: OptigoTheme.error),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: OptigoTheme.primary,
-                    elevation: 0,
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: OptigoTheme.primary,
+                      elevation: 0,
+                    ),
+                    child: const Text('Post Reply', style: TextStyle(fontWeight: FontWeight.w800)),
                   ),
-                  child: const Text('Post Reply', style: TextStyle(fontWeight: FontWeight.w800)),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
