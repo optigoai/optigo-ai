@@ -7,7 +7,6 @@ import '../../data/repositories/business_repository.dart';
 import '../../data/repositories/recommendation_repository.dart';
 import '../auth/auth_provider.dart';
 import '../shared/optigo_top_bar.dart';
-import 'widgets/gauge_wave_painter.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onNavigateToRecommendations;
@@ -353,185 +352,125 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMarketingHealthScoreCard(int score) {
+    Color scoreColor = const Color(0xFF2563EB);
+    String statusLabel = 'Good Standing';
+    if (score >= 85) {
+      scoreColor = const Color(0xFF10B981);
+      statusLabel = 'Excellent Health';
+    } else if (score < 60) {
+      scoreColor = const Color(0xFFEF4444);
+      statusLabel = 'Needs Attention';
+    }
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Header Row
-          Row(
+          // Circular Clean Progress Ring
+          Stack(
+            alignment: Alignment.center,
             children: [
-              const Text(
-                'Marketing Health Score',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF334155),
+              SizedBox(
+                width: 54,
+                height: 54,
+                child: CircularProgressIndicator(
+                  value: (score / 100).clamp(0.0, 1.0),
+                  strokeWidth: 5.5,
+                  backgroundColor: const Color(0xFFF1F5F9),
+                  valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
+                  strokeCap: StrokeCap.round,
                 ),
               ),
-              const SizedBox(width: 4),
-              const Icon(Icons.info_outline_rounded, size: 15, color: Color(0xFF94A3B8)),
-              const Spacer(),
-              if (_isLoadingIntel)
-                const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
+              Text(
+                '$score',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF0F172A),
                 ),
+              ),
             ],
           ),
+          const SizedBox(width: 16),
 
-          const SizedBox(height: 12),
-
-          // Score and Semicircle Gauge Row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Left: Numeric Score & Quality assessment
-              Expanded(
-                flex: 5,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          // Title & Health Status
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '$score',
-                            style: const TextStyle(
-                              fontSize: 38,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: -1,
-                            ),
-                          ),
-                          const TextSpan(
-                            text: ' /100',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Good',
+                    Text(
+                      statusLabel,
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF2563EB),
+                        color: scoreColor,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      "You're doing well! Let's make it excellent.",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF64748B),
-                        height: 1.3,
-                        fontWeight: FontWeight.w500,
+                    const SizedBox(width: 6),
+                    if (_isLoadingIntel)
+                      const SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFF2563EB)),
+                      )
+                    else
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: scoreColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
                   ],
                 ),
-              ),
-
-              // Right: Arc Gauge with Sparkline Wave
-              Expanded(
-                flex: 5,
-                child: SizedBox(
-                  height: 95,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CustomPaint(
-                        size: const Size(130, 85),
-                        painter: GaugeWavePainter(
-                          score: score.toDouble(),
-                          trackColor: const Color(0xFFE2E8F0),
-                          progressColor: const Color(0xFF2563EB),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        left: 12,
-                        child: const Text('0', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600)),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 12,
-                        child: const Text('100', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600)),
-                      ),
-                    ],
+                const SizedBox(height: 2),
+                const Text(
+                  'Marketing Health Score',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF64748B),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
 
-          const SizedBox(height: 14),
-
-          // Bottom Inside Banner: Score Improvement Pill
+          // Direct Insights Action Pill
           InkWell(
             onTap: widget.onNavigateToRecommendations,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Row(
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+                  Text(
+                    'Insights',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
                   ),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Your score improved by 12 points',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                        Text(
-                          'Keep following the recommendations!',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF2563EB)),
+                  SizedBox(width: 3),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFF2563EB)),
                 ],
               ),
             ),

@@ -347,13 +347,14 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _cmoNote.isNotEmpty
-                          ? _cmoNote
-                          : "We've prioritized the actions that will get you the best results right now.",
+                      _cmoNote.isNotEmpty ? _cmoNote : 'Prioritized action steps to boost your business revenue.',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.white.withValues(alpha: 0.9),
-                        height: 1.3,
+                        fontWeight: FontWeight.w500,
+                        height: 1.25,
                       ),
                     ),
                   ],
@@ -379,12 +380,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       else ...[
+                        const Icon(Icons.refresh_rounded, size: 12, color: Colors.white),
+                        const SizedBox(width: 4),
                         const Text(
-                          'View Plan',
+                          'Refresh AI',
                           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white),
                         ),
-                        const SizedBox(width: 2),
-                        const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Colors.white),
                       ],
                     ],
                   ),
@@ -617,7 +618,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
           Text(
             rec.title,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w800,
               color: Color(0xFF0F172A),
               letterSpacing: -0.3,
@@ -627,54 +628,19 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
           const SizedBox(height: 6),
 
-          // 3. Full-Width Concise Explanation
+          // 3. Clear, direct instruction
           Text(
-            rec.explanation,
+            rec.suggestedAction.isNotEmpty ? rec.suggestedAction : rec.explanation,
             style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF475569),
-              height: 1.4,
+              height: 1.35,
             ),
           ),
 
-          const SizedBox(height: 12),
-
-          // 4. Action Recommendation Pill
-          if (rec.suggestedAction.isNotEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: iconBg,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: themeColor.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Icon(Icons.check_circle_outline_rounded, size: 14, color: themeColor),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      rec.suggestedAction,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: themeColor,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
           const SizedBox(height: 14),
 
-          // 5. Footer Row with Estimated Time and Action Buttons
+          // 4. Footer Row with Estimated Time and Action Buttons
           Row(
             children: [
               Container(
