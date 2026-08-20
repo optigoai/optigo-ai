@@ -2,9 +2,23 @@
 class ApiConstants {
   ApiConstants._();
 
-  // Base URL — will be configurable per environment
-  static const String baseUrl = 'http://10.0.2.2:8000'; // Android emulator → host
-  static const String iosBaseUrl = 'http://localhost:8000';
+  // Host IP for local device testing (can also be overridden with --dart-define=API_URL=http://...)
+  static const String serverHost = String.fromEnvironment(
+    'API_HOST',
+    defaultValue: '10.51.25.138',
+  );
+  static const String serverPort = String.fromEnvironment(
+    'API_PORT',
+    defaultValue: '8000',
+  );
+
+  static const String defaultApiUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'http://10.51.25.138:8000',
+  );
+
+  static const String baseUrl = defaultApiUrl;
+  static const String iosBaseUrl = defaultApiUrl;
 
   // API version
   static const String apiPrefix = '/api/v1';
