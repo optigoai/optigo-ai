@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../app/theme.dart';
 import '../../data/models/intelligence_model.dart';
+import '../../data/models/recommendation_model.dart';
 import '../../data/repositories/business_repository.dart';
+import '../../data/repositories/recommendation_repository.dart';
 import '../auth/auth_provider.dart';
 import '../shared/optigo_top_bar.dart';
 import 'widgets/gauge_wave_painter.dart';
@@ -25,8 +27,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   BusinessRepository? _bizRepo;
+  RecommendationRepository? _recRepo;
   BusinessIntelligenceModel? _intelligence;
+  List<RecommendationModel> _recommendations = [];
   bool _isLoadingIntel = true;
+  bool _isLoadingRecs = true;
   bool _initialized = false;
 
   @override
@@ -34,9 +39,17 @@ class _HomeScreenState extends State<HomeScreen> {
     super.didChangeDependencies();
     if (!_initialized) {
       _bizRepo = context.read<BusinessRepository>();
+      _recRepo = context.read<RecommendationRepository>();
       _initialized = true;
-      _loadIntelligence();
+      _loadData();
     }
+  }
+
+  Future<void> _loadData() async {
+    await Future.wait([
+      _loadIntelligence(),
+      _loadRecommendations(),
+    ]);
   }
 
   Future<void> _loadIntelligence() async {
@@ -57,6 +70,37 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       if (mounted) setState(() => _isLoadingIntel = false);
     }
+  }
+
+  Future<void> _loadRecommendations() async {
+    if (_recRepo == null) return;
+    final authProvider = context.read<AppAuthProvider>();
+    final businessId = authProvider.currentBusiness?.id;
+    if (businessId == null) return;
+
+    setState(() => _isLoadingRecs = true);
+    try {
+      final list = await _recRepo!.getRecommendations(businessId);
+      if (mounted) {
+        setState(() {
+          _recommendations = list;
+          _isLoadingRecs = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingRecs = false);
+    }
+  }
+
+  Future<void> _handleUpdateStatus(RecommendationModel rec, String newStatus) async {
+    final authProvider = context.read<AppAuthProvider>();
+    final bizId = authProvider.currentBusiness?.id;
+    if (bizId == null || _recRepo == null) return;
+
+    try {
+      await _recRepo!.updateStatus(rec.id, bizId, newStatus);
+      _loadRecommendations();
+    } catch (_) {}
   }
 
   String _getGreeting() {
@@ -143,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadIntelligence,
+          onRefresh: _loadData,
           color: const Color(0xFF2563EB),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -498,6 +542,42 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTopPrioritySection() {
+    final pending = _recommendations.where((r) => r.isPending).toList();
+
+    // Prioritize urgent first, then important, then opportunity
+    RecommendationModel? topRec;
+    if (pending.isNotEmpty) {
+      topRec = pending.firstWhere(
+        (r) => r.isUrgent,
+        orElse: () => pending.firstWhere(
+          (r) => r.isImportant,
+          orElse: () => pending.first,
+        ),
+      );
+    }
+
+    Color themeColor;
+    String priorityTag;
+    IconData leadingIcon;
+    Color iconBg;
+
+    if (topRec?.isUrgent == true) {
+      themeColor = const Color(0xFFEF4444);
+      priorityTag = 'URGENT';
+      leadingIcon = Icons.emergency_rounded;
+      iconBg = const Color(0xFFFEF2F2);
+    } else if (topRec?.isOpportunity == true) {
+      themeColor = const Color(0xFF10B981);
+      priorityTag = 'OPPORTUNITY';
+      leadingIcon = Icons.rocket_launch_rounded;
+      iconBg = const Color(0xFFECFDF5);
+    } else {
+      themeColor = const Color(0xFFD97706);
+      priorityTag = 'IMPORTANT';
+      leadingIcon = Icons.bolt_rounded;
+      iconBg = const Color(0xFFFFFBEB);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -530,148 +610,226 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Hero Priority Card with Left Red Accent
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+        if (_isLoadingRecs)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
               ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: IntrinsicHeight(
+            ),
+          )
+        else if (topRec == null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Left Coral/Red Accent Bar
                 Container(
-                  width: 4,
-                  color: const Color(0xFFEF4444),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 24),
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Icon with Badge
-                            Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Container(
-                                  width: 42,
-                                  height: 42,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEFF6FF),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF2563EB), size: 20),
-                                ),
-                                Positioned(
-                                  top: -4,
-                                  right: -4,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFEF4444),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                                    child: const Center(
-                                      child: Text(
-                                        '3',
-                                        style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Respond to 3 unhappy reviews',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  const Text(
-                                    'Unanswered negative reviews can hurt your reputation and trust.',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF64748B),
-                                      height: 1.3,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            // Impact Tag
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEFF6FF),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.trending_up_rounded, size: 12, color: Color(0xFF2563EB)),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'High impact • Takes 5 min',
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Spacer(),
-
-                            // Take Action Button
-                            ElevatedButton(
-                              onPressed: widget.onNavigateToReviews,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563EB),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              child: const Text('Take Action', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'All Caught Up! 🎉',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Your AI CMO marketing health is in great shape.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
+          )
+        else
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: topRec.isUrgent ? const Color(0xFFFCA5A5) : const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 4,
+                    color: themeColor,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: iconBg,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(leadingIcon, color: themeColor, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: iconBg,
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(color: themeColor.withValues(alpha: 0.3)),
+                                          ),
+                                          child: Text(
+                                            priorityTag,
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w900,
+                                              color: themeColor,
+                                            ),
+                                          ),
+                                        ),
+                                        if (topRec.effort.isNotEmpty) ...[
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            '• ${topRec.effort}',
+                                            style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      topRec.title,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      topRec.explanation,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF64748B),
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              if (topRec.impact.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.trending_up_rounded, size: 12, color: Color(0xFF2563EB)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        topRec.impact,
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              const Spacer(),
+
+                              TextButton(
+                                onPressed: () => _handleUpdateStatus(topRec!, 'completed'),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  foregroundColor: const Color(0xFF64748B),
+                                ),
+                                child: const Text('Mark Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                              ),
+                              const SizedBox(width: 6),
+
+                              ElevatedButton(
+                                onPressed: () {
+                                  if (topRec!.relatedFeature == 'reviews' && widget.onNavigateToReviews != null) {
+                                    widget.onNavigateToReviews!();
+                                  } else if (topRec.relatedFeature == 'posts' && widget.onNavigateToTab != null) {
+                                    widget.onNavigateToTab!(2);
+                                  } else if (widget.onNavigateToRecommendations != null) {
+                                    widget.onNavigateToRecommendations!();
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2563EB),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Text('Take Action', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -788,6 +946,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildOtherOpportunitiesSection() {
+    final pending = _recommendations.where((r) => r.isPending).toList();
+    // Exclude the top priority card already displayed above
+    final otherRecs = pending.length > 1 ? pending.sublist(1, pending.length > 4 ? 4 : pending.length) : <RecommendationModel>[];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -820,69 +982,84 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 10),
 
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+        if (otherRecs.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.insights_rounded, color: Color(0xFF2563EB), size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'No additional pending actions. Tap "Ask AI CMO" to discover new growth opportunities.',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.3),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              children: [
+                for (int i = 0; i < otherRecs.length; i++) ...[
+                  _buildDynamicOpportunityRow(otherRecs[i]),
+                  if (i < otherRecs.length - 1)
+                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                ],
+              ],
+            ),
           ),
-          child: Column(
-            children: [
-              _buildOpportunityRow(
-                icon: Icons.manage_search_rounded,
-                iconColor: const Color(0xFF10B981),
-                iconBg: const Color(0xFFECFDF5),
-                title: 'Improve Local SEO',
-                subtitle: 'Rank higher for 5 important keywords',
-                tagText: 'High Impact',
-                tagBg: const Color(0xFFECFDF5),
-                tagColor: const Color(0xFF10B981),
-                onTap: () => _showComingSoonDialog('Local SEO & Keyword Ranking', 'Phase 7'),
-              ),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              _buildOpportunityRow(
-                icon: Icons.description_outlined,
-                iconColor: const Color(0xFFA855F7),
-                iconBg: const Color(0xFFFAF5FF),
-                title: 'Post on Google',
-                subtitle: "You haven't posted in 12 days",
-                tagText: 'Medium Impact',
-                tagBg: const Color(0xFFFEF3C7),
-                tagColor: const Color(0xFFD97706),
-                onTap: () => _showComingSoonDialog('Automated Google Business Posts', 'Phase 6'),
-              ),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              _buildOpportunityRow(
-                icon: Icons.group_outlined,
-                iconColor: const Color(0xFF38BDF8),
-                iconBg: const Color(0xFFF0F9FF),
-                title: 'Check Competitors',
-                subtitle: 'See what your competitors are doing',
-                tagText: 'Low Impact',
-                tagBg: const Color(0xFFEFF6FF),
-                tagColor: const Color(0xFF2563EB),
-                onTap: () => _showComingSoonDialog('Competitor Benchmarking Engine', 'Phase 9'),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
 
-  Widget _buildOpportunityRow({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required String title,
-    required String subtitle,
-    required String tagText,
-    required Color tagBg,
-    required Color tagColor,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildDynamicOpportunityRow(RecommendationModel rec) {
+    Color iconColor;
+    Color iconBg;
+    IconData icon;
+
+    if (rec.isUrgent) {
+      iconColor = const Color(0xFFEF4444);
+      iconBg = const Color(0xFFFEF2F2);
+      icon = Icons.emergency_rounded;
+    } else if (rec.isOpportunity) {
+      iconColor = const Color(0xFF10B981);
+      iconBg = const Color(0xFFECFDF5);
+      icon = Icons.rocket_launch_rounded;
+    } else {
+      iconColor = const Color(0xFFD97706);
+      iconBg = const Color(0xFFFFFBEB);
+      icon = Icons.bolt_rounded;
+    }
+
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        if (rec.relatedFeature == 'reviews' && widget.onNavigateToReviews != null) {
+          widget.onNavigateToReviews!();
+        } else if (rec.relatedFeature == 'posts' && widget.onNavigateToTab != null) {
+          widget.onNavigateToTab!(2);
+        } else if (widget.onNavigateToRecommendations != null) {
+          widget.onNavigateToRecommendations!();
+        }
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
@@ -901,7 +1078,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    rec.title,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
@@ -910,7 +1087,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    subtitle,
+                    rec.explanation,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 11,
                       color: Color(0xFF64748B),
@@ -920,21 +1099,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: tagBg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                tagText,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: tagColor,
+            if (rec.impact.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  rec.impact.length > 18 ? rec.impact.substring(0, 18) : rec.impact,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: iconColor,
+                  ),
                 ),
               ),
-            ),
             const SizedBox(width: 6),
             const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF94A3B8)),
           ],

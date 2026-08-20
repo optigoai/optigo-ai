@@ -68,6 +68,7 @@ class RecommendationModel {
   bool get isUrgent => priority == 'urgent';
   bool get isImportant => priority == 'important';
   bool get isOpportunity => priority == 'opportunity';
+  bool get isPending => status == 'pending' || status == 'in_progress';
   bool get isCompleted => status == 'completed';
   bool get isDismissed => status == 'dismissed';
 }
