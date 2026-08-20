@@ -1,0 +1,87 @@
+# ==================================================
+# OptigoAI — .gitignore
+# ==================================================
+
+# ---- Environment & Secrets ----
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+
+# ---- Python / Backend ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.whl
+.venv/
+venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Flutter / Dart ----
+mobile/.dart_tool/
+mobile/.packages
+mobile/.pub-cache/
+mobile/.pub/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/**/GeneratedPluginRegistrant.java
+mobile/android/app/debug/
+mobile/android/app/profile/
+mobile/android/app/release/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/ios/Flutter/Generated.xcconfig
+mobile/ios/Flutter/app.flx
+mobile/ios/Flutter/flutter_assets/
+mobile/ios/Flutter/flutter_export_environment.sh
+mobile/ios/ServiceDefinitions.json
+mobile/ios/Runner/GeneratedPluginRegistrant.*
+mobile/ios/Pods/
+*.iml
+
+# ---- Admin Portal (Node.js) ----
+admin/node_modules/
+admin/dist/
+admin/.env
+
+# ---- Docker ----
+docker-compose.override.yml
+
+# ---- IDE ----
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ---- Storage / Uploads ----
+uploads/
+storage/
+media/
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Coverage & Test Artifacts ----
+coverage/
+test-results/
