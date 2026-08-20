@@ -9,8 +9,10 @@ from app.schemas import (
     BusinessOnboardingRequest,
     BusinessResponse,
     GBPSyncResponse,
+    BusinessIntelligenceResponse,
 )
 from app.services.business_service import BusinessService
+from app.services.business_intelligence_service import BusinessIntelligenceService
 
 router = APIRouter()
 
@@ -94,3 +96,33 @@ async def sync_business_gbp(
     sync_service = GBPSyncService(db)
     result = await sync_service.sync_business_data(business_id, org_id)
     return GBPSyncResponse(**result)
+
+
+@router.post("/{business_id}/analyze", response_model=BusinessIntelligenceResponse)
+async def analyze_business(
+    business_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Trigger AI Business Understanding & Marketing Health Score analysis."""
+    org_id = get_org_id(current_user)
+    service = BusinessIntelligenceService(db)
+    result = await service.analyze_business(
+        business_id=business_id,
+        organization_id=org_id,
+        user_id=current_user.id,
+    )
+    return BusinessIntelligenceResponse(**result)
+
+
+@router.get("/{business_id}/intelligence", response_model=BusinessIntelligenceResponse)
+async def get_business_intelligence(
+    business_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retrieve stored AI Business Profile & Marketing Health Analysis."""
+    org_id = get_org_id(current_user)
+    service = BusinessIntelligenceService(db)
+    result = await service.get_intelligence(business_id, org_id)
+    return BusinessIntelligenceResponse(**result)

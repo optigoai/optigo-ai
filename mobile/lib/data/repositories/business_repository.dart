@@ -62,4 +62,18 @@ class BusinessRepository {
     );
     return response as Map<String, dynamic>;
   }
+
+  Future<Map<String, dynamic>> analyzeBusiness(String businessId) async {
+    final response = await _apiClient.post(
+      '${ApiConstants.businesses}/$businessId/analyze',
+    );
+    return response as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getIntelligence(String businessId) async {
+    final response = await _apiClient.get(
+      '${ApiConstants.businesses}/$businessId/intelligence',
+    );
+    return response as Map<String, dynamic>;
+  }
 }

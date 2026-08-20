@@ -1,4 +1,4 @@
-## Current Phase: 3 — Business Data & MockGBP Provider Seeding ✅ (Ready for Phase 4)
+## Current Phase: 4 — AI Business Understanding & Health Scoring ✅ (Ready for Phase 5)
 
 **Last Updated:** 2026-08-20
 
@@ -61,18 +61,27 @@
 - [x] Flutter Phase 3 UI: Google Profile card, 4-metric grid (rating, reviews, views, calls), sentiment filter chips (All, Positive, Negative, Needs Reply), and in-app review reply dialog
 - [x] Automated tests for GBP provider sync, review querying by sentiment, and review reply workflows (100% pass)
 
+### Phase 4 — AI Business Understanding & Health Scoring
+- [x] Gemini AI Provider (`GeminiAIProvider`) with schema enforcement and resilient fallback engine
+- [x] AI prompt management layer (`backend/app/ai/prompts/business_prompts.py`) for business profile generation and marketing health scoring
+- [x] `AIService` with automated token tracking, latency measurement, and USD cost calculation in `ai_request_logs` table
+- [x] `BusinessIntelligenceService` orchestrating business understanding and storing `health_score`, `health_analysis`, and `ai_business_profile` in PostgreSQL
+- [x] Endpoints: `POST /api/v1/businesses/{id}/analyze` and `GET /api/v1/businesses/{id}/intelligence`
+- [x] Flutter integration: `BusinessIntelligenceModel`, `BusinessProblemModel`, `BusinessOpportunityModel`, repository methods (`analyzeBusiness`, `getIntelligence`)
+- [x] Flutter Phase 4 UI: AI CMO Health Score Card (radial score, Reputation/Visibility sub-scores, strategic advice, Problems Detected with severity tags, High-Impact Opportunities with actions, and "Re-Run AI Audit" button)
+- [x] Backend integration tests in `test_ai_intelligence.py` (10/10 tests passed)
+
 ---
 
 ## Remaining Work
 
-### Phase 4 — AI Business Understanding & Health Scoring
-- [ ] Gemini AI Provider integration behind AIProvider interface
-- [ ] AI prompt management layer (versioned, structured schemas)
-- [ ] AI Business Profile generator from onboarding inputs
-- [ ] AI Health Scoring engine (score 0-100, problems, opportunities)
-- [ ] AI request logging and cost/token tracking
+### Phase 5 — AI CMO Engine & Actionable Recommendations (WAITING FOR USER INSTRUCTION TO START)
+- [ ] Central AI CMO Engine analyzing marketing priorities
+- [ ] Recommendation Engine producing prioritized action cards (`Urgent`, `Important`, `Opportunity`)
+- [ ] One-click action triggers from recommendations
+- [ ] Flutter AI CMO Recommendation Feed & Action Handlers
 
----
+### Phase 6-13 — See README.md
 
 ## Known Issues
 

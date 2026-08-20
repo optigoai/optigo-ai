@@ -152,3 +152,10 @@ class GBPSyncResponse(BaseModel):
     total_reviews: int
     average_rating: float
     metrics: dict[str, Any]
+
+
+class BusinessIntelligenceResponse(BaseModel):
+    business_id: str
+    health_score: Optional[int] = None
+    ai_profile: Optional[dict[str, Any]] = None
+    health_analysis: Optional[dict[str, Any]] = None
