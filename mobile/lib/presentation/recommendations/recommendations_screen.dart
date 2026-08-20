@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../data/models/recommendation_model.dart';
 import '../../data/repositories/recommendation_repository.dart';
 import '../auth/auth_provider.dart';
+import '../shared/optigo_top_bar.dart';
 
 class RecommendationsScreen extends StatefulWidget {
   final VoidCallback? onNavigateToReviews;
@@ -124,9 +125,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AppAuthProvider>();
-    final business = authProvider.currentBusiness;
-
     final pendingList = _recommendations.where((r) => !r.isCompleted).toList();
     final completedList = _recommendations.where((r) => r.isCompleted).toList();
 
@@ -154,10 +152,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Top App Bar
-                _buildTopAppBar(business?.name),
+                // 1. Universal Top App Bar
+                const OptigoTopBar(
+                  subtitle: 'AI CMO Actions',
+                ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
                 // 2. AI CMO Battle Plan Hero Card
                 _buildBattlePlanCard(
@@ -293,71 +293,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     );
   }
 
-  Widget _buildTopAppBar(String? businessName) {
-    return Row(
-      children: [
-        Image.asset(
-          'assets/images/logo.png',
-          width: 54,
-          height: 54,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'AI CMO Actions',
-                style: TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
-                  letterSpacing: -0.5,
-                ),
-              ),
-              Text(
-                businessName ?? 'Your AI Marketing Manager',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              child: const Icon(Icons.notifications_none_rounded, size: 26, color: Color(0xFF334155)),
-            ),
-            Positioned(
-              top: 3,
-              right: 3,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF2563EB),
-                  shape: BoxShape.circle,
-                ),
-                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                child: const Center(
-                  child: Text(
-                    '3',
-                    style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   Widget _buildBattlePlanCard({
     required int totalCount,

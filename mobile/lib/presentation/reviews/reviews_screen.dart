@@ -4,6 +4,7 @@ import '../../app/theme.dart';
 import '../../data/models/review_model.dart';
 import '../../data/repositories/review_repository.dart';
 import '../auth/auth_provider.dart';
+import '../shared/optigo_top_bar.dart';
 
 class ReviewsScreen extends StatefulWidget {
   const ReviewsScreen({super.key});
@@ -225,9 +226,6 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AppAuthProvider>();
-    final business = authProvider.currentBusiness;
-
     final avgRating = _reviews.isNotEmpty
         ? (_reviews.map((r) => r.rating).reduce((a, b) => a + b) / _reviews.length).toStringAsFixed(1)
         : '4.4';
@@ -243,39 +241,12 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Screen Header
+                // Universal Top App Bar
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: OptigoTheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(OptigoTheme.radiusMD),
-                      ),
-                      child: const Icon(Icons.rate_review_outlined, color: OptigoTheme.primary, size: 24),
-                    ),
-                    const SizedBox(width: OptigoTheme.spacingMD),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Reviews & Reputation',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: OptigoTheme.textPrimary,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          Text(
-                            business?.name ?? 'OptigoAI Business',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: OptigoTheme.textSecondary,
-                            ),
-                          ),
-                        ],
+                    const Expanded(
+                      child: OptigoTopBar(
+                        subtitle: 'Reviews & Reputation',
                       ),
                     ),
                     IconButton(
@@ -283,16 +254,16 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(strokeWidth: 2, color: OptigoTheme.primary),
                             )
-                          : const Icon(Icons.sync_rounded),
+                          : const Icon(Icons.sync_rounded, color: OptigoTheme.primary),
                       onPressed: _isSyncing ? null : _handleSyncGbp,
                       tooltip: 'Sync Google Reviews',
                     ),
                   ],
                 ),
 
-                const SizedBox(height: OptigoTheme.spacingMD),
+                const SizedBox(height: 8),
 
                 // GBP Connected Status Card with 4 Metrics
                 Container(

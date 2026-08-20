@@ -4,6 +4,7 @@ import '../../app/theme.dart';
 import '../../data/models/intelligence_model.dart';
 import '../../data/repositories/business_repository.dart';
 import '../auth/auth_provider.dart';
+import '../shared/optigo_top_bar.dart';
 import 'widgets/gauge_wave_painter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -150,10 +151,12 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Top App Bar Header
-                _buildTopAppBar(context, authProvider),
+                // 1. Universal Top App Bar Header
+                OptigoTopBar(
+                  onNotificationTap: widget.onNavigateToRecommendations,
+                ),
 
-                const SizedBox(height: 18),
+                const SizedBox(height: 8),
 
                 // 2. Greeting Header
                 Text(
@@ -209,126 +212,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTopAppBar(BuildContext context, AppAuthProvider authProvider) {
-    return Row(
-      children: [
-        // Drawer / Menu icon
-        InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.all(6),
-            child: const Icon(Icons.menu_rounded, size: 26, color: Color(0xFF1E293B)),
-          ),
-        ),
-        const Spacer(),
-
-        // Brand Logo & Subtitle
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Optigo',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const Text(
-                  'AI',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF2563EB),
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                Transform.translate(
-                  offset: const Offset(1, -5),
-                  child: const Text(
-                    '✦',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF38BDF8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Text(
-              'AI Marketing Manager',
-              style: TextStyle(
-                fontSize: 10,
-                color: Color(0xFF64748B),
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ],
-        ),
-
-        const Spacer(),
-
-        // Notification Bell with Badge
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            InkWell(
-              onTap: widget.onNavigateToRecommendations,
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                child: const Icon(Icons.notifications_none_rounded, size: 26, color: Color(0xFF334155)),
-              ),
-            ),
-            Positioned(
-              top: 3,
-              right: 3,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF2563EB),
-                  shape: BoxShape.circle,
-                ),
-                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                child: const Center(
-                  child: Text(
-                    '3',
-                    style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(width: 8),
-
-        // User Avatar
-        InkWell(
-          onTap: () => authProvider.logout(),
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
-              color: const Color(0xFFF1F5F9),
-            ),
-            child: const Center(
-              child: Icon(Icons.person_rounded, size: 20, color: Color(0xFF475569)),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildBusinessSelectorCard(String? businessName, String? location) {
     return Container(
