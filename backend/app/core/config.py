@@ -41,8 +41,8 @@ class Settings(BaseSettings):
     # ---- JWT Authentication ----
     jwt_secret_key: str = "CHANGE_ME_GENERATE_A_STRONG_SECRET"
     jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
-    refresh_token_expire_days: int = 7
+    access_token_expire_minutes: int = 10080  # 7 days for mobile session stability
+    refresh_token_expire_days: int = 30
 
     # ---- AI Provider ----
     ai_provider: str = "gemini"
