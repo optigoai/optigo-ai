@@ -228,10 +228,12 @@ def build_seo_audit_prompt(
     location: str,
     description: Optional[str] = None,
     current_keywords: Optional[List[str]] = None,
+    competitors_context: Optional[List[str]] = None,
     rating: float = 4.5,
     reviews_count: int = 10,
 ) -> str:
     keywords_str = ", ".join(current_keywords) if current_keywords else "None tracked yet"
+    competitors_str = ", ".join(competitors_context) if competitors_context else "Standard local benchmarks"
     return f"""Perform a comprehensive Local SEO and Google Maps Pack visibility audit for this business:
 
 Business: {business_name}
@@ -240,6 +242,7 @@ Location: {location}
 Current Description: {description or 'Not specified'}
 Rating: {rating}★ ({reviews_count} reviews)
 Current Tracked Keywords: {keywords_str}
+Live Google Maps Competitors: {competitors_str}
 
 Instructions:
 1. Evaluate scores (0-100) for overall_seo_score, map_pack_score, keyword_score, citation_score.

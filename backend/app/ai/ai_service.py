@@ -394,6 +394,7 @@ class AIService:
         location: str,
         description: Optional[str] = None,
         current_keywords: Optional[List[str]] = None,
+        competitors_context: Optional[List[str]] = None,
         rating: float = 4.5,
         reviews_count: int = 10,
     ) -> AISeoAuditOutput:
@@ -403,6 +404,7 @@ class AIService:
             location=location,
             description=description,
             current_keywords=current_keywords,
+            competitors_context=competitors_context,
             rating=rating,
             reviews_count=reviews_count,
         )
