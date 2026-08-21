@@ -34,16 +34,16 @@ class OptigoTheme {
 
   // ---- Spacing ----
   static const double spacingXS = 4;
-  static const double spacingSM = 8;
-  static const double spacingMD = 16;
-  static const double spacingLG = 24;
-  static const double spacingXL = 32;
+  static const double spacingSM = 10;
+  static const double spacingMD = 18;
+  static const double spacingLG = 28;
+  static const double spacingXL = 36;
   static const double spacingXXL = 48;
 
   // ---- Border Radius ----
   static const double radiusSM = 8;
-  static const double radiusMD = 12;
-  static const double radiusLG = 16;
+  static const double radiusMD = 14;
+  static const double radiusLG = 18;
   static const double radiusXL = 24;
 
   // ---- Theme Data ----
@@ -88,8 +88,8 @@ class OptigoTheme {
           side: const BorderSide(color: divider, width: 1),
         ),
         margin: const EdgeInsets.symmetric(
-          horizontal: spacingMD,
-          vertical: spacingSM,
+          horizontal: 18,
+          vertical: 10,
         ),
       ),
 
@@ -218,7 +218,7 @@ class OptigoTheme {
         ),
         titleSmall: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w500,
           color: textPrimary,
         ),
@@ -231,14 +231,14 @@ class OptigoTheme {
         ),
         bodyMedium: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w400,
           color: textSecondary,
           height: 1.5,
         ),
         bodySmall: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: FontWeight.w400,
           color: textTertiary,
           height: 1.4,
@@ -251,7 +251,7 @@ class OptigoTheme {
         ),
         labelMedium: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: FontWeight.w500,
           color: textSecondary,
         ),

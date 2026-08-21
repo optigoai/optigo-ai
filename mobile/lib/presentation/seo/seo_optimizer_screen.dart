@@ -604,8 +604,8 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                 alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    width: 58,
-                    height: 58,
+                    width: 66,
+                    height: 66,
                     child: CircularProgressIndicator(
                       value: (score / 100).clamp(0.0, 1.0),
                       strokeWidth: 6,
@@ -617,7 +617,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                   Text(
                     '$score',
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 22,
                       fontWeight: FontWeight.w900,
                       color: Color(0xFF0F172A),
                     ),
@@ -635,7 +635,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                         Text(
                           status,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: FontWeight.w800,
                             color: scoreColor,
                           ),
@@ -646,7 +646,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      'Google Local 3-Pack Presence',
+                      'Your Google Maps visibility',
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
                     ),
                   ],
@@ -707,9 +707,9 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
   Widget _buildMiniStat(String label, String value, Color valueColor) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: valueColor)),
-        const SizedBox(height: 1),
-        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
+        Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: valueColor)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -733,7 +733,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                 children: [
                   Icon(Icons.add_rounded, size: 16, color: Color(0xFF2563EB)),
                   SizedBox(width: 4),
-                  Text('Track Keyword', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+                  Text('Track Keyword', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
                 ],
               ),
             ),
@@ -745,7 +745,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             onTap: _showAiKeywordDiscoveryModal,
             borderRadius: BorderRadius.circular(12),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 11),
+              padding: const EdgeInsets.symmetric(vertical: 13),
               decoration: BoxDecoration(
                 color: const Color(0xFF2563EB),
                 borderRadius: BorderRadius.circular(12),
@@ -755,7 +755,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                 children: [
                   Icon(Icons.auto_awesome, size: 16, color: Colors.white),
                   SizedBox(width: 5),
-                  Text('AI Discovery', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
+                  Text('AI Discovery', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
                 ],
               ),
             ),
@@ -766,7 +766,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
           onTap: _isOptimizingGbp ? null : _showGbpOptimizerModal,
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
             decoration: BoxDecoration(
               color: const Color(0xFFECFDF5),
               borderRadius: BorderRadius.circular(12),
@@ -779,7 +779,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                     children: [
                       Icon(Icons.storefront_rounded, size: 16, color: Color(0xFF10B981)),
                       SizedBox(width: 4),
-                      Text('GBP Fix', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF10B981))),
+                      Text('Optimize Profile', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF10B981))),
                     ],
                   ),
           ),
@@ -805,8 +805,8 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
               Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFD97706)),
               SizedBox(width: 6),
               Text(
-                'Missing GBP Attributes to Add',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF92400E)),
+                'Add to Your Google Profile',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF92400E)),
               ),
             ],
           ),
@@ -824,7 +824,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                 ),
                 child: Text(
                   '+ $attr',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF92400E)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF92400E)),
                 ),
               );
             }).toList(),
@@ -844,7 +844,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             Text(
               'Tracked Keywords (${_keywords.length})',
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 17,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF0F172A),
                 letterSpacing: -0.3,
@@ -905,13 +905,13 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       child: Row(
         children: [
           // Rank Badge
           Container(
-            width: 38,
-            height: 38,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               color: rankColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
@@ -922,7 +922,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                 Text(
                   '#$rank',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w900,
                     color: rankColor,
                   ),
@@ -959,7 +959,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                   children: [
                     Text(
                       'Vol: ${kw.searchVolume}',
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(width: 8),
                     Container(

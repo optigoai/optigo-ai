@@ -9,6 +9,10 @@ import 'data/repositories/review_repository.dart';
 import 'data/repositories/recommendation_repository.dart';
 import 'data/repositories/content_repository.dart';
 import 'data/repositories/seo_repository.dart';
+import 'data/repositories/campaign_repository.dart';
+import 'data/repositories/creative_repository.dart';
+import 'data/repositories/cmo_chat_repository.dart';
+import 'data/repositories/notification_repository.dart';
 import 'presentation/auth/auth_provider.dart';
 
 void main() async {
@@ -35,6 +39,10 @@ void main() async {
   final recRepo = RecommendationRepository(apiClient);
   final contentRepo = ContentRepository(apiClient);
   final seoRepo = SeoRepository(apiClient);
+  final campaignRepo = CampaignRepository(apiClient);
+  final creativeRepo = CreativeRepository(apiClient);
+  final cmoChatRepo = CmoChatRepository(apiClient);
+  final notificationRepo = NotificationRepository(apiClient);
 
   runApp(
     MultiProvider(
@@ -46,6 +54,10 @@ void main() async {
         Provider<RecommendationRepository>.value(value: recRepo),
         Provider<ContentRepository>.value(value: contentRepo),
         Provider<SeoRepository>.value(value: seoRepo),
+        Provider<CampaignRepository>.value(value: campaignRepo),
+        Provider<CreativeRepository>.value(value: creativeRepo),
+        Provider<CmoChatRepository>.value(value: cmoChatRepo),
+        Provider<NotificationRepository>.value(value: notificationRepo),
         ChangeNotifierProvider<AppAuthProvider>(
           create: (_) => AppAuthProvider(authRepo, bizRepo)..checkAuth(),
         ),

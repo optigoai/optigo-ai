@@ -4,6 +4,7 @@ import 'recommendations/recommendations_screen.dart';
 import 'content/content_studio_screen.dart';
 import 'seo/seo_optimizer_screen.dart';
 import 'reviews/reviews_screen.dart';
+import 'shared/cmo_chat_drawer.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -19,6 +20,20 @@ class _MainShellState extends State<MainShell> {
     setState(() => _currentIndex = index);
   }
 
+  void _handleRouteNavigate(String route) {
+    if (route == 'home') {
+      _navigateToTab(0);
+    } else if (route == 'actions') {
+      _navigateToTab(1);
+    } else if (route == 'create') {
+      _navigateToTab(2);
+    } else if (route == 'seo') {
+      _navigateToTab(3);
+    } else if (route == 'reviews') {
+      _navigateToTab(4);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screens = [
@@ -30,15 +45,15 @@ class _MainShellState extends State<MainShell> {
       RecommendationsScreen(
         onNavigateToReviews: () => _navigateToTab(4),
       ),
-      // Tab 2: Phase 6 Content & Social Post Studio
+      // Tab 2: Phase 6, 8, 9 Content, Campaign & Creative Studio
       ContentStudioScreen(
         onNavigateToRecommendations: () => _navigateToTab(1),
       ),
-      // Tab 3: Phase 7 SEO & Visibility Optimizer
+      // Tab 3: Phase 7 SEO & Competitor Optimizer
       SeoOptimizerScreen(
         onNavigateToRecommendations: () => _navigateToTab(1),
       ),
-      // More Tab (Reviews & Settings)
+      // Tab 4: Reviews & Google Business
       const ReviewsScreen(),
     ];
 
@@ -46,6 +61,21 @@ class _MainShellState extends State<MainShell> {
       body: IndexedStack(
         index: _currentIndex,
         children: screens,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => CmoChatDrawer.show(
+          context,
+          currentScreen: ['home', 'actions', 'create', 'seo', 'reviews'][_currentIndex],
+          onNavigate: _handleRouteNavigate,
+        ),
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFF60A5FA)),
+        label: const Text(
+          'Ask AI CMO',
+          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, letterSpacing: 0.1),
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -63,15 +93,15 @@ class _MainShellState extends State<MainShell> {
         ),
         child: SafeArea(
           child: SizedBox(
-            height: 64,
+            height: 70,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(0, Icons.home_rounded, 'Home'),
-                _buildNavItem(1, Icons.insights_rounded, 'Insights'),
+                _buildNavItem(1, Icons.insights_rounded, 'Actions'),
                 _buildCreateNavItem(2),
                 _buildNavItem(3, Icons.search_rounded, 'SEO'),
-                _buildNavItem(4, Icons.more_horiz_rounded, 'More'),
+                _buildNavItem(4, Icons.rate_review_outlined, 'Reviews'),
               ],
             ),
           ),
@@ -86,26 +116,26 @@ class _MainShellState extends State<MainShell> {
       onTap: () => _navigateToTab(index),
       borderRadius: BorderRadius.circular(24),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               decoration: const BoxDecoration(
                 color: Color(0xFF2563EB),
                 shape: BoxShape.circle,
               ),
               child: const Center(
-                child: Icon(Icons.add, color: Colors.white, size: 20),
+                child: Icon(Icons.add, color: Colors.white, size: 22),
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               'Create',
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 11.5,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
               ),
@@ -121,31 +151,26 @@ class _MainShellState extends State<MainShell> {
     return InkWell(
       onTap: () => _navigateToTab(index),
       borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (isSelected && index == 0)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(icon, color: const Color(0xFF2563EB), size: 20),
-              )
-            else
-              Icon(
-                icon,
-                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
-                size: 22,
-              ),
+            Icon(
+              icon,
+              color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+              size: 22,
+            ),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10.5,
+                fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
               ),

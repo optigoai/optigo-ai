@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth/auth_provider.dart';
+import 'notification_modal.dart';
 
 class OptigoTopBar extends StatelessWidget {
   final String? subtitle;
@@ -150,15 +151,15 @@ class OptigoTopBar extends StatelessWidget {
               children: [
                 Image.asset(
                   'assets/images/logo.png',
-                  height: 26,
+                  height: 30,
                   fit: BoxFit.contain,
                   alignment: Alignment.centerLeft,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   displaySubtitle,
                   style: const TextStyle(
-                    fontSize: 10.5,
+                    fontSize: 12,
                     color: Color(0xFF64748B),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.1,
@@ -174,7 +175,7 @@ class OptigoTopBar extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               InkWell(
-                onTap: onNotificationTap,
+                onTap: onNotificationTap ?? () => NotificationModal.show(context),
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
                   padding: const EdgeInsets.all(6),
@@ -209,8 +210,8 @@ class OptigoTopBar extends StatelessWidget {
             onTap: () => _showProfileModal(context, authProvider),
             borderRadius: BorderRadius.circular(20),
             child: Container(
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
@@ -220,7 +221,7 @@ class OptigoTopBar extends StatelessWidget {
                 child: Text(
                   user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'N',
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF2563EB),
                   ),

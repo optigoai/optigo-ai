@@ -152,14 +152,15 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Universal Top App Bar
-                const OptigoTopBar(
-                  subtitle: 'AI CMO Actions',
+                // Universal Top App Bar Header
+                OptigoTopBar(
+                  subtitle: 'Priority Actions',
+                  onNotificationTap: () {},
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
 
-                // 2. AI CMO Battle Plan Hero Card
+                // 2. Action Plan Hero Card
                 _buildBattlePlanCard(
                   totalCount: _recommendations.length,
                   attentionCount: pendingList.length,
@@ -337,7 +338,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'AI CMO Battle Plan',
+                      'Today\'s Action Plan',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
@@ -474,7 +475,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? activeColor : Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -504,7 +505,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               style: TextStyle(
                 color: isSelected ? Colors.white : const Color(0xFF334155),
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                fontSize: 12,
+                fontSize: 13,
               ),
             ),
           ],
@@ -537,8 +538,8 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -575,7 +576,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     Text(
                       priorityTag,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: FontWeight.w900,
                         color: themeColor,
                         letterSpacing: 0.5,
@@ -612,13 +613,13 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
           // 2. Full-Width Title (Never squished)
           Text(
             rec.title,
             style: const TextStyle(
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: FontWeight.w800,
               color: Color(0xFF0F172A),
               letterSpacing: -0.3,
@@ -626,15 +627,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             ),
           ),
 
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
 
-          // 3. Clear, direct instruction
+          // 3. Clear, direct instruction (expandable)
           Text(
             rec.suggestedAction.isNotEmpty ? rec.suggestedAction : rec.explanation,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               color: Color(0xFF475569),
-              height: 1.35,
+              height: 1.4,
             ),
           ),
 
@@ -656,7 +659,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     const SizedBox(width: 4),
                     Text(
                       rec.effort.isNotEmpty ? rec.effort : '5 mins',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
                     ),
                   ],
                 ),
@@ -675,7 +678,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                       side: const BorderSide(color: Color(0xFF2563EB)),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text('Open Reviews', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+                    child: const Text('Open Reviews', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
                   ),
                 ),
 
@@ -687,7 +690,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   foregroundColor: const Color(0xFF64748B),
                 ),
-                child: const Text('Dismiss', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                child: const Text('Dismiss', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
               ),
               const SizedBox(width: 4),
 
@@ -702,7 +705,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text('Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                child: const Text('Done', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
               ),
             ],
           ),
@@ -713,8 +716,8 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
   Widget _buildCompletedActionCard(RecommendationModel rec) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -723,15 +726,15 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               color: const Color(0xFFECFDF5),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 20),
+            child: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 22),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -739,17 +742,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                 const Text(
                   'COMPLETED',
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 10,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF10B981),
                     letterSpacing: 0.5,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   rec.title,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
                   ),
@@ -757,39 +760,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                 const SizedBox(height: 2),
                 const Text(
                   'Completed recently',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFECFDF5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              children: const [
-                Text(
-                  'High Impact',
-                  style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: Color(0xFF10B981)),
-                ),
-                SizedBox(height: 2),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.trending_up_rounded, size: 10, color: Color(0xFF10B981)),
-                    SizedBox(width: 2),
-                    Text(
-                      '+15%',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF10B981)),
-                    ),
-                  ],
-                ),
-                Text(
-                  'Conversion Rate',
-                  style: TextStyle(fontSize: 7, color: Color(0xFF64748B)),
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                 ),
               ],
             ),
@@ -823,12 +794,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               children: const [
                 Text(
                   'Keep the momentum going!',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
                 ),
                 SizedBox(height: 2),
                 Text(
                   'Here are your top opportunities to grow your business.',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                   style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                 ),
               ],
             ),

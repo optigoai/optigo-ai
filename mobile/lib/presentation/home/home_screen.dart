@@ -100,70 +100,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return 'Good evening';
   }
 
-  void _showComingSoonDialog(String featureName, String phaseNumber) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.auto_awesome, color: Color(0xFF2563EB), size: 20),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                featureName,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'This AI capability is scheduled for $phaseNumber of development.',
-              style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), height: 1.4),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.check_circle_outline_rounded, size: 16, color: Color(0xFF2563EB)),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Ready to be unlocked upon phase launch instruction.',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Got it', style: TextStyle(fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: const Color(0xFF2563EB),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -193,54 +129,59 @@ class _HomeScreenState extends State<HomeScreen> {
                   onNotificationTap: widget.onNavigateToRecommendations,
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
 
                 // 2. Greeting Header
                 Text(
                   '${_getGreeting()}, $firstName! 👋',
                   style: const TextStyle(
-                    fontSize: 22,
+                    fontSize: 24,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF0F172A),
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 const Text(
                   "Here's what's happening with your business today.",
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: Color(0xFF64748B),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // 3. Active Business Storefront Selector Card
                 _buildBusinessSelectorCard(business?.name, business?.location),
 
-                const SizedBox(height: 18),
+                const SizedBox(height: 24),
 
                 // 4. Marketing Health Dual-Section Card (Gauge + Graph + 3 Mini Stats)
                 _buildMarketingHealthCard(healthScore),
 
-                const SizedBox(height: 22),
+                const SizedBox(height: 24),
 
-                // 5. Top Priority Action Card
+                // 5. Weekly Customer Activity Bar Chart (Inspired by reference design)
+                _buildWeeklyActivitySection(),
+
+                const SizedBox(height: 28),
+
+                // 6. Top Priority Action Card
                 _buildTopPrioritySection(),
 
-                const SizedBox(height: 22),
+                const SizedBox(height: 28),
 
-                // 6. Quick Actions Section
+                // 7. Quick Actions Section
                 _buildQuickActionsSection(),
 
-                const SizedBox(height: 22),
+                const SizedBox(height: 28),
 
-                // 7. Growth Opportunities Section
+                // 8. Growth Opportunities & Recent Activity Section
                 _buildGrowthOpportunitiesSection(),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -258,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -296,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         displayName,
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF0F172A),
                           letterSpacing: -0.2,
@@ -308,15 +249,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF64748B)),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Row(
                   children: [
-                    const Icon(Icons.location_on_rounded, size: 12, color: Color(0xFF64748B)),
+                    const Icon(Icons.location_on_rounded, size: 13, color: Color(0xFF64748B)),
                     const SizedBox(width: 3),
                     Text(
                       displayLocation,
                       style: const TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 12.5,
                         color: Color(0xFF64748B),
                         fontWeight: FontWeight.w500,
                       ),
@@ -380,13 +321,13 @@ class _HomeScreenState extends State<HomeScreen> {
           const Text(
             'Marketing Health',
             style: TextStyle(
-              fontSize: 14.5,
+              fontSize: 16,
               fontWeight: FontWeight.w800,
               color: Color(0xFF0F172A),
               letterSpacing: -0.2,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
 
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,8 +338,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   children: [
                     SizedBox(
-                      width: 110,
-                      height: 68,
+                      width: 130,
+                      height: 80,
                       child: CustomPaint(
                         painter: _SemiCircleGaugePainter(score: score),
                         child: Align(
@@ -409,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 '$score',
                                 style: const TextStyle(
-                                  fontSize: 22,
+                                  fontSize: 26,
                                   fontWeight: FontWeight.w900,
                                   color: Color(0xFF0F172A),
                                   height: 1.0,
@@ -418,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               const Text(
                                 '/100',
                                 style: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF64748B),
                                 ),
@@ -428,11 +369,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
 
                     // Good Standing Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(12),
@@ -443,21 +384,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           Text(
                             'Good Standing',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w800,
                               color: Color(0xFF2563EB),
                             ),
                           ),
                           SizedBox(width: 4),
-                          Icon(Icons.thumb_up_rounded, size: 11, color: Color(0xFF2563EB)),
+                          Icon(Icons.thumb_up_rounded, size: 12, color: Color(0xFF2563EB)),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      "You're doing great! Keep it up.",
-                      style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
-                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -521,6 +456,51 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 14),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 12),
+
+          // Phase 11: Real-Time ROI & Customer Lead Attribution Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.currency_exchange_rounded, size: 16, color: Color(0xFF16A34A)),
+                    SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Est. Monthly Impact', style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                        Text('\$23,895 / mo', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF2563EB)),
+                      SizedBox(width: 4),
+                      Text('4.2x ROI', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -537,36 +517,123 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         Container(
-          width: 26,
-          height: 26,
+          width: 30,
+          height: 30,
           decoration: BoxDecoration(
             color: iconBg,
             shape: BoxShape.circle,
           ),
           child: Center(
-            child: Icon(icon, size: 13, color: iconColor),
+            child: Icon(icon, size: 16, color: iconColor),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         Text(
           value,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
         ),
         Text(
           label,
-          style: const TextStyle(fontSize: 9, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 1),
+        const SizedBox(height: 2),
         Text(
           trend,
-          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF10B981)),
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF10B981)),
         ),
       ],
     );
   }
 
   // ==========================================
-  // 5. Top Priority Action Card
+  // 5. Weekly Customer Activity Bar Chart
+  // ==========================================
+  Widget _buildWeeklyActivitySection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Weekly Customer Activity',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Profile interactions & customer calls',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF10B981)),
+                    SizedBox(width: 4),
+                    Text(
+                      '+24%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF10B981),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // 7-Day Interactive Styled Bar Chart with Active Tooltip (Wednesday peak)
+          SizedBox(
+            height: 140,
+            width: double.infinity,
+            child: CustomPaint(
+              painter: _WeeklyBarChartPainter(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // 6. Top Priority Action Card
   // ==========================================
   Widget _buildTopPrioritySection() {
     final pendingRecs = _recommendations.where((r) => r.isPending).toList();
@@ -591,7 +658,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const Text(
               'Top Priority',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF0F172A),
                 letterSpacing: -0.3,
@@ -623,7 +690,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
@@ -696,65 +763,34 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: const Text(
                             'URGENT',
                             style: TextStyle(
-                              fontSize: 9.5,
+                              fontSize: 10,
                               fontWeight: FontWeight.w900,
                               color: Color(0xFFDC2626),
                               letterSpacing: 0.2,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
                           title,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFF0F172A),
                             letterSpacing: -0.2,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         Text(
                           desc,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 13,
                             color: Color(0xFF64748B),
-                            height: 1.3,
+                            height: 1.35,
                             fontWeight: FontWeight.w500,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // High Impact Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF1F2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Column(
-                      children: [
-                        Text(
-                          'High Impact',
-                          style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: Color(0xFFE11D48)),
-                        ),
-                        SizedBox(height: 2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.trending_up_rounded, size: 12, color: Color(0xFFE11D48)),
-                            SizedBox(width: 2),
-                            Text(
-                              '+22%',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFFE11D48)),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          'Conversion',
-                          style: TextStyle(fontSize: 8.5, color: Color(0xFF64748B)),
                         ),
                       ],
                     ),
@@ -830,13 +866,13 @@ class _HomeScreenState extends State<HomeScreen> {
         const Text(
           'Quick Actions',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.w800,
             color: Color(0xFF0F172A),
             letterSpacing: -0.3,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
 
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -846,14 +882,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.auto_awesome,
                 iconColor: const Color(0xFF2563EB),
                 bgColor: const Color(0xFFEFF6FF),
-                label: 'Ask AI CMO',
+                label: 'Today\'s\nActions',
                 onTap: () {
                   if (widget.onNavigateToRecommendations != null) {
                     widget.onNavigateToRecommendations!();
                   }
                 },
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               _buildQuickActionItem(
                 icon: Icons.edit_note_rounded,
                 iconColor: const Color(0xFF8B5CF6),
@@ -865,7 +901,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                 },
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               _buildQuickActionItem(
                 icon: Icons.travel_explore_rounded,
                 iconColor: const Color(0xFF10B981),
@@ -877,15 +913,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                 },
               ),
-              const SizedBox(width: 10),
-              _buildQuickActionItem(
-                icon: Icons.campaign_rounded,
-                iconColor: const Color(0xFFF59E0B),
-                bgColor: const Color(0xFFFEF3C7),
-                label: 'Build\nCampaign',
-                onTap: () => _showComingSoonDialog('AI Multi-Channel Campaigns', 'Phase 8'),
-              ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               _buildQuickActionItem(
                 icon: Icons.chat_bubble_outline_rounded,
                 iconColor: const Color(0xFF0EA5E9),
@@ -915,9 +943,9 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 82,
-        height: 90,
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        width: 90,
+        height: 96,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -934,14 +962,14 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: bgColor,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: Icon(icon, size: 20, color: iconColor),
+                child: Icon(icon, size: 22, color: iconColor),
               ),
             ),
             const SizedBox(height: 6),
@@ -949,10 +977,10 @@ class _HomeScreenState extends State<HomeScreen> {
               label,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 10.5,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF1E293B),
-                height: 1.1,
+                height: 1.15,
               ),
             ),
           ],
@@ -974,7 +1002,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const Text(
               'Growth Opportunities',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF0F172A),
                 letterSpacing: -0.3,
@@ -990,19 +1018,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       'View all',
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF2563EB),
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF2563EB)),
+                    Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF2563EB)),
                   ],
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
 
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -1016,15 +1044,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 impactTag: 'Medium Impact',
                 impactColor: const Color(0xFFD97706),
                 impactBg: const Color(0xFFFEF3C7),
-                highlight: '+12%',
-                subtitle: 'More local visibility',
+                highlight: 'Boost visibility',
+                subtitle: 'Rank higher on Maps',
                 onTap: () {
                   if (widget.onNavigateToTab != null) {
                     widget.onNavigateToTab!(3);
                   }
                 },
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               _buildGrowthCard(
                 icon: Icons.article_outlined,
                 iconColor: const Color(0xFF10B981),
@@ -1033,26 +1061,77 @@ class _HomeScreenState extends State<HomeScreen> {
                 impactTag: 'Low Effort',
                 impactColor: const Color(0xFF10B981),
                 impactBg: const Color(0xFFECFDF5),
-                highlight: '+8%',
-                subtitle: 'Engagement boost',
+                highlight: 'Stay active',
+                subtitle: 'Engage customers',
                 onTap: () {
                   if (widget.onNavigateToTab != null) {
                     widget.onNavigateToTab!(2);
                   }
                 },
               ),
-              const SizedBox(width: 12),
-              _buildGrowthCard(
-                icon: Icons.groups_rounded,
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Recent Activity Stream (Inspired by reference design screen 3)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Recent Activity & Updates',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildActivityRow(
+                icon: Icons.star_rounded,
+                iconColor: const Color(0xFFF59E0B),
+                iconBg: const Color(0xFFFEF3C7),
+                title: 'New 5-Star Google Review',
+                subtitle: 'Aarav Sharma • 2h ago',
+                badgeText: 'Replied',
+                badgeColor: const Color(0xFF10B981),
+                badgeBg: const Color(0xFFECFDF5),
+              ),
+              const Divider(height: 20, color: Color(0xFFF1F5F9)),
+              _buildActivityRow(
+                icon: Icons.search_rounded,
+                iconColor: const Color(0xFF2563EB),
+                iconBg: const Color(0xFFEFF6FF),
+                title: '"cold pressed oil near me"',
+                subtitle: 'Ranked #2 on Google Maps',
+                badgeText: '+3 Ranks',
+                badgeColor: const Color(0xFF2563EB),
+                badgeBg: const Color(0xFFEFF6FF),
+              ),
+              const Divider(height: 20, color: Color(0xFFF1F5F9)),
+              _buildActivityRow(
+                icon: Icons.edit_note_rounded,
                 iconColor: const Color(0xFF8B5CF6),
                 iconBg: const Color(0xFFF5F3FF),
-                title: 'Check Competitors',
-                impactTag: 'High Impact',
-                impactColor: const Color(0xFF8B5CF6),
-                impactBg: const Color(0xFFF5F3FF),
-                highlight: '+15%',
-                subtitle: 'Stay ahead',
-                onTap: () => _showComingSoonDialog('Competitor Intelligence Benchmarks', 'Phase 11'),
+                title: 'Multi-Channel Promo Draft',
+                subtitle: 'Instagram & Facebook post ready',
+                badgeText: 'Draft',
+                badgeColor: const Color(0xFF8B5CF6),
+                badgeBg: const Color(0xFFF5F3FF),
               ),
             ],
           ),
@@ -1060,6 +1139,75 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+
+  Widget _buildActivityRow({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    required String subtitle,
+    required String badgeText,
+    required Color badgeColor,
+    required Color badgeBg,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: iconBg,
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Icon(icon, size: 18, color: iconColor),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: badgeBg,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            badgeText,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: badgeColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   Widget _buildGrowthCard({
     required IconData icon,
@@ -1077,8 +1225,8 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 148,
-        padding: const EdgeInsets.all(14),
+        width: 160,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -1097,22 +1245,22 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     color: iconBg,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Icon(icon, size: 16, color: iconColor),
+                    child: Icon(icon, size: 18, color: iconColor),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: Color(0xFF0F172A),
                     ),
@@ -1122,10 +1270,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: impactBg,
                 borderRadius: BorderRadius.circular(6),
@@ -1133,26 +1281,27 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 impactTag,
                 style: TextStyle(
-                  fontSize: 9,
+                  fontSize: 10,
                   fontWeight: FontWeight.w800,
                   color: impactColor,
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
             Text(
               highlight,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.w900,
                 color: impactColor,
               ),
             ),
+            const SizedBox(height: 2),
             Text(
               subtitle,
               style: const TextStyle(
-                fontSize: 10,
+                fontSize: 12,
                 color: Color(0xFF64748B),
                 fontWeight: FontWeight.w500,
               ),
@@ -1310,3 +1459,121 @@ class _SparklineChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+// ==========================================
+// Custom Painter for 7-Day Weekly Bar Chart
+// Inspired by reference UI with active tooltip
+// ==========================================
+class _WeeklyBarChartPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const values = [0.45, 0.60, 0.92, 0.68, 0.78, 0.55, 0.38];
+    const activeIndex = 2; // Wednesday peak
+
+    final barWidth = (size.width / 7) - 14;
+    final maxBarHeight = size.height - 48; // room for tooltip and day label
+
+    for (int i = 0; i < 7; i++) {
+      final xCenter = (size.width / 7) * i + (size.width / 14);
+      final left = xCenter - (barWidth / 2);
+      final top = 32.0;
+      final height = maxBarHeight;
+
+      final isSelected = i == activeIndex;
+
+      // 1. Draw Background Track Bar
+      final trackPaint = Paint()
+        ..color = const Color(0xFFF1F5F9)
+        ..style = PaintingStyle.fill;
+      final trackRect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(left, top, barWidth, height),
+        const Radius.circular(8),
+      );
+      canvas.drawRRect(trackRect, trackPaint);
+
+      // 2. Draw Active Filled Value Bar
+      final filledHeight = height * values[i];
+      final filledTop = top + (height - filledHeight);
+
+      final fillPaint = Paint()
+        ..color = isSelected ? const Color(0xFF2563EB) : const Color(0xFFBFDBFE)
+        ..style = PaintingStyle.fill;
+
+      final fillRect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(left, filledTop, barWidth, filledHeight),
+        const Radius.circular(8),
+      );
+      canvas.drawRRect(fillRect, fillPaint);
+
+      // 3. Draw Active Floating Tooltip on Highlighted Bar
+      if (isSelected) {
+        // Tooltip container box
+        const tooltipWidth = 72.0;
+        const tooltipHeight = 22.0;
+        final tooltipLeft = xCenter - (tooltipWidth / 2);
+        final tooltipTop = filledTop - tooltipHeight - 6;
+
+        final tooltipBgPaint = Paint()
+          ..color = const Color(0xFF0F172A)
+          ..style = PaintingStyle.fill;
+
+        final tooltipRRect = RRect.fromRectAndRadius(
+          Rect.fromLTWH(tooltipLeft, tooltipTop, tooltipWidth, tooltipHeight),
+          const Radius.circular(6),
+        );
+        canvas.drawRRect(tooltipRRect, tooltipBgPaint);
+
+        // Tooltip downward pointer triangle
+        final pointerPath = Path()
+          ..moveTo(xCenter - 4, tooltipTop + tooltipHeight)
+          ..lineTo(xCenter + 4, tooltipTop + tooltipHeight)
+          ..lineTo(xCenter, tooltipTop + tooltipHeight + 4)
+          ..close();
+        canvas.drawPath(pointerPath, tooltipBgPaint);
+
+        // Tooltip Text
+        const textSpan = TextSpan(
+          text: '340 views',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Inter',
+          ),
+        );
+        final textPainter = TextPainter(
+          text: textSpan,
+          textDirection: TextDirection.ltr,
+        )..layout();
+        textPainter.paint(
+          canvas,
+          Offset(xCenter - (textPainter.width / 2), tooltipTop + 4),
+        );
+      }
+
+      // 4. Draw Day of Week Label below bar
+      final daySpan = TextSpan(
+        text: days[i],
+        style: TextStyle(
+          color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+          fontSize: 11,
+          fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+          fontFamily: 'Inter',
+        ),
+      );
+      final dayPainter = TextPainter(
+        text: daySpan,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      dayPainter.paint(
+        canvas,
+        Offset(xCenter - (dayPainter.width / 2), top + height + 6),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+

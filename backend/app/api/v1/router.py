@@ -4,7 +4,20 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health, auth, businesses, reviews, recommendations, contents, seo
+from app.api.v1.endpoints import (
+    health,
+    auth,
+    businesses,
+    reviews,
+    recommendations,
+    contents,
+    seo,
+    campaigns,
+    creatives,
+    cmo,
+    analytics,
+    notifications,
+)
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -28,10 +41,19 @@ api_router.include_router(contents.router)
 
 # SEO & Visibility Optimizer
 api_router.include_router(seo.router)
-# api_router.include_router(content.router, prefix="/content", tags=["Content"])
-# api_router.include_router(campaigns.router, prefix="/campaigns", tags=["Campaigns"])
-# api_router.include_router(creatives.router, prefix="/creatives", tags=["Creatives"])
-# api_router.include_router(chat.router, prefix="/chat", tags=["AI Chat"])
-# api_router.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
-# api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
-# api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
+
+# Phase 8: Multi-Channel Marketing Campaigns
+api_router.include_router(campaigns.router)
+
+# Phase 9: Smart Creatives & Promo Engine
+api_router.include_router(creatives.router)
+
+# Phase 10: Conversational AI CMO Chat
+api_router.include_router(cmo.router)
+
+# Phase 11: ROI Analytics & Real-Time Performance
+api_router.include_router(analytics.router)
+
+# Phase 12: Notifications & Proactive Intelligence
+api_router.include_router(notifications.router)
+
