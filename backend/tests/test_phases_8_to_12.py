@@ -128,6 +128,19 @@ async def test_phases_8_to_12_workflow(client):
     assert len(chat_data["content"]) > 10
     assert len(chat_data["suggested_actions"]) >= 1
 
+    # Test specific query extracting reviewer names from profile
+    chat_name_res = await client.post(
+        "/api/v1/cmo/chat",
+        headers=headers,
+        json={
+            "business_id": biz_id,
+            "message": "generate name of all person who post review in my profile",
+            "context_screen": "reviews",
+        },
+    )
+    assert chat_name_res.status_code == 200
+    assert len(chat_name_res.json()["content"]) > 0
+
     # ==========================================
     # Phase 11: ROI Analytics Tests
     # ==========================================
