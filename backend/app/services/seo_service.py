@@ -10,6 +10,8 @@ from app.repositories.seo_repo import SEORepository
 from app.ai.ai_service import AIService
 from app.schemas.seo import SEOKeywordCreate
 
+from app.providers.seo.factory import SEOProviderFactory
+
 logger = get_logger("app.services.seo")
 
 
@@ -26,27 +28,29 @@ class SEOService:
         return business
 
     async def list_keywords(self, business_id: str) -> List[SEOKeyword]:
-        await self._get_business_or_404(business_id)
+        business = await self._get_business_or_404(business_id)
         keywords = await self.repo.get_keywords_by_business(business_id)
-        # If no keywords yet, seed default ones based on business type
+        # If no keywords yet, seed default ones based on business type using active provider
         if not keywords:
-            business = await self._get_business_or_404(business_id)
             location = business.location or "Local Market"
-            defaults = [
-                (f"{business.category or 'oil mill'} near me", 2, "1.8K / mo", "Low"),
-                (f"best {business.category or 'flour mill'} in {location}", 4, "950 / mo", "Medium"),
-                (f"fresh cold pressed oil {location}", 1, "600 / mo", "Low"),
-                (f"wholesale flour supply {location}", 7, "400 / mo", "Medium"),
+            category = business.category or "Store"
+            default_kws = [
+                f"{category} near me",
+                f"best {category} in {location}",
+                f"fresh {category} {location}",
             ]
-            for kw, rank, vol, diff in defaults:
+            provider = SEOProviderFactory.get_provider()
+            for kw in default_kws:
+                rank_info = await provider.get_keyword_rank(kw, domain=business.website or business.name, location=location)
+                current_rank = rank_info.get("rank") or 3
                 k_obj = SEOKeyword(
                     business_id=business_id,
                     keyword=kw,
                     target_location=location,
-                    current_rank=rank,
-                    previous_rank=rank + random.choice([1, 2, -1, 0]),
-                    search_volume=vol,
-                    difficulty=diff,
+                    current_rank=current_rank,
+                    previous_rank=current_rank + 1,
+                    search_volume="850 / mo",
+                    difficulty="Low",
                     intent="Local Intent",
                     is_tracked=True,
                 )
@@ -61,7 +65,16 @@ class SEOService:
             return existing
 
         location = data.target_location or business.location or "Local Market"
-        current_rank = data.current_rank or random.randint(2, 12)
+        
+        # Query real ranking from active SEO provider (Serper / DataForSEO)
+        provider = SEOProviderFactory.get_provider()
+        rank_info = await provider.get_keyword_rank(
+            keyword=data.keyword.strip(),
+            domain=business.website or business.name,
+            location=location,
+        )
+        current_rank = data.current_rank or rank_info.get("rank") or 5
+
         keyword_obj = SEOKeyword(
             business_id=business_id,
             keyword=data.keyword.strip(),
@@ -99,6 +112,15 @@ class SEOService:
         kw_list = [k.keyword for k in tracked]
         location = business.location or "Local Market"
 
+        # Fetch live competitors from active SEO provider
+        provider = SEOProviderFactory.get_provider()
+        live_competitors = await provider.get_local_competitors(
+            keyword=business.category or "local business",
+            location=location,
+            limit=3,
+        )
+        comp_summary = [f"{c.get('name')} ({c.get('rating')}★)" for c in live_competitors] if live_competitors else None
+
         ai_res = await self.ai_service.generate_seo_audit(
             organization_id=business.organization_id,
             user_id=user_id,
@@ -107,6 +129,7 @@ class SEOService:
             location=location,
             description=business.description,
             current_keywords=kw_list,
+            competitors_context=comp_summary,
             rating=4.5,
             reviews_count=10,
         )

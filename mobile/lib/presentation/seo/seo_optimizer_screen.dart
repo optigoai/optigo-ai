@@ -106,35 +106,6 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     }
   }
 
-  Future<void> _handleRunWebsiteAudit() async {
-    final business = context.read<AppAuthProvider>().currentBusiness;
-    if (business == null || _seoRepo == null) return;
-
-    setState(() => _isAuditingWebsite = true);
-    try {
-      final res = await _seoRepo!.runWebsiteAudit(business.id);
-      if (mounted) {
-        setState(() {
-          _websiteAudit = res;
-          _isAuditingWebsite = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✨ Website audit completed! High-impact fixes added to Actions.'),
-            backgroundColor: Color(0xFF10B981),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isAuditingWebsite = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Audit error: $e')),
-        );
-      }
-    }
-  }
-
   Future<void> _handleRunFreshAudit() async {
     final business = context.read<AppAuthProvider>().currentBusiness;
     if (business == null || _seoRepo == null) return;
@@ -1085,11 +1056,6 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
   Widget _buildGoogleSearchPerformanceCard() {
     final gsc = _gscSummary;
     final isConnected = gsc != null && gsc.isConnected;
-    final clicks = gsc?.totalClicks ?? 379;
-    final impressions = gsc?.totalImpressions ?? 4900;
-    final ctr = gsc?.averageCtr ?? 7.7;
-    final pos = gsc?.averagePosition ?? 1.9;
-    final freshness = gsc?.freshnessLabel ?? 'Updated 2h ago';
 
     return Container(
       width: double.infinity,
@@ -1129,69 +1095,93 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(6),
+              if (isConnected)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    gsc.freshnessLabel,
+                    style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                  ),
                 ),
-                child: Text(
-                  freshness,
-                  style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // 4-Metric Grid
-          Row(
-            children: [
-              _buildGscMiniStat('Clicks', '$clicks', const Color(0xFF2563EB)),
-              const SizedBox(width: 8),
-              _buildGscMiniStat('Impressions', '$impressions', const Color(0xFF0F172A)),
-              const SizedBox(width: 8),
-              _buildGscMiniStat('Avg CTR', '$ctr%', const Color(0xFF10B981)),
-              const SizedBox(width: 8),
-              _buildGscMiniStat('Avg Pos', '#$pos', const Color(0xFFD97706)),
-            ],
-          ),
+          if (isConnected) ...[
+            // 4-Metric Grid
+            Row(
+              children: [
+                _buildGscMiniStat('Clicks', '${gsc.totalClicks}', const Color(0xFF2563EB)),
+                const SizedBox(width: 8),
+                _buildGscMiniStat('Impressions', '${gsc.totalImpressions}', const Color(0xFF0F172A)),
+                const SizedBox(width: 8),
+                _buildGscMiniStat('Avg CTR', '${gsc.averageCtr}%', const Color(0xFF10B981)),
+                const SizedBox(width: 8),
+                _buildGscMiniStat('Avg Pos', '#${gsc.averagePosition}', const Color(0xFFD97706)),
+              ],
+            ),
 
-          if (gsc != null && gsc.topQueries.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const Text('Top Customer Search Queries:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF334155))),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: gsc.topQueries.take(3).map((q) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+            if (gsc.topQueries.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              const Text('Top Customer Search Queries:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF334155))),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: gsc.topQueries.take(3).map((q) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Text(
+                      '${q.query} (${q.clicks} clicks)',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: Color(0xFF64748B), size: 18),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Connect Google Search Console to see your real clicks, impressions, and live customer search queries from Google.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF475569), height: 1.35),
+                    ),
                   ),
-                  child: Text(
-                    '${q.query} (${q.clicks} clicks)',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                  ),
-                );
-              }).toList(),
+                ],
+              ),
             ),
           ],
 
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            height: 38,
+            height: 40,
             child: OutlinedButton.icon(
               onPressed: _isSyncingGsc ? null : _handleSyncGsc,
               icon: _isSyncingGsc
                   ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.sync_rounded, size: 16),
               label: Text(
-                isConnected ? 'Sync Search Data' : 'Connect Google Search Console',
+                isConnected ? 'Sync Search Console Data' : 'Connect Google Search Console',
                 style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
               ),
               style: OutlinedButton.styleFrom(
@@ -1336,13 +1326,13 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            height: 38,
+            height: 44,
             child: ElevatedButton.icon(
-              onPressed: _isAuditingWebsite ? null : _handleRunWebsiteAudit,
+              onPressed: _isAuditingWebsite ? null : _showWebsiteAuditDialog,
               icon: _isAuditingWebsite
-                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.search_rounded, size: 16),
-              label: const Text('Audit My Website', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.travel_explore_rounded, size: 18),
+              label: const Text('Audit Website with Firecrawl', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F172A),
                 foregroundColor: Colors.white,
@@ -1354,6 +1344,127 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
         ],
       ),
     );
+  }
+
+  void _showWebsiteAuditDialog() {
+    final business = context.read<AppAuthProvider>().currentBusiness;
+    final defaultUrl = (business?.website != null && business!.website!.isNotEmpty && !business.website!.contains('localhost'))
+        ? business.website!
+        : 'https://panekkattmill.com';
+    final urlController = TextEditingController(text: defaultUrl);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.language_rounded, color: Color(0xFF10B981), size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Audit Business Website', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                      Text('Powered by Firecrawl & Gemini AI intelligence', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text('Website URL to Crawl:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
+            const SizedBox(height: 6),
+            TextField(
+              controller: urlController,
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                hintText: 'https://yourbusiness.com',
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                prefixIcon: const Icon(Icons.link_rounded, color: Color(0xFF64748B)),
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  final target = urlController.text.trim();
+                  if (target.isNotEmpty) {
+                    _runAuditOnUrl(target);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Start Live Website Crawl', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _runAuditOnUrl(String url) async {
+    final business = context.read<AppAuthProvider>().currentBusiness;
+    if (business == null || _seoRepo == null) return;
+
+    setState(() => _isAuditingWebsite = true);
+    try {
+      final res = await _seoRepo!.runWebsiteAudit(business.id, url: url);
+      if (mounted) {
+        setState(() {
+          _websiteAudit = res;
+          _isAuditingWebsite = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✨ Firecrawl website audit completed! Real findings added to Actions.'),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isAuditingWebsite = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Audit error: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
   }
 }
 
