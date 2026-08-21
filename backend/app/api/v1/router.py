@@ -17,6 +17,7 @@ from app.api.v1.endpoints import (
     cmo,
     analytics,
     notifications,
+    gsc,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -56,4 +57,7 @@ api_router.include_router(analytics.router)
 
 # Phase 12: Notifications & Proactive Intelligence
 api_router.include_router(notifications.router)
+
+# External Integrations: Google Search Console
+api_router.include_router(gsc.router)
 

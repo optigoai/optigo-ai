@@ -95,3 +95,37 @@ async def optimize_gbp_profile(
         business_id=business_id,
         user_id=current_user.id,
     )
+
+
+@router.post("/website/audit")
+async def run_website_audit(
+    business_id: str = Query(..., description="Business ID"),
+    url: Optional[str] = Query(None, description="Custom URL to audit, defaults to business website"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Run an automated website crawl, technical SEO audit, and generate AI recommendations."""
+    from app.services.website_audit_service import WebsiteAuditService
+    service = WebsiteAuditService(db)
+    return await service.run_audit(
+        business_id=business_id,
+        organization_id=current_user.organization_id,
+        user_id=current_user.id,
+        custom_url=url,
+    )
+
+
+@router.get("/website/audit/latest")
+async def get_latest_website_audit(
+    business_id: str = Query(..., description="Business ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get the latest website audit findings and actionable fixes."""
+    from app.services.website_audit_service import WebsiteAuditService
+    service = WebsiteAuditService(db)
+    return await service.get_latest_audit(
+        business_id=business_id,
+        organization_id=current_user.organization_id,
+    )
+

@@ -67,7 +67,8 @@ async def clean_database():
             text(
                 "TRUNCATE TABLE users, organizations, businesses, reviews, recommendations, "
                 "contents, campaigns, competitors, seo_keywords, seo_audits, creatives, notifications, "
-                "business_analytics, ai_request_logs, feature_toggles CASCADE;"
+                "business_analytics, ai_request_logs, feature_toggles, "
+                "google_search_console_connections, search_console_metrics, website_audits CASCADE;"
             )
         )
     yield

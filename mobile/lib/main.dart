@@ -13,6 +13,7 @@ import 'data/repositories/campaign_repository.dart';
 import 'data/repositories/creative_repository.dart';
 import 'data/repositories/cmo_chat_repository.dart';
 import 'data/repositories/notification_repository.dart';
+import 'data/repositories/gsc_repository.dart';
 import 'presentation/auth/auth_provider.dart';
 
 void main() async {
@@ -43,6 +44,7 @@ void main() async {
   final creativeRepo = CreativeRepository(apiClient);
   final cmoChatRepo = CmoChatRepository(apiClient);
   final notificationRepo = NotificationRepository(apiClient);
+  final gscRepo = GscRepository(apiClient);
 
   runApp(
     MultiProvider(
@@ -58,6 +60,7 @@ void main() async {
         Provider<CreativeRepository>.value(value: creativeRepo),
         Provider<CmoChatRepository>.value(value: cmoChatRepo),
         Provider<NotificationRepository>.value(value: notificationRepo),
+        Provider<GscRepository>.value(value: gscRepo),
         ChangeNotifierProvider<AppAuthProvider>(
           create: (_) => AppAuthProvider(authRepo, bizRepo)..checkAuth(),
         ),

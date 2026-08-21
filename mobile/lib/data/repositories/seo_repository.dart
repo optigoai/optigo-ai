@@ -75,4 +75,24 @@ class SeoRepository {
     );
     return GbpOptimizationModel.fromJson(response);
   }
+
+  Future<Map<String, dynamic>> runWebsiteAudit(String businessId, {String? url}) async {
+    final endpoint = url != null
+        ? '${ApiConstants.seo}/website/audit?business_id=$businessId&url=${Uri.encodeComponent(url)}'
+        : '${ApiConstants.seo}/website/audit?business_id=$businessId';
+    final response = await _apiClient.post(endpoint);
+    return response as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>?> getLatestWebsiteAudit(String businessId) async {
+    try {
+      final response = await _apiClient.get('${ApiConstants.seo}/website/audit/latest?business_id=$businessId');
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
 }

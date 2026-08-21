@@ -49,6 +49,26 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
 
+    # ---- Google OAuth & Search Console ----
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = "http://localhost:8000/api/v1/integrations/google/search-console/callback"
+    google_token_encryption_key: str = "OPTIGOAI_SECRET_KEY_FOR_OAUTH_TOKEN_ENCRYPTION_32B"
+
+    # ---- SEO & SERP Providers ----
+    seo_provider: str = "dataforseo"  # dataforseo, serper, serpapi
+    dataforseo_login: str = ""
+    dataforseo_password: str = ""
+    serper_api_key: str = ""
+    serpapi_api_key: str = ""
+
+    # ---- Website Crawler & Intelligence ----
+    website_crawler_provider: str = "firecrawl"  # firecrawl, beautifulsoup, playwright
+    firecrawl_api_key: str = ""
+    crawler_max_pages: int = 10
+    crawler_timeout_seconds: int = 30
+    crawler_max_response_size_bytes: int = 5242880  # 5 MB
+
     # ---- Storage ----
     storage_provider: str = "local"
     gcs_bucket_name: str = ""

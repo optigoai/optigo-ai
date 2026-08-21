@@ -24,6 +24,8 @@ from app.models.notification import Notification, NotificationType
 from app.models.analytics import BusinessAnalytics
 from app.models.ai_log import AIRequestLog
 from app.models.feature_toggle import FeatureToggle
+from app.models.gsc import GoogleSearchConsoleConnection, SearchConsoleMetric
+from app.models.website_audit import WebsiteAudit
 
 __all__ = [
     "Organization",
@@ -50,4 +52,7 @@ __all__ = [
     "BusinessAnalytics",
     "AIRequestLog",
     "FeatureToggle",
+    "GoogleSearchConsoleConnection",
+    "SearchConsoleMetric",
+    "WebsiteAudit",
 ]
