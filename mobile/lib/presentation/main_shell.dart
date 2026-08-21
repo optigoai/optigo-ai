@@ -77,84 +77,116 @@ class _MainShellState extends State<MainShell> {
           style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, letterSpacing: 0.1),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(34),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: const Border(
+            top: BorderSide(color: Color(0xFFF1F5F9), width: 1.2),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildFloatingNavItem(0, Icons.home_rounded, 'Home'),
-              _buildFloatingNavItem(1, Icons.insights_rounded, 'Actions'),
-              _buildFloatingNavItem(2, Icons.add_circle_outline_rounded, 'Create'),
-              _buildFloatingNavItem(3, Icons.search_rounded, 'SEO'),
-              _buildFloatingNavItem(4, Icons.rate_review_outlined, 'Reviews'),
-            ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            height: 64,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavBarItem(
+                  index: 0,
+                  activeIcon: Icons.home_rounded,
+                  inactiveIcon: Icons.home_outlined,
+                  label: 'Home',
+                ),
+                _buildNavBarItem(
+                  index: 1,
+                  activeIcon: Icons.pie_chart_rounded,
+                  inactiveIcon: Icons.pie_chart_outline_rounded,
+                  label: 'Actions',
+                ),
+                _buildNavBarItem(
+                  index: 2,
+                  activeIcon: Icons.add_circle_rounded,
+                  inactiveIcon: Icons.add_circle_outline_rounded,
+                  label: 'Create',
+                ),
+                _buildNavBarItem(
+                  index: 3,
+                  activeIcon: Icons.travel_explore_rounded,
+                  inactiveIcon: Icons.search_rounded,
+                  label: 'SEO',
+                ),
+                _buildNavBarItem(
+                  index: 4,
+                  activeIcon: Icons.chat_bubble_rounded,
+                  inactiveIcon: Icons.chat_bubble_outline_rounded,
+                  label: 'Reviews',
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFloatingNavItem(int index, IconData icon, String label) {
+  Widget _buildNavBarItem({
+    required int index,
+    required IconData activeIcon,
+    required IconData inactiveIcon,
+    required String label,
+  }) {
     final isSelected = _currentIndex == index;
 
-    if (isSelected) {
-      // Dark active pill capsule
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0F172A),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white, size: 18),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
+    return Expanded(
+      child: InkWell(
+        onTap: () => _navigateToTab(index),
+        splashColor: const Color(0xFFEFF6FF),
+        highlightColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Micro-animation scale for the active icon
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 1.0, end: isSelected ? 1.15 : 1.0),
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutBack,
+                builder: (context, scale, child) {
+                  return Transform.scale(
+                    scale: scale,
+                    child: Icon(
+                      isSelected ? activeIcon : inactiveIcon,
+                      color: isSelected
+                          ? const Color(0xFF2563EB)
+                          : const Color(0xFF94A3B8),
+                      size: 24,
+                    ),
+                  );
+                },
               ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Inactive circular button
-    return InkWell(
-      onTap: () => _navigateToTab(index),
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Icon(
-            icon,
-            color: const Color(0xFF64748B),
-            size: 20,
+              const SizedBox(height: 4),
+              // Smooth label text animation
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected
+                      ? const Color(0xFF2563EB)
+                      : const Color(0xFF64748B),
+                ),
+                child: Text(label),
+              ),
+            ],
           ),
         ),
       ),
