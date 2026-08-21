@@ -8,6 +8,7 @@ import '../../data/repositories/business_repository.dart';
 import '../../data/repositories/recommendation_repository.dart';
 import '../auth/auth_provider.dart';
 import '../shared/optigo_top_bar.dart';
+import '../shared/cmo_chat_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onNavigateToRecommendations;
@@ -44,20 +45,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadData() async {
-    await Future.wait([
-      _loadIntelligence(),
-      _loadRecommendations(),
-    ]);
+    await Future.wait([_loadIntelligence(), _loadRecommendations()]);
   }
 
   Future<void> _loadIntelligence() async {
-    if (_bizRepo == null) return;
     final authProvider = context.read<AppAuthProvider>();
-    final businessId = authProvider.currentBusiness?.id;
-    if (businessId == null) return;
+    final bizId = authProvider.currentBusiness?.id;
+    if (bizId == null || _bizRepo == null) return;
 
     try {
-      final data = await _bizRepo!.getIntelligence(businessId);
+      final data = await _bizRepo!.getIntelligence(bizId);
       if (mounted) {
         setState(() {
           _intelligence = BusinessIntelligenceModel.fromJson(data);
@@ -67,22 +64,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadRecommendations() async {
-    if (_recRepo == null) return;
     final authProvider = context.read<AppAuthProvider>();
-    final businessId = authProvider.currentBusiness?.id;
-    if (businessId == null) return;
+    final bizId = authProvider.currentBusiness?.id;
+    if (bizId == null || _recRepo == null) return;
 
     try {
-      final list = await _recRepo!.getRecommendations(businessId);
+      final recs = await _recRepo!.getRecommendations(bizId);
       if (mounted) {
-        setState(() {
-          _recommendations = list;
-        });
+        setState(() => _recommendations = recs);
       }
     } catch (_) {}
   }
 
-  Future<void> _handleUpdateStatus(RecommendationModel rec, String newStatus) async {
+  Future<void> _handleUpdateStatus(
+    RecommendationModel rec,
+    String newStatus,
+  ) async {
     final authProvider = context.read<AppAuthProvider>();
     final bizId = authProvider.currentBusiness?.id;
     if (bizId == null || _recRepo == null) return;
@@ -93,23 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
   }
 
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }
-
-
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AppAuthProvider>();
-    final user = authProvider.user;
-    final business = authProvider.currentBusiness;
-
-    final firstName = user?.fullName.isNotEmpty == true
-        ? user!.fullName.split(' ').first
-        : 'Naveen';
     final healthScore = _intelligence?.healthScore ?? 78;
 
     return Scaffold(
@@ -120,65 +102,96 @@ class _HomeScreenState extends State<HomeScreen> {
           color: const Color(0xFF2563EB),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Universal Top App Bar Header (Brand Logo image without text)
+                // 1. Top Profile Pill + Notification Circle
                 OptigoTopBar(
                   onNotificationTap: widget.onNavigateToRecommendations,
                 ),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
 
-                // 2. Greeting Header
-                Text(
-                  '${_getGreeting()}, $firstName! 👋',
-                  style: const TextStyle(
-                    fontSize: 24,
+                // 2. Large Editorial Headline (Inspired by reference)
+                const Text(
+                  'How is your business\nperforming today?',
+                  style: TextStyle(
+                    fontSize: 28,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF0F172A),
-                    letterSpacing: -0.5,
+                    height: 1.15,
+                    letterSpacing: -0.8,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  "Here's what's happening with your business today.",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
+
+                const SizedBox(height: 16),
+
+                // 3. Search / AI Prompt Pill Bar
+                InkWell(
+                  onTap: () => CmoChatDrawer.show(context, currentScreen: 'home'),
+                  borderRadius: BorderRadius.circular(24),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Search actions, keywords, reviews...',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              color: Color(0xFF94A3B8),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 20),
 
-                // 3. Active Business Storefront Selector Card
-                _buildBusinessSelectorCard(business?.name, business?.location),
+                // 4. Hero Bento Grid Metrics (Dark Contrast Card + Clean White Card)
+                _buildHeroBentoRow(healthScore),
+
+                const SizedBox(height: 18),
+
+                // 5. Weekly Activity Pill Bar Chart Card (Reference Inspired)
+                _buildWeeklyActivityPillCard(),
+
+                const SizedBox(height: 18),
+
+                // 6. Segmented Radial Gauge Performance Card (Reference Inspired)
+                _buildSegmentedPerformanceCard(healthScore),
 
                 const SizedBox(height: 24),
 
-                // 4. Marketing Health Dual-Section Card (Gauge + Graph + 3 Mini Stats)
-                _buildMarketingHealthCard(healthScore),
-
-                const SizedBox(height: 24),
-
-                // 5. Weekly Customer Activity Bar Chart (Inspired by reference design)
-                _buildWeeklyActivitySection(),
-
-                const SizedBox(height: 28),
-
-                // 6. Top Priority Action Card
+                // 7. Top Priority Action Card
                 _buildTopPrioritySection(),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
-                // 7. Quick Actions Section
+                // 8. Quick Actions Section
                 _buildQuickActionsSection(),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
-                // 8. Growth Opportunities & Recent Activity Section
+                // 9. Growth Opportunities & Recent Activity Section
                 _buildGrowthOpportunitiesSection(),
 
                 const SizedBox(height: 40),
@@ -191,376 +204,180 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 3. Business Selector Card
+  // 4. Hero Bento Grid Row (Dark Contrast Card + Pure White Card)
   // ==========================================
-  Widget _buildBusinessSelectorCard(String? name, String? location) {
-    final displayName = (name ?? 'Panekkatt Oil & Flour Mill').toUpperCase();
-    final displayLocation = location ?? 'Ponnani';
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
+  Widget _buildHeroBentoRow(int healthScore) {
+    return Row(
+      children: [
+        // Left Card: Dark Charcoal Hero Card (#0F172A)
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF),
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(26),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: const Center(
-              child: Icon(Icons.storefront_rounded, color: Color(0xFF2563EB), size: 24),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(
-                      child: Text(
-                        displayName,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
-                          letterSpacing: -0.2,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF64748B)),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on_rounded, size: 13, color: Color(0xFF64748B)),
-                    const SizedBox(width: 3),
-                    Text(
-                      displayLocation,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: Color(0xFF64748B),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Growing Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFECFDF5),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF10B981)),
-                SizedBox(width: 4),
-                Text(
-                  'Growing',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF10B981),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================
-  // 4. Marketing Health Card (Gauge + Graph)
-  // ==========================================
-  Widget _buildMarketingHealthCard(int score) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Marketing Health',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left: Semi-Circle Gauge Arc & Status
-              Expanded(
-                flex: 4,
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: 130,
-                      height: 80,
-                      child: CustomPaint(
-                        painter: _SemiCircleGaugePainter(score: score),
-                        child: Align(
-                          alignment: const Alignment(0, 0.4),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '$score',
-                                style: const TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFF0F172A),
-                                  height: 1.0,
-                                ),
-                              ),
-                              const Text(
-                                '/100',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Good Standing Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.bolt_rounded,
+                        color: Color(0xFF60A5FA),
+                        size: 18,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Good Standing',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF2563EB),
-                            ),
-                          ),
-                          SizedBox(width: 4),
-                          Icon(Icons.thumb_up_rounded, size: 12, color: Color(0xFF2563EB)),
-                        ],
+                      child: const Text(
+                        'Good',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF34D399),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-
-              // Vertical subtle divider
-              Container(
-                width: 1,
-                height: 120,
-                color: const Color(0xFFF1F5F9),
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-              ),
-
-              // Right: Trend Sparkline Graph & 3 Mini Stats
-              Expanded(
-                flex: 6,
-                child: Column(
-                  children: [
-                    // Sparkline Chart
-                    SizedBox(
-                      height: 52,
-                      width: double.infinity,
-                      child: CustomPaint(
-                        painter: _SparklineChartPainter(),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // 3 Mini Stats Columns
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildHealthMiniMetric(
-                          icon: Icons.visibility_outlined,
-                          iconBg: const Color(0xFFEFF6FF),
-                          iconColor: const Color(0xFF2563EB),
-                          value: '1.2K',
-                          label: 'Profile Views',
-                          trend: '▲ 18%',
-                        ),
-                        _buildHealthMiniMetric(
-                          icon: Icons.phone_outlined,
-                          iconBg: const Color(0xFFECFDF5),
-                          iconColor: const Color(0xFF10B981),
-                          value: '321',
-                          label: 'Calls',
-                          trend: '▲ 24%',
-                        ),
-                        _buildHealthMiniMetric(
-                          icon: Icons.alt_route_rounded,
-                          iconBg: const Color(0xFFF5F3FF),
-                          iconColor: const Color(0xFF8B5CF6),
-                          value: '210',
-                          label: 'Direction Req.',
-                          trend: '▲ 15%',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 12),
-
-          // Phase 11: Real-Time ROI & Customer Lead Attribution Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: const [
-                    Icon(Icons.currency_exchange_rounded, size: 16, color: Color(0xFF16A34A)),
-                    SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Est. Monthly Impact', style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
-                        Text('\$23,895 / mo', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
-                      ],
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(20),
+                const SizedBox(height: 14),
+                const Text(
+                  'Business Health',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w600,
                   ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF2563EB)),
-                      SizedBox(width: 4),
-                      Text('4.2x ROI', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
-                    ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$healthScore/100',
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(width: 14),
 
-  Widget _buildHealthMiniMetric({
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
-    required String value,
-    required String label,
-    required String trend,
-  }) {
-    return Column(
-      children: [
-        Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            color: iconBg,
-            shape: BoxShape.circle,
+        // Right Card: Clean Pure White Card (#FFFFFF)
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.travel_explore_rounded,
+                        color: Color(0xFF2563EB),
+                        size: 18,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Top 10%',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF059669),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Avg Google Rank',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  '#1.9 Rank',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Center(
-            child: Icon(icon, size: 16, color: iconColor),
-          ),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
-        ),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          trend,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF10B981)),
         ),
       ],
     );
   }
 
   // ==========================================
-  // 5. Weekly Customer Activity Bar Chart
+  // 5. Weekly Activity Pill Bar Chart Card (Reference Inspired)
   // ==========================================
-  Widget _buildWeeklyActivitySection() {
+  Widget _buildWeeklyActivityPillCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -570,67 +387,194 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Weekly Customer Activity',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                      letterSpacing: -0.2,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.bar_chart_rounded,
+                      color: Color(0xFF2563EB),
+                      size: 18,
                     ),
                   ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Profile interactions & customer calls',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF64748B),
-                      fontWeight: FontWeight.w500,
-                    ),
+                  const SizedBox(width: 10),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Customer Views',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      Text(
+                        'Google Search & Maps interactions',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF10B981)),
-                    SizedBox(width: 4),
-                    Text(
-                      '+24%',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF10B981),
-                      ),
-                    ),
-                  ],
+                child: const Text(
+                  '+24% vs last wk',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF059669),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
 
-          // 7-Day Interactive Styled Bar Chart with Active Tooltip (Wednesday peak)
-          SizedBox(
-            height: 140,
+          // Custom Pill Bar Chart Painter
+          const SizedBox(
+            height: 110,
             width: double.infinity,
             child: CustomPaint(
-              painter: _WeeklyBarChartPainter(),
+              painter: _PillBarChartPainter(),
             ),
           ),
         ],
       ),
     );
   }
+
+  // ==========================================
+  // 6. Segmented Radial Gauge Performance Card (Reference Inspired)
+  // ==========================================
+  Widget _buildSegmentedPerformanceCard(int healthScore) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Marketing Optimization',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: const Icon(
+                  Icons.calendar_month_outlined,
+                  size: 16,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Segmented Arc Meter
+          Center(
+            child: SizedBox(
+              width: 240,
+              height: 120,
+              child: CustomPaint(
+                painter: _SegmentedRadialGaugePainter(score: healthScore),
+                child: Align(
+                  alignment: const Alignment(0, 0.5),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$healthScore%',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0F172A),
+                          height: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      const Text(
+                        'From last week',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          // Full-width pill action button
+          SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: OutlinedButton(
+              onPressed: widget.onNavigateToRecommendations,
+              style: OutlinedButton.styleFrom(
+                backgroundColor: const Color(0xFFF8FAFC),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: const Text(
+                'See Detail Information',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
 
   // ==========================================
   // 6. Top Priority Action Card
@@ -646,7 +590,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final title = topRec?.title ?? 'Reply to 6 unanswered reviews';
-    final desc = topRec?.explanation ??
+    final desc =
+        topRec?.explanation ??
         'Customers are waiting for your response. This can directly impact your reputation.';
 
     return Column(
@@ -679,7 +624,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Color(0xFF2563EB),
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF2563EB)),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: Color(0xFF2563EB),
+                    ),
                   ],
                 ),
               ),
@@ -720,7 +669,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Center(
-                          child: Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFFEF4444), size: 24),
+                          child: Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: Color(0xFFEF4444),
+                            size: 24,
+                          ),
                         ),
                       ),
                       Positioned(
@@ -732,7 +685,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Color(0xFFDC2626),
                             shape: BoxShape.circle,
                           ),
-                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
                           child: const Center(
                             child: Text(
                               '6',
@@ -755,7 +711,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFEE2E2),
                             borderRadius: BorderRadius.circular(4),
@@ -806,11 +765,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        if (topRec?.relatedFeature == 'reviews' && widget.onNavigateToReviews != null) {
+                        if (topRec?.relatedFeature == 'reviews' &&
+                            widget.onNavigateToReviews != null) {
                           widget.onNavigateToReviews!();
-                        } else if (topRec?.relatedFeature == 'posts' && widget.onNavigateToTab != null) {
+                        } else if (topRec?.relatedFeature == 'posts' &&
+                            widget.onNavigateToTab != null) {
                           widget.onNavigateToTab!(2);
-                        } else if (topRec?.relatedFeature == 'seo' && widget.onNavigateToTab != null) {
+                        } else if (topRec?.relatedFeature == 'seo' &&
+                            widget.onNavigateToTab != null) {
                           widget.onNavigateToTab!(3);
                         } else if (widget.onNavigateToReviews != null) {
                           widget.onNavigateToReviews!();
@@ -821,29 +783,45 @@ class _HomeScreenState extends State<HomeScreen> {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: const Text(
                         'Take Action',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: topRec != null
-                          ? () => _handleUpdateStatus(topRec!, 'completed')
-                          : () {},
-                      icon: const Icon(Icons.check_circle_outline_rounded, size: 16, color: Color(0xFF475569)),
+                      onPressed:
+                          topRec != null
+                              ? () => _handleUpdateStatus(topRec!, 'completed')
+                              : () {},
+                      icon: const Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 16,
+                        color: Color(0xFF475569),
+                      ),
                       label: const Text(
                         'Mark Done',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF475569),
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFFCBD5E1)),
                         padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ),
@@ -968,9 +946,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: bgColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(
-                child: Icon(icon, size: 22, color: iconColor),
-              ),
+              child: Center(child: Icon(icon, size: 22, color: iconColor)),
             ),
             const SizedBox(height: 6),
             Text(
@@ -1023,7 +999,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Color(0xFF2563EB),
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF2563EB)),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: Color(0xFF2563EB),
+                    ),
                   ],
                 ),
               ),
@@ -1155,13 +1135,8 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(
           width: 36,
           height: 36,
-          decoration: BoxDecoration(
-            color: iconBg,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Icon(icon, size: 18, color: iconColor),
-          ),
+          decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+          child: Center(child: Icon(icon, size: 18, color: iconColor)),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -1208,7 +1183,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildGrowthCard({
     required IconData icon,
     required Color iconColor,
@@ -1251,9 +1225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: iconBg,
                     shape: BoxShape.circle,
                   ),
-                  child: Center(
-                    child: Icon(icon, size: 18, color: iconColor),
-                  ),
+                  child: Center(child: Icon(icon, size: 18, color: iconColor)),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -1313,251 +1285,61 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ==========================================
-// Custom Painter for Semi-Circle Gauge Arc
-// ==========================================
-class _SemiCircleGaugePainter extends CustomPainter {
-  final int score;
 
-  _SemiCircleGaugePainter({required this.score});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height);
-    final radius = size.width / 2 - 8;
-
-    // Background track arc
-    final bgPaint = Paint()
-      ..color = const Color(0xFFF1F5F9)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 9.0
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      pi,
-      pi,
-      false,
-      bgPaint,
-    );
-
-    // Active progress arc
-    final progress = (score / 100).clamp(0.0, 1.0);
-    final sweepAngle = pi * progress;
-
-    final progressPaint = Paint()
-      ..shader = const LinearGradient(
-        colors: [Color(0xFF38BDF8), Color(0xFF2563EB)],
-      ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 9.0
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      pi,
-      sweepAngle,
-      false,
-      progressPaint,
-    );
-
-    // End indicator dot
-    final endAngle = pi + sweepAngle;
-    final dotX = center.dx + radius * cos(endAngle);
-    final dotY = center.dy + radius * sin(endAngle);
-
-    final dotOuterPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(dotX, dotY), 6.0, dotOuterPaint);
-
-    final dotInnerPaint = Paint()
-      ..color = const Color(0xFF2563EB)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(dotX, dotY), 4.0, dotInnerPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SemiCircleGaugePainter oldDelegate) {
-    return oldDelegate.score != score;
-  }
-}
 
 // ==========================================
-// Custom Painter for Sparkline Trend Chart
+// PILL BAR CHART PAINTER (Reference Inspired)
 // ==========================================
-class _SparklineChartPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final points = [
-      Offset(0, size.height * 0.7),
-      Offset(size.width * 0.12, size.height * 0.55),
-      Offset(size.width * 0.25, size.height * 0.65),
-      Offset(size.width * 0.38, size.height * 0.45),
-      Offset(size.width * 0.50, size.height * 0.60),
-      Offset(size.width * 0.62, size.height * 0.50),
-      Offset(size.width * 0.75, size.height * 0.70),
-      Offset(size.width * 0.88, size.height * 0.35),
-      Offset(size.width * 1.0, size.height * 0.15),
-    ];
+class _PillBarChartPainter extends CustomPainter {
+  const _PillBarChartPainter();
 
-    final path = Path()..moveTo(points[0].dx, points[0].dy);
-    for (int i = 0; i < points.length - 1; i++) {
-      final p0 = points[i];
-      final p1 = points[i + 1];
-      final midX = (p0.dx + p1.dx) / 2;
-      path.cubicTo(midX, p0.dy, midX, p1.dy, p1.dx, p1.dy);
-    }
-
-    // Draw shaded gradient underneath
-    final fillPath = Path.from(path)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          const Color(0xFF2563EB).withValues(alpha: 0.12),
-          const Color(0xFF2563EB).withValues(alpha: 0.0),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.fill;
-
-    canvas.drawPath(fillPath, fillPaint);
-
-    // Draw main stroke line
-    final linePaint = Paint()
-      ..color = const Color(0xFF2563EB)
-      ..strokeWidth = 2.2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    canvas.drawPath(path, linePaint);
-
-    // Endpoint Glowing Dot
-    final lastPoint = points.last;
-    final outerDot = Paint()
-      ..color = const Color(0xFF2563EB).withValues(alpha: 0.2)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(lastPoint, 6.0, outerDot);
-
-    final innerDot = Paint()
-      ..color = const Color(0xFF2563EB)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(lastPoint, 3.5, innerDot);
-
-    final centerDot = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(lastPoint, 1.5, centerDot);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// ==========================================
-// Custom Painter for 7-Day Weekly Bar Chart
-// Inspired by reference UI with active tooltip
-// ==========================================
-class _WeeklyBarChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const values = [0.45, 0.60, 0.92, 0.68, 0.78, 0.55, 0.38];
-    const activeIndex = 2; // Wednesday peak
+    const values = [0.35, 0.50, 0.40, 0.65, 0.95, 0.45, 0.30];
+    const activeIndex = 4; // Friday highlighted
 
-    final barWidth = (size.width / 7) - 14;
-    final maxBarHeight = size.height - 48; // room for tooltip and day label
+    final barWidth = (size.width / 7) - 18;
+    final maxBarHeight = size.height - 24;
 
     for (int i = 0; i < 7; i++) {
       final xCenter = (size.width / 7) * i + (size.width / 14);
       final left = xCenter - (barWidth / 2);
-      final top = 32.0;
+      final top = 0.0;
       final height = maxBarHeight;
 
       final isSelected = i == activeIndex;
 
-      // 1. Draw Background Track Bar
+      // 1. Soft Track Pillar
       final trackPaint = Paint()
-        ..color = const Color(0xFFF1F5F9)
+        ..color = isSelected ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC)
         ..style = PaintingStyle.fill;
       final trackRect = RRect.fromRectAndRadius(
         Rect.fromLTWH(left, top, barWidth, height),
-        const Radius.circular(8),
+        Radius.circular(barWidth / 2),
       );
       canvas.drawRRect(trackRect, trackPaint);
 
-      // 2. Draw Active Filled Value Bar
+      // 2. Active Filled Pill Value
       final filledHeight = height * values[i];
       final filledTop = top + (height - filledHeight);
 
       final fillPaint = Paint()
-        ..color = isSelected ? const Color(0xFF2563EB) : const Color(0xFFBFDBFE)
+        ..color = isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0)
         ..style = PaintingStyle.fill;
 
       final fillRect = RRect.fromRectAndRadius(
         Rect.fromLTWH(left, filledTop, barWidth, filledHeight),
-        const Radius.circular(8),
+        Radius.circular(barWidth / 2),
       );
       canvas.drawRRect(fillRect, fillPaint);
 
-      // 3. Draw Active Floating Tooltip on Highlighted Bar
-      if (isSelected) {
-        // Tooltip container box
-        const tooltipWidth = 72.0;
-        const tooltipHeight = 22.0;
-        final tooltipLeft = xCenter - (tooltipWidth / 2);
-        final tooltipTop = filledTop - tooltipHeight - 6;
-
-        final tooltipBgPaint = Paint()
-          ..color = const Color(0xFF0F172A)
-          ..style = PaintingStyle.fill;
-
-        final tooltipRRect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(tooltipLeft, tooltipTop, tooltipWidth, tooltipHeight),
-          const Radius.circular(6),
-        );
-        canvas.drawRRect(tooltipRRect, tooltipBgPaint);
-
-        // Tooltip downward pointer triangle
-        final pointerPath = Path()
-          ..moveTo(xCenter - 4, tooltipTop + tooltipHeight)
-          ..lineTo(xCenter + 4, tooltipTop + tooltipHeight)
-          ..lineTo(xCenter, tooltipTop + tooltipHeight + 4)
-          ..close();
-        canvas.drawPath(pointerPath, tooltipBgPaint);
-
-        // Tooltip Text
-        const textSpan = TextSpan(
-          text: '340 views',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            fontFamily: 'Inter',
-          ),
-        );
-        final textPainter = TextPainter(
-          text: textSpan,
-          textDirection: TextDirection.ltr,
-        )..layout();
-        textPainter.paint(
-          canvas,
-          Offset(xCenter - (textPainter.width / 2), tooltipTop + 4),
-        );
-      }
-
-      // 4. Draw Day of Week Label below bar
+      // 3. Day Label
       final daySpan = TextSpan(
         text: days[i],
         style: TextStyle(
-          color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
-          fontSize: 11,
+          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+          fontSize: 10.5,
           fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
           fontFamily: 'Inter',
         ),
@@ -1577,3 +1359,64 @@ class _WeeklyBarChartPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+// ==========================================
+// SEGMENTED RADIAL GAUGE PAINTER (Reference Inspired)
+// ==========================================
+class _SegmentedRadialGaugePainter extends CustomPainter {
+  final int score;
+
+  const _SegmentedRadialGaugePainter({required this.score});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height);
+    final outerRadius = size.width / 2 - 12;
+    final innerRadius = outerRadius - 18;
+
+    const totalSegments = 26;
+    final activeSegments = ((score / 100) * totalSegments).round();
+
+    const startAngle = pi;
+    const totalAngle = pi;
+    final stepAngle = totalAngle / totalSegments;
+    const gapAngle = 0.035;
+
+    for (int i = 0; i < totalSegments; i++) {
+      final segStart = startAngle + (i * stepAngle) + (gapAngle / 2);
+      final segSweep = stepAngle - gapAngle;
+
+      final isActive = i < activeSegments;
+
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 14.0
+        ..strokeCap = StrokeCap.round;
+
+      if (isActive) {
+        // Gradient color transition from amber/gold to primary blue
+        final t = i / totalSegments;
+        final color = Color.lerp(
+          const Color(0xFFF59E0B),
+          const Color(0xFF2563EB),
+          t,
+        )!;
+        paint.color = color;
+      } else {
+        paint.color = const Color(0xFFF1F5F9);
+      }
+
+      final midRadius = (innerRadius + outerRadius) / 2;
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: midRadius),
+        segStart,
+        segSweep,
+        false,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SegmentedRadialGaugePainter oldDelegate) =>
+      oldDelegate.score != score;
+}

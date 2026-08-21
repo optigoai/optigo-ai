@@ -579,12 +579,26 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Universal Top App Bar Header
+                // 1. Top Profile Pill + Notification Circle
                 OptigoTopBar(
                   onNotificationTap: widget.onNavigateToRecommendations,
                 ),
 
                 const SizedBox(height: 12),
+
+                // Large Editorial Headline (Reference Philosophy)
+                const Text(
+                  'How is your Google\nvisibility performing?',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    height: 1.15,
+                    letterSpacing: -0.8,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
 
                 // 2. SEO Health Score Summary Card
                 _buildSeoScoreCard(score, mapPackScore),

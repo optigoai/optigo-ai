@@ -190,12 +190,26 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Universal Top App Bar Header
+                // 1. Top Profile Pill + Notification Circle
+                OptigoTopBar(
+                  subtitle: 'Review Replies',
+                ),
+
+                const SizedBox(height: 12),
+
+                // Large Editorial Headline (Reference Philosophy)
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Expanded(
-                      child: OptigoTopBar(
-                        subtitle: 'Review Replies',
+                    const Text(
+                      'What are customers\nsaying about you?',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF0F172A),
+                        height: 1.15,
+                        letterSpacing: -0.8,
                       ),
                     ),
                     IconButton(
@@ -203,16 +217,22 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF2563EB),
+                              ),
                             )
-                          : const Icon(Icons.sync_rounded, color: Color(0xFF2563EB)),
+                          : const Icon(
+                              Icons.sync_rounded,
+                              color: Color(0xFF2563EB),
+                            ),
                       onPressed: _isSyncing ? null : _handleSyncGbp,
                       tooltip: 'Sync Google Reviews',
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
                 // 2. Reviews Trend Card (Inspired by reference design)
                 _buildReviewsTrendCard(),

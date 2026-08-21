@@ -152,7 +152,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Universal Top App Bar Header
+                // Top Profile Pill + Notification Circle
                 OptigoTopBar(
                   subtitle: 'Priority Actions',
                   onNotificationTap: () {},
@@ -160,7 +160,21 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
                 const SizedBox(height: 12),
 
-                // 2. Action Plan Hero Card
+                // Large Editorial Headline (Reference Philosophy)
+                const Text(
+                  'What should we\nact on right now?',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    height: 1.15,
+                    letterSpacing: -0.8,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // 2. Action Plan Hero Bento Card
                 _buildBattlePlanCard(
                   totalCount: _recommendations.length,
                   attentionCount: pendingList.length,

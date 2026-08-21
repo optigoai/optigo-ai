@@ -276,9 +276,29 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
           children: [
             // Top App Bar
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 6),
               child: OptigoTopBar(subtitle: 'Marketing & Studio'),
             ),
+
+            // Large Editorial Headline (Reference Philosophy)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'What would you like\nto create today?',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    height: 1.15,
+                    letterSpacing: -0.8,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
 
             // Segment Tabs (Posts, Campaigns, Creatives, Saved)
             Container(
@@ -286,8 +306,15 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [

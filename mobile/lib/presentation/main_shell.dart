@@ -77,105 +77,85 @@ class _MainShellState extends State<MainShell> {
           style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, letterSpacing: 0.1),
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            top: BorderSide(color: const Color(0xFFE2E8F0), width: 1),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(34),
+            border: Border.all(color: const Color(0xFFF1F5F9)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 12,
-              offset: const Offset(0, -3),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: SizedBox(
-            height: 70,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(0, Icons.home_rounded, 'Home'),
-                _buildNavItem(1, Icons.insights_rounded, 'Actions'),
-                _buildCreateNavItem(2),
-                _buildNavItem(3, Icons.search_rounded, 'SEO'),
-                _buildNavItem(4, Icons.rate_review_outlined, 'Reviews'),
-              ],
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildFloatingNavItem(0, Icons.home_rounded, 'Home'),
+              _buildFloatingNavItem(1, Icons.insights_rounded, 'Actions'),
+              _buildFloatingNavItem(2, Icons.add_circle_outline_rounded, 'Create'),
+              _buildFloatingNavItem(3, Icons.search_rounded, 'SEO'),
+              _buildFloatingNavItem(4, Icons.rate_review_outlined, 'Reviews'),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCreateNavItem(int index) {
+  Widget _buildFloatingNavItem(int index, IconData icon, String label) {
     final isSelected = _currentIndex == index;
-    return InkWell(
-      onTap: () => _navigateToTab(index),
-      borderRadius: BorderRadius.circular(24),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                color: Color(0xFF2563EB),
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(Icons.add, color: Colors.white, size: 22),
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              'Create',
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildNavItem(int index, IconData icon, String label) {
-    final isSelected = _currentIndex == index;
-    return InkWell(
-      onTap: () => _navigateToTab(index),
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    if (isSelected) {
+      // Dark active pill capsule
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFF0F172A),
+          borderRadius: BorderRadius.circular(24),
         ),
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
-              size: 22,
-            ),
-            const SizedBox(height: 2),
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 6),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
               ),
             ),
           ],
+        ),
+      );
+    }
+
+    // Inactive circular button
+    return InkWell(
+      onTap: () => _navigateToTab(index),
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: const BoxDecoration(
+          color: Colors.transparent,
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            color: const Color(0xFF64748B),
+            size: 20,
+          ),
         ),
       ),
     );

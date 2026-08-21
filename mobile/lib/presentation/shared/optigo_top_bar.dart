@@ -117,115 +117,129 @@ class OptigoTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AppAuthProvider>();
     final user = authProvider.user;
-    final business = authProvider.currentBusiness;
 
-    final displaySubtitle = subtitle ?? business?.name ?? 'AI Marketing Manager';
+    final displayName = user?.fullName.isNotEmpty == true
+        ? user!.fullName
+        : 'Leon Fernandez';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'O';
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(top: 6, bottom: 16),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left: Back button or Hamburger Menu
-          if (showBackButton)
-            IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF1E293B)),
-              onPressed: () => Navigator.of(context).maybePop(),
-            )
-          else
-            InkWell(
-              onTap: onMenuTap ?? () => _showProfileModal(context, authProvider),
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                child: const Icon(Icons.menu_rounded, size: 26, color: Color(0xFF1E293B)),
-              ),
-            ),
-
-          const SizedBox(width: 8),
-
-          // Center-Left: Official App Logo Image (No duplicate text) + Subtitle
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 30,
-                  fit: BoxFit.contain,
-                  alignment: Alignment.centerLeft,
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  displaySubtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.1,
+          // Left: User Profile Pill (Avatar + Welcome Back & Name)
+          InkWell(
+            onTap: onMenuTap ?? () => _showProfileModal(context, authProvider),
+            borderRadius: BorderRadius.circular(30),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-
-          // Right: Notification Bell with Badge
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              InkWell(
-                onTap: onNotificationTap ?? () => NotificationModal.show(context),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  child: const Icon(Icons.notifications_none_rounded, size: 24, color: Color(0xFF334155)),
-                ),
+                ],
               ),
-              Positioned(
-                top: 2,
-                right: 2,
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF2563EB),
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(minWidth: 15, minHeight: 15),
-                  child: const Center(
-                    child: Text(
-                      '3',
-                      style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.w900),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Circle Avatar
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEFF6FF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  // Welcome & Name
+                  Padding(
+                    padding: const EdgeInsets.only(right: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Hi, Welcome Back!',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF94A3B8),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          displayName,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
 
-          const SizedBox(width: 8),
-
-          // Right: User Profile Avatar
+          // Right: Circular Isolated Notification Bell
           InkWell(
-            onTap: () => _showProfileModal(context, authProvider),
-            borderRadius: BorderRadius.circular(20),
+            onTap: onNotificationTap ?? () => NotificationModal.show(context),
+            borderRadius: BorderRadius.circular(24),
             child: Container(
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
+                color: Colors.white,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
-                color: const Color(0xFFEFF6FF),
-              ),
-              child: Center(
-                child: Text(
-                  user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'N',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF2563EB),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
-                ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(
+                    Icons.notifications_none_rounded,
+                    size: 22,
+                    color: Color(0xFF0F172A),
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 11,
+                    child: Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
