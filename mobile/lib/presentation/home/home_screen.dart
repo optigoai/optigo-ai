@@ -553,29 +553,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
 
           // Custom Pill Bar Chart Painter
-          const SizedBox(
-            height: 100,
-            width: double.infinity,
-            child: CustomPaint(
-              painter: _PillBarChartPainter(),
+          const Expanded(
+            child: SizedBox(
+              width: double.infinity,
+              child: CustomPaint(
+                painter: _PillBarChartPainter(),
+              ),
             ),
           ),
-
-          const SizedBox(height: 12),
-
-          // Glanceable bottom pill tags
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildMiniMetricChip('⭐ 4.8 Rating', const Color(0xFFFEF3C7), const Color(0xFFD97706)),
-              _buildMiniMetricChip('📞 1,280 Calls', const Color(0xFFEFF6FF), const Color(0xFF2563EB)),
-              _buildMiniMetricChip('📍 94% Direction', const Color(0xFFF3E8FF), const Color(0xFF7E22CE)),
-              _buildMiniMetricChip('🌐 450 Clicks', const Color(0xFFECFDF5), const Color(0xFF059669)),
-            ],
-          ),
+          const SizedBox(height: 6),
         ],
       ),
     );
@@ -667,13 +656,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  '${avgRating.toStringAsFixed(1)} ★ ($totalReviews)',
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFFB45309),
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded, size: 13, color: Color(0xFFD97706)),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${avgRating.toStringAsFixed(1)} ($totalReviews)',
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFB45309),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -780,8 +776,18 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMiniMetricChip('🟢 94% Positive Sentiment', const Color(0xFFF0FDF4), const Color(0xFF16A34A)),
-              _buildMiniMetricChip('⚡ 100% Google Replied', const Color(0xFFEFF6FF), const Color(0xFF2563EB)),
+              _buildIconMetricChip(
+                Icons.thumb_up_alt_rounded,
+                '94% Positive Sentiment',
+                const Color(0xFFF0FDF4),
+                const Color(0xFF16A34A),
+              ),
+              _buildIconMetricChip(
+                Icons.check_circle_rounded,
+                '100% Google Replied',
+                const Color(0xFFEFF6FF),
+                const Color(0xFF2563EB),
+              ),
             ],
           ),
         ],
@@ -1021,13 +1027,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: const Color(0xFFECFDF5),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  '🏆 You Rank #1',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF059669),
-                  ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.military_tech_rounded, size: 13, color: Color(0xFF059669)),
+                    SizedBox(width: 3),
+                    Text(
+                      'You Rank #1',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF059669),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1041,7 +1054,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Divider(height: 1, color: Color(0xFFF1F5F9)),
                 _buildCompetitorMetricRow('Avg Google Rank', '#1.9', '#3.4', '#5.8', isRank: true),
                 _buildCompetitorMetricRow('Keyword Coverage', '94%', '68%', '45%'),
-                _buildCompetitorMetricRow('Reviews / Rating', '4.8★ (124)', '4.6★ (142)', '4.1★ (88)'),
+                _buildCompetitorMetricRow('Reviews & Rating', '4.8 (124)', '4.6 (142)', '4.1 (88)'),
               ],
             ),
           ),
@@ -1114,20 +1127,27 @@ class _HomeScreenState extends State<HomeScreen> {
   // ----------------------------------------------------
   // Sub-widgets & helper rows
   // ----------------------------------------------------
-  Widget _buildMiniMetricChip(String text, Color bg, Color textCol) {
+  Widget _buildIconMetricChip(IconData icon, String text, Color bg, Color textCol) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: textCol,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: textCol),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: textCol,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1135,15 +1155,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildStarDistributionRow(int stars, int percentage) {
     return Row(
       children: [
-        Text(
-          '$stars★',
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF64748B),
+        SizedBox(
+          width: 14,
+          child: Text(
+            '$stars',
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF64748B),
+            ),
           ),
         ),
-        const SizedBox(width: 6),
+        const Icon(Icons.star_rounded, size: 10, color: Color(0xFF94A3B8)),
+        const SizedBox(width: 4),
         Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(4),
