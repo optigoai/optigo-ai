@@ -62,24 +62,19 @@ class _MainShellState extends State<MainShell> {
         index: _currentIndex,
         children: screens,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => CmoChatDrawer.show(
+      floatingActionButton: GestureDetector(
+        onTap: () => CmoChatDrawer.show(
           context,
           currentScreen: ['home', 'actions', 'create', 'seo', 'reviews'][_currentIndex],
           onNavigate: _handleRouteNavigate,
         ),
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: Colors.white,
-        elevation: 6,
-        icon: Image.asset(
-          'assets/images/optigo-bot.png',
-          width: 26,
-          height: 26,
-          fit: BoxFit.contain,
-        ),
-        label: const Text(
-          'Ask Optigo',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.2),
+        child: Container(
+          height: 72,
+          margin: const EdgeInsets.only(bottom: 2),
+          child: Image.asset(
+            'assets/images/ask-optigo-btn.png',
+            fit: BoxFit.contain,
+          ),
         ),
       ),
       bottomNavigationBar: Container(
