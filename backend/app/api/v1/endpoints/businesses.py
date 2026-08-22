@@ -81,6 +81,14 @@ async def submit_business_onboarding(
         business_goals=req.business_goals,
         marketing_channels=req.marketing_channels,
     )
+
+    # Trigger background AI Business Profile & CMO Intelligence synthesis
+    try:
+        from app.workers.tasks import sync_onboarding_intelligence_task
+        sync_onboarding_intelligence_task.delay(business_id, org_id)
+    except Exception:
+        pass
+
     return BusinessResponse.model_validate(business)
 
 

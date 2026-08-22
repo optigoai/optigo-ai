@@ -97,10 +97,12 @@ class GBPSyncService:
 
         rating_summary = await self.review_repo.get_rating_summary(business_id)
 
-        # 6. Trigger background AI review intelligence analysis
+        # 6. Trigger background AI review intelligence & CMO recommendations refresh
         try:
-            from app.workers.tasks import analyze_review_intelligence_task
+            from app.workers.tasks import analyze_review_intelligence_task, generate_cmo_recommendations_task
             analyze_review_intelligence_task.delay(business_id, organization_id)
+            if new_reviews:
+                generate_cmo_recommendations_task.delay(business_id, organization_id)
         except Exception:
             pass
 
