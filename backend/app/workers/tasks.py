@@ -223,13 +223,12 @@ def generate_cmo_recommendations_task(self, business_id: str, organization_id: s
     logger.info("Starting background CMO recommendations generation", business_id=business_id)
 
     async def _refresh():
-        from app.services.cmo_recommendations_service import CMORecommendationsService
+        from app.services.cmo_engine_service import CMOEngineService
         async with async_session_factory() as session:
-            service = CMORecommendationsService(session)
-            res = await service.get_or_generate_recommendations(
+            service = CMOEngineService(session)
+            res = await service.generate_recommendations(
                 business_id=business_id,
                 organization_id=organization_id,
-                force_regenerate=force,
             )
             await session.commit()
             return res
@@ -314,7 +313,7 @@ def scheduled_weekly_cmo_health_task() -> Dict[str, Any]:
 
     async def _audit_all():
         from app.models.business import Business
-        from app.services.cmo_recommendations_service import CMORecommendationsService
+        from app.services.cmo_engine_service import CMOEngineService
         from sqlalchemy import select
 
         audited_count = 0
@@ -325,11 +324,10 @@ def scheduled_weekly_cmo_health_task() -> Dict[str, Any]:
             businesses = result.scalars().all()
             for b in businesses:
                 try:
-                    cmo_service = CMORecommendationsService(session)
-                    await cmo_service.get_or_generate_recommendations(
+                    cmo_service = CMOEngineService(session)
+                    await cmo_service.generate_recommendations(
                         business_id=b.id,
                         organization_id=b.organization_id,
-                        force_regenerate=True,
                     )
                     audited_count += 1
                 except Exception as e:
@@ -338,5 +336,6 @@ def scheduled_weekly_cmo_health_task() -> Dict[str, Any]:
         return {"status": "completed", "businesses_audited": audited_count}
 
     return run_async(_audit_all())
+
 
 
