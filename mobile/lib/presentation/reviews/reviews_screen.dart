@@ -583,13 +583,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             ),
           ),
 
-          const SizedBox(height: 14),
-
-          // Bottom Action: If Replied -> show status tag. If Pending -> show "Reply with AI" button.
+          const SizedBox(height: 14),          // Bottom Action: If Replied -> show status tag. If Pending -> show "Reply with AI" button.
           if (review.isReplied) ...[
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(14),
@@ -597,7 +595,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF10B981)),
+                  const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF10B981)),
                   const SizedBox(width: 6),
                   const Text(
                     'Replied to customer',
@@ -608,33 +606,45 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                     onTap: () => _openReviewDetailModal(review),
                     child: const Text(
                       'View Reply',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
                     ),
                   ),
                 ],
               ),
             ),
           ] else ...[
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton.icon(
-                onPressed: () => _openReviewDetailModal(review),
-                icon: const Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-                label: const Text(
-                  'Reply with AI',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.1,
-                  ),
+            InkWell(
+              onTap: () => _openReviewDetailModal(review),
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.auto_awesome, size: 16, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      'Reply with AI',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -707,7 +717,7 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
       if (mounted) {
         setState(() {
           _replyTextController.text =
-              "Hi ${widget.review.reviewerName}, thank you so much for your feedback! We're glad you visited us and appreciate your support. We look forward to serving you again soon!";
+              "Hi ${widget.review.reviewerName}, thank you so much for the wonderful feedback! We take great pride in our quality and service, and we look forward to serving you again soon!";
           _isGenerating = false;
         });
       }
@@ -760,7 +770,7 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
     }
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.88,
+      height: MediaQuery.of(context).size.height * 0.90,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -850,7 +860,7 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
                           children: [
                             Icon(
                               Icons.auto_awesome,
-                              size: 13,
+                              size: 14,
                               color: _activeTabIndex == 1 ? const Color(0xFF2563EB) : const Color(0xFF64748B),
                             ),
                             const SizedBox(width: 5),
@@ -951,105 +961,182 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
                       ),
                     ),
 
-                    const SizedBox(height: 18),
+                    if (_activeTabIndex == 1) ...[
+                      const SizedBox(height: 18),
 
-                    // AI Suggested Response Mint Box (Matching Reference Right Screen)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDF4),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFBBF7D0), width: 1.2),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Row(
-                                children: [
-                                  Icon(Icons.auto_awesome, size: 16, color: Color(0xFF16A34A)),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'AI Suggested Response',
-                                    style: TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF166534),
+                      // AI Suggested Response Mint Box — Auto-expands based on content length without truncation
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFBBF7D0), width: 1.2),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Row(
+                                  children: [
+                                    Icon(Icons.auto_awesome, size: 16, color: Color(0xFF16A34A)),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'AI Suggested Response',
+                                      style: TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF166534),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              InkWell(
-                                onTap: _isGenerating ? null : _generateAiReply,
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  child: _isGenerating
-                                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF16A34A)))
-                                      : const Icon(Icons.refresh_rounded, size: 18, color: Color(0xFF16A34A)),
+                                  ],
                                 ),
+                                InkWell(
+                                  onTap: _isGenerating ? null : _generateAiReply,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    child: _isGenerating
+                                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF16A34A)))
+                                        : const Icon(Icons.refresh_rounded, size: 18, color: Color(0xFF16A34A)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+
+                            if (_isGenerating)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24),
+                                child: Center(
+                                  child: Text(
+                                    'Crafting personalized brand response with Gemini...',
+                                    style: TextStyle(fontSize: 12.5, color: Color(0xFF166534), fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              )
+                            else
+                              TextField(
+                                controller: _replyTextController,
+                                maxLines: null,
+                                minLines: 3,
+                                keyboardType: TextInputType.multiline,
+                                style: const TextStyle(
+                                  fontSize: 13.5,
+                                  color: Color(0xFF14532D),
+                                  height: 1.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                  isDense: true,
+                                  hintText: 'Type custom reply...',
+                                  hintStyle: TextStyle(color: Color(0xFF86EFAC)),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Big Action Button: Use & Reply
+                      InkWell(
+                        onTap: (_isPosting || _isGenerating) ? null : _handleUseAndReply,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2563EB),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF2563EB).withValues(alpha: 0.28),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-
-                          if (_isGenerating)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 24),
-                              child: Center(
-                                child: Text(
-                                  'Crafting personalized brand response with Gemini...',
-                                  style: TextStyle(fontSize: 12.5, color: Color(0xFF166534), fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            )
-                          else
-                            TextField(
-                              controller: _replyTextController,
-                              maxLines: 6,
-                              style: const TextStyle(
-                                fontSize: 13.5,
-                                color: Color(0xFF14532D),
-                                height: 1.5,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                                hintText: 'Type custom reply...',
-                                hintStyle: TextStyle(color: Color(0xFF86EFAC)),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Big Action Button: Use & Reply
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: (_isPosting || _isGenerating) ? null : _handleUseAndReply,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          child: Center(
+                            child: _isPosting
+                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+                                : const Text(
+                                    'Use & Reply',
+                                    style: TextStyle(
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                          ),
                         ),
-                        child: _isPosting
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text(
-                                'Use & Reply',
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 0.1),
-                              ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
+                    ] else ...[
+                      const SizedBox(height: 18),
+                      // Review Details Tab Content
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Review Metadata',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF334155)),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Source', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                                Text(widget.review.source.toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Sentiment', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                                Text(
+                                  widget.review.sentiment ?? (widget.review.rating >= 4 ? 'Positive' : 'Needs attention'),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: widget.review.rating >= 4 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Status', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                                Text(
+                                  widget.review.isReplied ? 'Replied' : 'Pending response',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: widget.review.isReplied ? const Color(0xFF10B981) : const Color(0xFFD97706),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -1060,3 +1147,4 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
     );
   }
 }
+
