@@ -2,12 +2,12 @@
 # OptigoAI Backend — Admin Service
 # ==================================================
 
-import structlog
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import get_logger
 from app.models.organization import Organization
 from app.models.business import Business
 from app.models.user import User
@@ -18,7 +18,7 @@ from app.models.campaign import Campaign
 from app.models.content import Content
 from app.core.redis import get_redis_client
 
-logger = structlog.get_logger(__name__)
+logger = get_logger("app.services.admin")
 
 DEFAULT_FEATURE_FLAGS = [
     {
