@@ -1186,8 +1186,8 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
           // 1-Tap Action Button
           SizedBox(
             width: double.infinity,
-            height: 42,
-            child: ElevatedButton.icon(
+            height: 48,
+            child: ElevatedButton(
               onPressed: () {
                 if (widget.onNavigateToRecommendations != null) {
                   widget.onNavigateToRecommendations!();
@@ -1195,15 +1195,23 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                   _showAiKeywordDiscoveryModal();
                 }
               },
-              icon: const Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-              label: const Text(
-                'Fix with AI CMO',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
-              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 elevation: 0,
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.auto_awesome, size: 16, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text(
+                    'Fix with AI CMO',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1334,21 +1342,28 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
-              height: 42,
-              child: OutlinedButton.icon(
+              height: 48,
+              child: OutlinedButton(
                 onPressed: _isSyncingGsc ? null : _handleSyncGsc,
-                icon: _isSyncingGsc
-                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.link_rounded, size: 16),
-                label: const Text(
-                  'Connect Google Search Console',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF2563EB),
-                  side: const BorderSide(color: Color(0xFFBFDBFE)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  side: const BorderSide(color: Color(0xFFBFDBFE), width: 1.2),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 ),
+                child: _isSyncingGsc
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)))
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.link_rounded, size: 18, color: Color(0xFF2563EB)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Connect Google Search Console',
+                            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
+                          ),
+                        ],
+                      ),
               ),
             ),
           ],
@@ -1426,7 +1441,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '$score / 100',
+                    'Health: $score/100',
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF059669)),
                   ),
                 ),
@@ -1435,10 +1450,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
           const SizedBox(height: 12),
 
           if (isAudited) ...[
-            // 2-3 Core findings
-            const Text('Key Issues Detected:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
-            const SizedBox(height: 8),
-            _buildWebsiteIssueRow('Missing LocalBusiness schema for Google Maps integration'),
+            _buildWebsiteIssueRow('Missing structured LocalBusiness schema markup'),
             _buildWebsiteIssueRow('Missing meta description for rich search snippets'),
             _buildWebsiteIssueRow('No clickable phone call link detected on homepage'),
             const SizedBox(height: 14),
@@ -1446,31 +1458,45 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isAuditingWebsite ? null : _showWebsiteAuditDialog,
-                    icon: _isAuditingWebsite
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.refresh_rounded, size: 15),
-                    label: const Text('Re-Audit with Firecrawl', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: SizedBox(
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: _isAuditingWebsite ? null : _showWebsiteAuditDialog,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                      child: _isAuditingWebsite
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.refresh_rounded, size: 15, color: Colors.white),
+                                SizedBox(width: 4),
+                                Flexible(
+                                  child: Text('Re-Audit', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800), overflow: TextOverflow.ellipsis),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: _showWebsiteTechnicalDetails,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFCBD5E1)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: SizedBox(
+                    height: 44,
+                    child: OutlinedButton(
+                      onPressed: _showWebsiteTechnicalDetails,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                      child: const Text('View Tech Details', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF475569))),
                     ),
-                    child: const Text('View Tech Details', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF475569))),
                   ),
                 ),
               ],
@@ -1499,19 +1525,29 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
-              height: 42,
-              child: ElevatedButton.icon(
+              height: 48,
+              child: ElevatedButton(
                 onPressed: _isAuditingWebsite ? null : _showWebsiteAuditDialog,
-                icon: _isAuditingWebsite
-                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.travel_explore_rounded, size: 16),
-                label: const Text('Audit Website with Firecrawl', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0F172A),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                   elevation: 0,
                 ),
+                child: _isAuditingWebsite
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.travel_explore_rounded, size: 18, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Audit Website with Firecrawl',
+                            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Colors.white),
+                          ),
+                        ],
+                      ),
               ),
             ),
           ],
@@ -1616,18 +1652,20 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
 
           SizedBox(
             width: double.infinity,
-            height: 42,
+            height: 48,
             child: OutlinedButton(
               onPressed: _isOptimizingGbp ? null : _showGbpOptimizerModal,
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFBFDBFE)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                foregroundColor: const Color(0xFF2563EB),
+                side: const BorderSide(color: Color(0xFFBFDBFE), width: 1.2),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
               ),
               child: _isOptimizingGbp
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)))
                   : const Text(
                       'Optimize Profile',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
+                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
                     ),
             ),
           ),
