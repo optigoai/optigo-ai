@@ -132,6 +132,14 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     );
   }
 
+  String _formatDate(String? rawDate) {
+    if (rawDate == null || rawDate.isEmpty) return 'Recent';
+    if (rawDate.contains('T')) {
+      return rawDate.split('T')[0];
+    }
+    return rawDate;
+  }
+
   @override
   Widget build(BuildContext context) {
     final pendingCount = _allReviews.where((r) => !r.isReplied).length;
@@ -174,7 +182,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                       onTap: _isSyncing ? null : _handleSyncGbp,
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
@@ -197,7 +205,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
                               )
                             else
-                              const Icon(Icons.sync_rounded, size: 14, color: Color(0xFF2563EB)),
+                              const Icon(Icons.sync_rounded, size: 15, color: Color(0xFF2563EB)),
                             const SizedBox(width: 5),
                             Text(
                               _isSyncing ? 'Syncing...' : 'Sync Google',
@@ -273,7 +281,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   // ==========================================
   Widget _buildRatingSummaryCard() {
     final avgRating = _averageRating;
-    final totalCount = _allReviews.isNotEmpty ? _allReviews.length : 138;
+    final totalCount = _allReviews.isNotEmpty ? _allReviews.length : 8;
     final percentages = _starPercentages;
 
     return Container(
@@ -294,7 +302,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Left: Big Rating Number & Based on X views
+          // Left: Big Rating Number & Based on X reviews
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -340,15 +348,15 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildStarProgressBar(5, percentages[5] ?? 0.72),
-                const SizedBox(height: 5),
-                _buildStarProgressBar(4, percentages[4] ?? 0.20),
-                const SizedBox(height: 5),
-                _buildStarProgressBar(3, percentages[3] ?? 0.06),
-                const SizedBox(height: 5),
-                _buildStarProgressBar(2, percentages[2] ?? 0.01),
-                const SizedBox(height: 5),
-                _buildStarProgressBar(1, percentages[1] ?? 0.01),
+                _buildStarProgressBar(5, percentages[5] ?? 0.38),
+                const SizedBox(height: 6),
+                _buildStarProgressBar(4, percentages[4] ?? 0.25),
+                const SizedBox(height: 6),
+                _buildStarProgressBar(3, percentages[3] ?? 0.13),
+                const SizedBox(height: 6),
+                _buildStarProgressBar(2, percentages[2] ?? 0.13),
+                const SizedBox(height: 6),
+                _buildStarProgressBar(1, percentages[1] ?? 0.13),
               ],
             ),
           ),
@@ -384,7 +392,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: ratio,
-              minHeight: 6,
+              minHeight: 7,
               backgroundColor: const Color(0xFFF1F5F9),
               valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
             ),
@@ -445,7 +453,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
-            width: isSelected ? 1.4 : 1.0,
+            width: isSelected ? 1.5 : 1.0,
           ),
         ),
         child: Row(
@@ -483,11 +491,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   // INDIVIDUAL REVIEW CARD (Reference Left Screen)
   // ==========================================
   Widget _buildReviewCard(ReviewModel review) {
-    String formattedDate = review.reviewDate ?? '1 day ago';
-    if (formattedDate.contains('T')) {
-      formattedDate = formattedDate.split('T')[0];
-    }
-
+    final formattedDate = _formatDate(review.reviewDate);
     final initial = review.reviewerName.isNotEmpty ? review.reviewerName[0].toUpperCase() : 'U';
 
     return Container(
@@ -495,7 +499,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: [
           BoxShadow(
@@ -513,8 +517,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             children: [
               // Circular Avatar
               Container(
-                width: 38,
-                height: 38,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
                   shape: BoxShape.circle,
@@ -536,9 +540,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 child: Text(
                   review.reviewerName,
                   style: const TextStyle(
-                    fontSize: 14.5,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
+                    letterSpacing: -0.2,
                   ),
                 ),
               ),
@@ -580,30 +585,30 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
           const SizedBox(height: 14),
 
-          // Bottom Action: If Replied -> show status tag. If Pending -> show "AI Reply" button.
+          // Bottom Action: If Replied -> show status tag. If Pending -> show "Reply with AI" button.
           if (review.isReplied) ...[
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF10B981)),
+                  const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF10B981)),
                   const SizedBox(width: 6),
                   const Text(
                     'Replied to customer',
-                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10B981)),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF10B981)),
                   ),
                   const Spacer(),
                   InkWell(
                     onTap: () => _openReviewDetailModal(review),
                     child: const Text(
                       'View Reply',
-                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF2563EB)),
                     ),
                   ),
                 ],
@@ -612,18 +617,24 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           ] else ...[
             SizedBox(
               width: double.infinity,
-              height: 38,
+              height: 44,
               child: ElevatedButton.icon(
                 onPressed: () => _openReviewDetailModal(review),
-                icon: const Icon(Icons.auto_awesome, size: 14, color: Colors.white),
+                icon: const Icon(Icons.auto_awesome, size: 16, color: Colors.white),
                 label: const Text(
-                  'Respond with AI',
-                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Colors.white),
+                  'Reply with AI',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.1,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
               ),
             ),
@@ -651,8 +662,8 @@ class _ReviewDetailModal extends StatefulWidget {
   State<_ReviewDetailModal> createState() => _ReviewDetailModalState();
 }
 
-class _ReviewDetailModalState extends State<_ReviewDetailModal> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _ReviewDetailModalState extends State<_ReviewDetailModal> {
+  int _activeTabIndex = 1; // 0: Review, 1: AI Response
   late TextEditingController _replyTextController;
   bool _isGenerating = false;
   bool _isPosting = false;
@@ -660,7 +671,6 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> with SingleTicke
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this, initialIndex: 1); // Open AI Response tab by default
     _replyTextController = TextEditingController(
       text: widget.review.replyText ?? widget.review.aiGeneratedReply ?? '',
     );
@@ -672,7 +682,6 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> with SingleTicke
 
   @override
   void dispose() {
-    _tabController.dispose();
     _replyTextController.dispose();
     super.dispose();
   }
@@ -698,7 +707,7 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> with SingleTicke
       if (mounted) {
         setState(() {
           _replyTextController.text =
-              "Hi ${widget.review.reviewerName}, thank you for your feedback! We're glad you visited us and appreciate your support. We look forward to serving you again soon!";
+              "Hi ${widget.review.reviewerName}, thank you so much for your feedback! We're glad you visited us and appreciate your support. We look forward to serving you again soon!";
           _isGenerating = false;
         });
       }
@@ -743,237 +752,310 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final initial = widget.review.reviewerName.isNotEmpty ? widget.review.reviewerName[0].toUpperCase() : 'U';
 
-    String formattedDate = widget.review.reviewDate ?? '1 day ago';
+    String formattedDate = widget.review.reviewDate ?? 'Recent';
     if (formattedDate.contains('T')) {
       formattedDate = formattedDate.split('T')[0];
     }
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      margin: EdgeInsets.only(bottom: bottomInset),
+      height: MediaQuery.of(context).size.height * 0.88,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      child: Column(
-        children: [
-          // Drag handle
-          const SizedBox(height: 12),
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFCBD5E1),
-                borderRadius: BorderRadius.circular(4),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Drag handle
+            const SizedBox(height: 12),
+            Center(
+              child: Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-          // Top Tab Switcher: Review | AI Response (Matching Reference Right Screen)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1.5)),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: const Color(0xFF2563EB),
-              indicatorWeight: 2.5,
-              labelColor: const Color(0xFF2563EB),
-              unselectedLabelColor: const Color(0xFF64748B),
-              labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-              unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              tabs: const [
-                Tab(text: 'Review'),
-                Tab(text: 'AI Response'),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Top Segmented Capsule Switcher: Review | AI Response (Matching Reference Right Screen)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
                 children: [
-                  // Customer Review Summary Card at Top
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEFF6FF),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: const Color(0xFFDBEAFE)),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  initial,
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF2563EB)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.review.reviewerName,
-                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _activeTabIndex = 0),
+                      borderRadius: BorderRadius.circular(10),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                        decoration: BoxDecoration(
+                          color: _activeTabIndex == 0 ? Colors.white : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: _activeTabIndex == 0
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
                                   ),
-                                  Text(
-                                    formattedDate,
-                                    style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                                ]
+                              : [],
                         ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: List.generate(
-                            5,
-                            (index) => Icon(
-                              Icons.star_rounded,
-                              size: 16,
-                              color: index < widget.review.rating ? const Color(0xFFF59E0B) : const Color(0xFFE2E8F0),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.review.text ?? 'No text provided',
-                          style: const TextStyle(fontSize: 13.5, color: Color(0xFF334155), height: 1.4),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // AI Suggested Response Mint Box (Matching Reference Right Screen)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0FDF4),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFBBF7D0), width: 1.2),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Row(
-                              children: [
-                                Icon(Icons.auto_awesome, size: 16, color: Color(0xFF16A34A)),
-                                SizedBox(width: 6),
-                                Text(
-                                  'AI Suggested Response',
-                                  style: TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF166534),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            InkWell(
-                              onTap: _isGenerating ? null : _generateAiReply,
-                              child: _isGenerating
-                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF16A34A)))
-                                  : const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFF16A34A)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        if (_isGenerating)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: Text(
-                                'Crafting personalized brand response with Gemini...',
-                                style: TextStyle(fontSize: 12.5, color: Color(0xFF166534), fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          )
-                        else
-                          TextField(
-                            controller: _replyTextController,
-                            maxLines: 5,
-                            style: const TextStyle(
+                        child: Center(
+                          child: Text(
+                            'Review',
+                            style: TextStyle(
                               fontSize: 13.5,
-                              color: Color(0xFF14532D),
-                              height: 1.5,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                              hintText: 'Type custom reply...',
-                              hintStyle: TextStyle(color: Color(0xFF86EFAC)),
+                              fontWeight: _activeTabIndex == 0 ? FontWeight.w800 : FontWeight.w600,
+                              color: _activeTabIndex == 0 ? const Color(0xFF0F172A) : const Color(0xFF64748B),
                             ),
                           ),
-                      ],
+                        ),
+                      ),
                     ),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Big Action Button: Use & Reply
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: (_isPosting || _isGenerating) ? null : _handleUseAndReply,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: _isPosting
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text(
-                              'Use & Reply',
-                              style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _activeTabIndex = 1),
+                      borderRadius: BorderRadius.circular(10),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                        decoration: BoxDecoration(
+                          color: _activeTabIndex == 1 ? Colors.white : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: _activeTabIndex == 1
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ]
+                              : [],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              size: 13,
+                              color: _activeTabIndex == 1 ? const Color(0xFF2563EB) : const Color(0xFF64748B),
                             ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'AI Response',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: _activeTabIndex == 1 ? FontWeight.w800 : FontWeight.w600,
+                                color: _activeTabIndex == 1 ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Customer Review Summary Card at Top
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: const Color(0xFFDBEAFE)),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    initial,
+                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Color(0xFF2563EB)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.review.reviewerName,
+                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                                    ),
+                                    Text(
+                                      formattedDate,
+                                      style: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: List.generate(
+                              5,
+                              (index) => Icon(
+                                Icons.star_rounded,
+                                size: 18,
+                                color: index < widget.review.rating ? const Color(0xFFF59E0B) : const Color(0xFFE2E8F0),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            widget.review.text ?? 'No written comment provided.',
+                            style: const TextStyle(fontSize: 13.5, color: Color(0xFF334155), height: 1.45, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // AI Suggested Response Mint Box (Matching Reference Right Screen)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0FDF4),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFBBF7D0), width: 1.2),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.auto_awesome, size: 16, color: Color(0xFF16A34A)),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'AI Suggested Response',
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF166534),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              InkWell(
+                                onTap: _isGenerating ? null : _generateAiReply,
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  child: _isGenerating
+                                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF16A34A)))
+                                      : const Icon(Icons.refresh_rounded, size: 18, color: Color(0xFF16A34A)),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+
+                          if (_isGenerating)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 24),
+                              child: Center(
+                                child: Text(
+                                  'Crafting personalized brand response with Gemini...',
+                                  style: TextStyle(fontSize: 12.5, color: Color(0xFF166534), fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            )
+                          else
+                            TextField(
+                              controller: _replyTextController,
+                              maxLines: 6,
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                color: Color(0xFF14532D),
+                                height: 1.5,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                hintText: 'Type custom reply...',
+                                hintStyle: TextStyle(color: Color(0xFF86EFAC)),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Big Action Button: Use & Reply
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: (_isPosting || _isGenerating) ? null : _handleUseAndReply,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: _isPosting
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Text(
+                                'Use & Reply',
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 0.1),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
