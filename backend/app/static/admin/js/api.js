@@ -9,6 +9,7 @@ const API_BASE = window.location.origin.includes(':8000')
 class AdminAPI {
   constructor() {
     this.token = localStorage.getItem('optigo_admin_token') || null;
+    this.onAuthRequired = null;
   }
 
   setToken(token) {
@@ -43,7 +44,10 @@ class AdminAPI {
     try {
       const res = await fetch(url, config);
       if (res.status === 401 || res.status === 403) {
-        console.warn('Admin authentication required or expired.');
+        console.warn(`Admin authentication required for ${endpoint}.`);
+        if (this.onAuthRequired) {
+          this.onAuthRequired();
+        }
       }
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -51,7 +55,6 @@ class AdminAPI {
       }
       return await res.json();
     } catch (err) {
-      console.error(`API Error on ${endpoint}:`, err);
       throw err;
     }
   }
@@ -101,10 +104,21 @@ class AdminAPI {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    if (res.access_token) {
+    if (res.tokens && res.tokens.access_token) {
+      this.setToken(res.tokens.access_token);
+      return res;
+    } else if (res.access_token) {
       this.setToken(res.access_token);
+      return res;
     }
     return res;
+  }
+
+  logout() {
+    this.setToken(null);
+    if (this.onAuthRequired) {
+      this.onAuthRequired();
+    }
   }
 }
 

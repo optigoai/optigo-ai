@@ -15,8 +15,69 @@ let usageData = null;
 
 function initApp() {
   setupNavigation();
-  loadAllData();
+  setupAuthHandling();
   setupRefreshButton();
+
+  if (!window.api.token) {
+    showAuthModal();
+  } else {
+    loadAllData();
+  }
+}
+
+function setupAuthHandling() {
+  window.api.onAuthRequired = () => {
+    showAuthModal();
+  };
+
+  const loginForm = document.getElementById('admin-login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const submitBtn = document.getElementById('btn-login-submit');
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Authenticating...';
+
+      try {
+        const res = await window.api.login(email, password);
+        hideAuthModal();
+        showToast('Authenticated successfully as Administrator!', 'success');
+
+        if (res.user) {
+          const nameEl = document.getElementById('admin-display-name');
+          const emailEl = document.getElementById('admin-display-email');
+          if (nameEl) nameEl.innerText = res.user.full_name || 'Super Administrator';
+          if (emailEl) emailEl.innerText = res.user.email || email;
+        }
+
+        loadAllData();
+      } catch (err) {
+        showToast(err.message || 'Login failed. Check admin credentials.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Sign In to Admin Portal';
+      }
+    });
+  }
+}
+
+function showAuthModal() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function hideAuthModal() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function handleLogout() {
+  window.api.logout();
+  showToast('Logged out of Admin Portal.', 'success');
+  showAuthModal();
 }
 
 function setupNavigation() {
@@ -93,18 +154,17 @@ async function loadStats() {
     statsData = await window.api.getStats();
     renderStats(statsData);
   } catch (err) {
-    // Graceful fallback for preview / unauthenticated
     statsData = {
-      total_organizations: 12,
-      total_businesses: 18,
-      total_users: 24,
-      total_reviews_managed: 184,
-      total_campaigns_created: 42,
-      total_content_pieces: 156,
-      ai_api_calls: 1420,
-      total_tokens_consumed: 389400,
-      estimated_ai_cost_usd: 5.84,
-      active_feature_flags: 8,
+      total_organizations: 0,
+      total_businesses: 0,
+      total_users: 0,
+      total_reviews_managed: 0,
+      total_campaigns_created: 0,
+      total_content_pieces: 0,
+      ai_api_calls: 0,
+      total_tokens_consumed: 0,
+      estimated_ai_cost_usd: 0.0,
+      active_feature_flags: 0,
     };
     renderStats(statsData);
   }
@@ -123,16 +183,7 @@ async function loadFeatures() {
   try {
     featuresData = await window.api.getFeatures();
   } catch (err) {
-    featuresData = [
-      { feature_name: 'ai_cmo_chat', description: 'Conversational AI CMO Chat Assistant with live business context and action triggers', is_enabled: true },
-      { feature_name: 'content_studio', description: '3-Step AI Content Studio for multi-channel copy generation and campaign assets', is_enabled: true },
-      { feature_name: 'smart_creatives', description: 'AI Visual Creative & Promotional Graphic Generator for Instagram and Google Posts', is_enabled: true },
-      { feature_name: 'firecrawl_crawler', description: 'Live website crawler for technical SEO, schema validation, and meta audits', is_enabled: true },
-      { feature_name: 'gsc_integration', description: 'Google Search Console real-time first-party keyword & CTR metrics integration', is_enabled: true },
-      { feature_name: 'auto_reviews_reply', description: 'AI-powered personalized review response generator and automated approvals', is_enabled: true },
-      { feature_name: 'seo_optimizer', description: 'Google Visibility & SEO optimization pillars, keyword tracking, and GBP enhancements', is_enabled: true },
-      { feature_name: 'scheduled_campaigns', description: 'Automated multi-channel campaign scheduling and background task execution', is_enabled: true },
-    ];
+    featuresData = [];
   }
   renderFeatures(featuresData);
 }
@@ -140,6 +191,11 @@ async function loadFeatures() {
 function renderFeatures(features) {
   const container = document.getElementById('features-container');
   if (!container) return;
+
+  if (features.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:30px; color:var(--text-muted);">No feature flags found. Click Synchronize to load from backend.</div>`;
+    return;
+  }
 
   container.innerHTML = features.map(f => {
     const formattedName = f.feature_name
@@ -182,10 +238,7 @@ async function loadOrganizations() {
   try {
     orgsData = await window.api.getOrganizations();
   } catch (err) {
-    orgsData = [
-      { id: 'org-1', name: 'Optigo Core Tenant', slug: 'optigo-core', is_active: true, businesses_count: 2, users_count: 3, created_at: '2026-08-20T10:00:00Z' },
-      { id: 'org-2', name: 'Malabar Retail Group', slug: 'malabar-retail', is_active: true, businesses_count: 1, users_count: 2, created_at: '2026-08-21T14:30:00Z' },
-    ];
+    orgsData = [];
   }
   renderOrganizations(orgsData);
 }
@@ -233,10 +286,7 @@ async function loadBusinesses() {
   try {
     businessesData = await window.api.getBusinesses();
   } catch (err) {
-    businessesData = [
-      { id: 'biz-1', name: 'Specialty Coffee Roasters', category: 'Restaurant / Cafe', location: 'Bengaluru, India', website: 'https://coffeeroasters.example.com', onboarding_completed: true },
-      { id: 'biz-2', name: 'Apex Fitness Club', category: 'Health & Wellness', location: 'Mumbai, India', website: 'https://apexfit.example.com', onboarding_completed: true },
-    ];
+    businessesData = [];
   }
   renderBusinesses(businessesData);
 }
@@ -270,45 +320,41 @@ async function loadUsage() {
     usageData = await window.api.getUsage();
     renderUsage(usageData);
   } catch (err) {
-    renderUsage({
-      by_feature: [
-        { feature: 'cmo_chat', calls: 620, tokens: 185000, cost_usd: 2.75 },
-        { feature: 'content_studio', calls: 410, tokens: 124000, cost_usd: 1.86 },
-        { feature: 'seo_audit', calls: 240, tokens: 52000, cost_usd: 0.78 },
-        { feature: 'reviews_reply', calls: 150, tokens: 28400, cost_usd: 0.45 },
-      ],
-      by_model: [
-        { provider: 'openai', model: 'gpt-4o-mini', calls: 980, avg_latency_ms: 850 },
-        { provider: 'google', model: 'gemini-1.5-pro', calls: 440, avg_latency_ms: 620 },
-      ],
-      recent_logs: [],
-    });
+    renderUsage({ by_feature: [], by_model: [], recent_logs: [] });
   }
 }
 
 function renderUsage(data) {
   const featureTbody = document.getElementById('usage-feature-tbody');
   if (featureTbody && data.by_feature) {
-    featureTbody.innerHTML = data.by_feature.map(f => `
-      <tr>
-        <td><strong>${escapeHtml(f.feature)}</strong></td>
-        <td>${f.calls.toLocaleString()}</td>
-        <td>${f.tokens.toLocaleString()}</td>
-        <td><strong style="color:#34D399;">$${f.cost_usd.toFixed(4)}</strong></td>
-      </tr>
-    `).join('');
+    if (data.by_feature.length === 0) {
+      featureTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No AI invocation logs recorded yet.</td></tr>`;
+    } else {
+      featureTbody.innerHTML = data.by_feature.map(f => `
+        <tr>
+          <td><strong>${escapeHtml(f.feature)}</strong></td>
+          <td>${f.calls.toLocaleString()}</td>
+          <td>${f.tokens.toLocaleString()}</td>
+          <td><strong style="color:#34D399;">$${f.cost_usd.toFixed(4)}</strong></td>
+        </tr>
+      `).join('');
+    }
   }
 
   const modelTbody = document.getElementById('usage-model-tbody');
   if (modelTbody && data.by_model) {
-    modelTbody.innerHTML = data.by_model.map(m => `
-      <tr>
-        <td><span class="badge badge-pill">${escapeHtml(m.provider)}</span></td>
-        <td><strong>${escapeHtml(m.model)}</strong></td>
-        <td>${m.calls.toLocaleString()}</td>
-        <td>${m.avg_latency_ms} ms</td>
-      </tr>
-    `).join('');
+    if (data.by_model.length === 0) {
+      modelTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No model records yet.</td></tr>`;
+    } else {
+      modelTbody.innerHTML = data.by_model.map(m => `
+        <tr>
+          <td><span class="badge badge-pill">${escapeHtml(m.provider)}</span></td>
+          <td><strong>${escapeHtml(m.model)}</strong></td>
+          <td>${m.calls.toLocaleString()}</td>
+          <td>${m.avg_latency_ms} ms</td>
+        </tr>
+      `).join('');
+    }
   }
 }
 
@@ -373,3 +419,4 @@ function escapeHtml(str) {
 
 window.handleFeatureToggle = handleFeatureToggle;
 window.handleOrgToggle = handleOrgToggle;
+window.handleLogout = handleLogout;

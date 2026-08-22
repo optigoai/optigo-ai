@@ -27,6 +27,20 @@ async def lifespan(app: FastAPI):
         environment=settings.app_env,
         debug=settings.debug,
     )
+    
+    # Seed default admin user and feature flags
+    try:
+        from app.core.database import async_session_factory
+        from app.services.admin_service import AdminService
+        async with async_session_factory() as session:
+            admin_srv = AdminService(session)
+            await admin_srv.ensure_default_admin()
+            await admin_srv._ensure_default_features()
+            await session.commit()
+            logger.info("Admin service initialization complete (default admin & feature flags verified)")
+    except Exception as e:
+        logger.warning("Admin initialization check failed", error=str(e))
+
     yield
     logger.info("Shutting down OptigoAI API")
 

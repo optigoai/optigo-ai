@@ -182,6 +182,28 @@ class AdminService:
             for b in businesses
         ]
 
+    async def ensure_default_admin(self) -> None:
+        """Ensure the default super admin exists."""
+        from app.models.user import User, UserRole
+        from app.core.security import hash_password
+        from app.core.config import settings
+
+        admin_email = settings.admin_email or "admin@optigoai.com"
+        result = await self.db.execute(select(User).where(User.email == admin_email))
+        admin = result.scalar_one_or_none()
+
+        if not admin:
+            pwd = settings.admin_default_password if settings.admin_default_password != "CHANGE_ME_ON_FIRST_LOGIN" else "Admin@Optigo123!"
+            admin = User(
+                email=admin_email,
+                password_hash=hash_password(pwd),
+                full_name="Super Administrator",
+                role=UserRole.ADMIN,
+                is_active=True,
+            )
+            self.db.add(admin)
+            await self.db.flush()
+
     async def _ensure_default_features(self) -> None:
         """Seed default feature flags if none exist."""
         result = await self.db.execute(select(FeatureToggle))
