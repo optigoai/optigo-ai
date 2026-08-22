@@ -304,86 +304,118 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Headline + Stylized AI Robot Avatar
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Top Area: Headline + 3D Bot Blend with Radiant Aura
+          Stack(
+            clipBehavior: Clip.none,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Today's AI Insight",
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF4F46E5),
-                        letterSpacing: 0.2,
-                      ),
+              // Radiant Background Glow Aura for 3D depth
+              Positioned(
+                right: -10,
+                top: -15,
+                child: Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFF818CF8).withValues(alpha: 0.30),
+                        const Color(0xFFC7D2FE).withValues(alpha: 0.12),
+                        Colors.transparent,
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
-                          letterSpacing: -0.5,
-                          height: 1.2,
-                        ),
-                        children: [
-                          const TextSpan(text: 'Focus on '),
-                          TextSpan(
-                            text: '$needAttention actions',
-                            style: const TextStyle(color: Color(0xFF2563EB)),
-                          ),
-                          const TextSpan(text: '\nto get more customers'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Trend Pill
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFA7F3D0)),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF059669)),
-                          SizedBox(width: 5),
-                          Text(
-                            'Your business is trending up!',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF059669),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
 
-              // 3D AI Mascot Graphic filling right side seamlessly
-              SizedBox(
-                width: 96,
-                height: 96,
-                child: Image.asset(
-                  'assets/images/optigo-bot.png',
-                  fit: BoxFit.contain,
-                ),
+              // Sparkle Accent
+              const Positioned(
+                right: 120,
+                top: -4,
+                child: Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
+              ),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Today's AI Insight",
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF4F46E5),
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -0.5,
+                              height: 1.2,
+                            ),
+                            children: [
+                              const TextSpan(text: 'Focus on '),
+                              TextSpan(
+                                text: '$needAttention actions',
+                                style: const TextStyle(color: Color(0xFF2563EB)),
+                              ),
+                              const TextSpan(text: '\nto get more customers'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Trend Pill
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFECFDF5),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFA7F3D0)),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF059669)),
+                              SizedBox(width: 5),
+                              Text(
+                                'Your business is trending up!',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF059669),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Large 3D AI Mascot Graphic blending seamlessly
+                  SizedBox(
+                    width: 125,
+                    height: 125,
+                    child: Image.asset(
+                      'assets/images/optigo-bot.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           // Metrics Stats Row (Fixed overflow with compact flexible padding)
           Container(
