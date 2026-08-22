@@ -371,41 +371,19 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                 ),
               ),
 
-              // AI Mascot Avatar Graphic
-              Container(
-                width: 76,
-                height: 76,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFFC7D2FE)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Image.asset(
-                      'assets/images/optigo-bot.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+              // 3D AI Mascot Graphic filling right side seamlessly
+              SizedBox(
+                width: 96,
+                height: 96,
+                child: Image.asset(
+                  'assets/images/optigo-bot.png',
+                  fit: BoxFit.contain,
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
 
           // Metrics Stats Row (Fixed overflow with compact flexible padding)
           Container(
@@ -858,9 +836,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  'Ask AI CMO ✨',
+                  'Ask Optigo ✨',
                   style: TextStyle(
-                    fontSize: 13.5,
+                    fontSize: 14,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF5B21B6),
                   ),
@@ -868,7 +846,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                 SizedBox(height: 2),
                 Text(
                   'Ask anything about your marketing.',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF7C3AED), fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 11.5, color: Color(0xFF7C3AED), fontWeight: FontWeight.w500),
                 ),
               ],
             ),
