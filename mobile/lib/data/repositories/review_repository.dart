@@ -52,4 +52,19 @@ class ReviewRepository {
     }
     return '';
   }
+
+  Future<Map<String, dynamic>> getReviewIntelligence({
+    required String businessId,
+  }) async {
+    try {
+      final response = await _apiClient.get(
+        '${ApiConstants.reviews}/intelligence?business_id=$businessId',
+      );
+      if (response is Map<String, dynamic>) {
+        return response;
+      }
+    } catch (_) {}
+    return {};
+  }
 }
+

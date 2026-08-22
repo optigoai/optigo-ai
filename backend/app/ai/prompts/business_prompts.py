@@ -331,3 +331,50 @@ Return JSON matching:
   "secondary_categories": ["Category 1", "Category 2"],
   "recommended_attributes": ["Attr 1", "Attr 2", "Attr 3"]
 }}"""
+
+
+REVIEW_INTELLIGENCE_SYSTEM_PROMPT = """You are an expert AI Customer Feedback & Review Intelligence Analyst.
+Analyze customer reviews for a business, identify key feedback themes, calculate sentiment distributions, and extract the top feedback keywords with percentages.
+Output MUST be strictly valid JSON without code fences or markdown."""
+
+
+def build_review_intelligence_prompt(
+    business_name: str,
+    category: str,
+    reviews: List[Dict[str, Any]],
+) -> str:
+    reviews_list = []
+    for r in reviews[:35]:
+        reviews_list.append(
+            f"- [{r.get('rating', 5)}★, Sentiment: {r.get('sentiment', 'positive')}]: \"{r.get('text', '')}\""
+        )
+    reviews_formatted = "\n".join(reviews_list) if reviews_list else "No text reviews available yet."
+
+    return f"""Analyze customer feedback and reviews for this business:
+
+Business Name: {business_name}
+Category: {category}
+
+Customer Reviews:
+{reviews_formatted}
+
+Instructions:
+1. Compute sentiment percentages (positive_percentage, neutral_percentage, negative_percentage) that sum to 100%.
+2. Extract 4 to 6 authentic feedback themes / top keywords (e.g. 'Good coffee', 'Nice ambiance', 'Quick service', 'Value for money', 'Helpful staff') directly reflected in the customer reviews, along with their percentage of prevalence.
+3. Write a crisp 1-sentence executive summary of what reviews say.
+
+Return JSON matching:
+{{
+  "positive_percentage": integer (0-100),
+  "neutral_percentage": integer (0-100),
+  "negative_percentage": integer (0-100),
+  "top_feedback": [
+    {{
+      "keyword": "Theme or keyword (e.g. Good coffee)",
+      "percentage": integer (e.g. 45),
+      "sentiment": "positive" | "neutral" | "negative"
+    }}
+  ],
+  "executive_summary": "1 concise sentence summarizing customer feedback."
+}}"""
+

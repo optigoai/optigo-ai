@@ -16,6 +16,7 @@ from app.ai.schemas import (
     AISeoAuditOutput,
     AIKeywordListOutput,
     AIGbpProfileOptimizationOutput,
+    AIReviewIntelligenceOutput,
 )
 from app.ai.prompts.business_prompts import (
     BUSINESS_PROFILE_SYSTEM_PROMPT,
@@ -23,6 +24,7 @@ from app.ai.prompts.business_prompts import (
     CMO_RECOMMENDATIONS_SYSTEM_PROMPT,
     CONTENT_SYSTEM_PROMPT,
     SEO_AUDIT_SYSTEM_PROMPT,
+    REVIEW_INTELLIGENCE_SYSTEM_PROMPT,
     build_business_profile_prompt,
     build_business_intelligence_prompt,
     build_cmo_recommendations_prompt,
@@ -30,6 +32,7 @@ from app.ai.prompts.business_prompts import (
     build_seo_audit_prompt,
     build_seo_keyword_generator_prompt,
     build_gbp_profile_optimizer_prompt,
+    build_review_intelligence_prompt,
 )
 
 logger = get_logger("app.ai.service")
@@ -541,6 +544,57 @@ class AIService:
             logger.error("AI GBP Profile optimization failed", error=str(e))
             await self._log_ai_request(
                 feature="seo_gbp_profile_optimization",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=getattr(self.provider, "model_name", "gemini-3.5-flash-lite"),
+                prompt_preview=prompt,
+                response_preview="",
+                usage={"latency_ms": 0},
+                is_success=False,
+                error_message=str(e),
+            )
+            raise e
+
+    async def analyze_review_intelligence(
+        self,
+        organization_id: Optional[str],
+        user_id: Optional[str],
+        business_name: str,
+        category: str,
+        reviews: List[Dict[str, Any]],
+    ) -> AIReviewIntelligenceOutput:
+        prompt = build_review_intelligence_prompt(
+            business_name=business_name,
+            category=category,
+            reviews=reviews,
+        )
+
+        try:
+            res = await self.provider.generate_structured(
+                prompt=prompt,
+                response_schema=AIReviewIntelligenceOutput.model_json_schema(),
+                system_instruction=REVIEW_INTELLIGENCE_SYSTEM_PROMPT,
+                temperature=0.4,
+            )
+            data = res.get("data", {})
+            output = AIReviewIntelligenceOutput.model_validate(data)
+            usage = res.get("usage", {})
+
+            await self._log_ai_request(
+                feature="review_intelligence_analysis",
+                organization_id=organization_id,
+                user_id=user_id,
+                model=res.get("model", getattr(self.provider, "model_name", "gemini-3.5-flash-lite")),
+                prompt_preview=prompt,
+                response_preview=json.dumps(data),
+                usage=usage,
+                is_success=True,
+            )
+            return output
+        except Exception as e:
+            logger.error("AI Review Intelligence analysis failed", error=str(e))
+            await self._log_ai_request(
+                feature="review_intelligence_analysis",
                 organization_id=organization_id,
                 user_id=user_id,
                 model=getattr(self.provider, "model_name", "gemini-3.5-flash-lite"),
