@@ -247,8 +247,8 @@ SELECT * FROM organizations;
 # View businesses:
 SELECT id, name, category, location, onboarding_completed FROM businesses;
 
-# View synced reviews:
-SELECT reviewer_name, rating, sentiment, is_replied, LEFT(text, 50) AS review_snippet FROM reviews;
+# View AI Request Logs and Token Costs:
+SELECT model, prompt_tokens, completion_tokens, total_tokens, estimated_cost_usd, created_at FROM ai_request_logs ORDER BY created_at DESC LIMIT 10;
 
 # Exit PostgreSQL prompt:
 \q
@@ -256,26 +256,52 @@ SELECT reviewer_name, rating, sentiment, is_replied, LEFT(text, 50) AS review_sn
 
 ---
 
-## 🧪 Step 6: Run Automated Tests
+## 🖥️ Step 6: Test the Web Admin Portal
+
+The Web Admin Portal allows administrators to monitor system health, feature flags, tenant status, and per-user/per-business AI token usage in real time.
+
+1. Navigate to: **[http://localhost:8000/admin](http://localhost:8000/admin)**
+2. Sign in with administrative credentials (e.g., `naveen@panekkatt.com` or `ahmed@casaraza.com`).
+3. **Live Auto-Sync**: Notice the green pulsing `● Live Auto-Sync` indicator in the header; the dashboard automatically syncs backend stats and token usage every 3.5 seconds silently.
+4. **AI & Token Usage Monitoring**: Scroll to the **User AI & Token Usage** table to see exact tokens, request counts, estimated USD costs, and attributed business storefronts (`panekkatt oil and flour mill`, `casaraza`, `alufab`).
+
+---
+
+## ⚡ Step 7: Inspect Celery Background Workers & Logs
+
+```powershell
+# View live background task execution logs
+docker compose logs -f celery_worker
+
+# View Celery Beat scheduler logs
+docker compose logs -f celery_beat
+
+# Inspect running Celery background processes
+docker compose exec api celery -A app.workers.celery_app inspect active
+```
+
+---
+
+## 🧪 Step 8: Run Automated Tests
 
 To verify that all backend and mobile test suites are healthy:
 
 ### Run Backend Tests (Pytest in Docker):
 ```powershell
-docker compose exec api pytest -v
+docker compose exec api pytest tests/
 ```
-*Expected: **9 passed in ~7 seconds** (including strict multi-tenant isolation tests).*
+*Expected: **26 passed in ~80-100 seconds** (including Admin, AI Intelligence, SSRF Security, SEO, and Multi-Tenant Isolation tests).*
 
-### Run Mobile Tests (Flutter):
+### Run Mobile Static Analyzer (Flutter):
 ```powershell
 cd "C:\Optigo Works\optigoai\mobile"
-flutter test
+flutter analyze
 ```
-*Expected: **All tests passed**.*
+*Expected: **No issues found!**.*
 
 ---
 
-## 🛑 Step 7: Stopping & Managing Services
+## 🛑 Step 9: Stopping & Managing Services
 
 ```powershell
 # Stop all containers (preserves your database data)
@@ -290,3 +316,4 @@ docker compose down
 # View real-time logs of the API
 docker compose logs -f api
 ```
+

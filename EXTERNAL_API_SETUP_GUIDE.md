@@ -124,11 +124,19 @@ FIRECRAWL_API_KEY=fc-your-api-key-here
 
 ---
 
-## 6. How to Test Connections
+## 6. Background Task Integration & Scheduling
+
+All external provider calls (Google Search Console sync, DataForSEO rank checks, Firecrawl website audits, and Gemini Review Intelligence) can be triggered asynchronously via **Celery background workers** and **Celery Beat schedulers** to avoid blocking API latency.
+
+See [`CELERY_BACKGROUND_TASKS.md`](file:///c:/Optigo%20Works/optigoai/CELERY_BACKGROUND_TASKS.md) for full background task catalogs, token optimization guards, and cron schedules.
+
+---
+
+## 7. How to Test Connections & Integrations
 
 ```bash
-# 1. Run backend test suite (All 23 tests including SSRF, GSC, and external providers)
-docker exec optigoai-api pytest -v
+# 1. Run full backend test suite (26 passing test suites)
+docker compose exec api pytest tests/
 
 # 2. Trigger on-demand GSC sync test via API
 curl -X POST "http://localhost:8000/api/v1/integrations/google/search-console/sync?business_id=<BIZ_ID>" \
@@ -137,4 +145,8 @@ curl -X POST "http://localhost:8000/api/v1/integrations/google/search-console/sy
 # 3. Trigger on-demand Website Audit test via API
 curl -X POST "http://localhost:8000/api/v1/seo/website/audit?business_id=<BIZ_ID>" \
      -H "Authorization: Bearer <TOKEN>"
+
+# 4. View Celery worker task execution logs
+docker compose logs -f celery_worker
 ```
+

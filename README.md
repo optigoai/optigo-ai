@@ -2,37 +2,44 @@
 
 **AI Marketing Manager for Small & Medium Businesses**
 
-OptigoAI helps business owners answer one question: *"What should I do to get more customers?"*
+OptigoAI helps business owners answer one core question: *"What should I do to get more customers?"*
 
-## Architecture
+---
+
+## 🏗️ Architecture
 
 ```
 optigoai/
-├── mobile/         Flutter app (Android + iOS)
-├── backend/        FastAPI + SQLAlchemy + Celery
-├── admin/          Internal admin portal (Phase 12)
-├── docker-compose.yml
-├── .env.example
+├── mobile/                  Flutter app (Android + iOS) with 5 Core Tabs & AI CMO Drawer
+├── backend/                 FastAPI + SQLAlchemy + Celery + Redis + PostgreSQL
+├── web-admin/               Live Web Admin Portal (Real-time auto-sync & AI tracking)
+├── docker-compose.yml       Orchestrates PostgreSQL, Redis, FastAPI, Celery Worker & Beat
+├── CELERY_BACKGROUND_TASKS.md Documentation for background workers & scheduler
+├── EXTERNAL_API_SETUP_GUIDE.md Guide for GSC, DataForSEO, Firecrawl, Gemini
+├── .env.example             Environment configuration template
 └── README.md
 ```
 
-## Tech Stack
+---
+
+## 💻 Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Mobile | Flutter 3.29, Dart 3.7 |
-| Backend | Python 3.11, FastAPI, SQLAlchemy, Alembic |
-| Database | PostgreSQL 16 |
-| Cache/Queue | Redis 7 |
-| Background Jobs | Celery |
-| AI | Google Gemini API |
-| Storage | Google Cloud Storage |
-| Containers | Docker, Docker Compose |
+|---|---|
+| **Mobile** | Flutter 3.29, Dart 3.7, Provider, Flutter Secure Storage, FL Chart |
+| **Backend** | Python 3.11, FastAPI, Async SQLAlchemy 2.0, Alembic |
+| **Database** | PostgreSQL 16 |
+| **Cache / Queue** | Redis 7 |
+| **Background Processing** | Celery 5 Worker & Celery Beat Scheduler |
+| **AI Intelligence** | Google Gemini 2.0 Flash (`google-genai`) |
+| **Integrations** | Google Search Console API, DataForSEO, Firecrawl, Serper, SerpAPI |
+| **Admin Portal** | HTML5 / Vanilla CSS & JS (with silent 3.5s background auto-sync) |
 
-## Quick Start
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
 - [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (stable channel)
 - [Python 3.11+](https://www.python.org/downloads/)
@@ -46,31 +53,31 @@ cd optigo-ai
 # Copy environment template
 cp .env.example .env
 
-# Edit .env and set your secrets:
-# - JWT_SECRET_KEY (generate with: python -c "import secrets; print(secrets.token_urlsafe(64))")
+# Edit .env and set your keys:
+# - JWT_SECRET_KEY
 # - GEMINI_API_KEY (from https://aistudio.google.com/apikey)
 ```
 
-### 2. Start Backend Services
+### 2. Start Backend Services with Docker
 
 ```bash
-docker compose up --build
+docker compose up -d
 ```
 
 This starts:
-- **PostgreSQL** on port 5432
-- **Redis** on port 6379
-- **FastAPI** on port 8000 (http://localhost:8000/docs)
-- **Celery Worker** (background tasks)
-- **Celery Beat** (scheduled tasks)
+- **PostgreSQL Database** on `localhost:5432`
+- **Redis Cache & Message Broker** on `localhost:6379`
+- **FastAPI Backend Server** on `http://localhost:8000`
+- **Celery Worker** (Asynchronous background processing)
+- **Celery Beat** (Scheduled daily & weekly maintenance tasks)
 
-### 3. Run Database Migrations
+### 3. Access Portals & API Documentation
 
-```bash
-docker compose exec api alembic upgrade head
-```
+- **Web Admin Portal**: [http://localhost:8000/admin](http://localhost:8000/admin) (or open `web-admin/index.html`)
+- **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Backend Health Check**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
 
-### 4. Run Flutter App
+### 4. Run Flutter Mobile App
 
 ```bash
 cd mobile
@@ -78,63 +85,54 @@ flutter pub get
 flutter run
 ```
 
-### 5. Verify
+---
 
-- Backend health: http://localhost:8000/api/v1/health
-- API docs: http://localhost:8000/docs
-- Flutter app: running on emulator/device
+## 🌟 Key Features
 
-## Environment Variables
+1. **AI CMO Action Engine**: Analyzes marketing health score, reviews, and SEO gaps to generate prioritized action cards (`URGENT`, `IMPORTANT`, `OPPORTUNITY`).
+2. **AI Review Intelligence**: Structured NLP extraction of sentiment ratios and real customer feedback keyword percentages. Features an auto-scrolling top carousel on the Customer Reviews screen.
+3. **Conversational AI CMO Assistant**: Real-time business advisor drawer accessible across all screens in the mobile app.
+4. **Local SEO & Google Search Console**: Ingests real search clicks, impressions, CTR, queries, and tracks Map Pack local rankings.
+5. **Autonomous Multi-Channel Content Studio**: Generates promotional campaigns, social posts (GBP, Instagram, Facebook, LinkedIn), and smart visual promotional banners.
+6. **Live Web Admin Dashboard**: Live auto-refreshing dashboard monitoring per-user & per-business AI token usage, tenant management, and system health.
+7. **Token-Guarded Background Worker**: Asynchronous processing with caching preventing redundant LLM token expenditures (see [`CELERY_BACKGROUND_TASKS.md`](CELERY_BACKGROUND_TASKS.md)).
 
-See [`.env.example`](.env.example) for all required variables.
+---
 
-**Critical secrets (NEVER commit):**
-- `JWT_SECRET_KEY`
-- `GEMINI_API_KEY`
-- `GOOGLE_APPLICATION_CREDENTIALS`
-- `POSTGRES_PASSWORD`
-
-## Mock GBP Architecture
-
-Google Business Profile integration is mocked during MVP:
-
-```
-Flutter → FastAPI → Provider Layer → MockGBPProvider → Database → AI
-```
-
-To replace with real GBP:
-1. Create `GoogleGBPProvider` implementing `BusinessDataProvider`
-2. Update provider factory in config
-3. No changes needed to services, AI, or Flutter
-
-## Development Phases
+## 📊 Development Phases
 
 | Phase | Status | Description |
-|-------|--------|-------------|
-| 1 | ✅ | Foundation |
-| 2 | ⬜ | Authentication + Onboarding |
-| 3 | ⬜ | Business Data + MockGBP |
-| 4 | ⬜ | AI Business Understanding |
-| 5 | ⬜ | AI CMO + Recommendations |
-| 6 | ⬜ | Reviews + Intelligence |
-| 7 | ⬜ | SEO + Competitors |
-| 8 | ⬜ | Content + Campaigns + Creatives |
-| 9 | ⬜ | AI CMO Chat |
-| 10 | ⬜ | Automation + Notifications |
-| 11 | ⬜ | Analytics + AI Insights |
-| 12 | ⬜ | Admin Portal |
-| 13 | ⬜ | Integration + Testing + Security |
+|:---|:---:|:---|
+| **Phase 1** | ✅ | Architecture & Monorepo Foundation |
+| **Phase 2** | ✅ | Authentication & 3-Step Business Onboarding |
+| **Phase 3** | ✅ | Business Data & Google Business Profile Sync Engine |
+| **Phase 4** | ✅ | AI Business Understanding & Health Scoring |
+| **Phase 5** | ✅ | AI CMO Engine & Prioritized Recommendations |
+| **Phase 6** | ✅ | Multi-Channel Social Content & Schedule Engine |
+| **Phase 7** | ✅ | Local SEO & Keyword Visibility Optimizer |
+| **Phase 8** | ✅ | Multi-Channel Marketing Campaigns |
+| **Phase 9** | ✅ | Smart Creatives & Promotional Banner Engine |
+| **Phase 10** | ✅ | Conversational AI CMO Chat Drawer |
+| **Phase 11** | ✅ | Marketing ROI & Competitor Intelligence Dashboard |
+| **Phase 12** | ✅ | Proactive Notification & Alert System |
+| **Phase 13** | ✅ | Live Web Admin Portal (Real-Time Auto-Sync & Token Tracking) |
+| **Phase 14** | ✅ | AI Review Intelligence & Interactive Mobile Carousel |
+| **Phase 15** | ✅ | Token-Guarded Celery Background Processing & Scheduling |
 
-## Testing
+---
+
+## 🧪 Testing & Verification
 
 ```bash
-# Backend tests
-docker compose exec api pytest
+# Run full backend test suite inside Docker
+docker compose exec api pytest tests/
 
-# Flutter tests
-cd mobile && flutter test
+# Run Flutter static analyzer
+cd mobile && flutter analyze
 ```
 
-## License
+---
+
+## 📄 License
 
 Proprietary — OptigoAI. All rights reserved.
