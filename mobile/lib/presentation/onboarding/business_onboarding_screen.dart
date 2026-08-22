@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../app/theme.dart';
-import '../shared/optigo_button.dart';
 import '../shared/optigo_text_field.dart';
 import '../auth/auth_provider.dart';
 
@@ -17,26 +15,44 @@ class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
   int _currentPage = 0;
   bool _isSubmitting = false;
 
-  // Step 1: Basic Info
-  final _nameController = TextEditingController();
-  final _categoryController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _websiteController = TextEditingController();
+  // Step 1: Basic Info (Matching Reference Screen 3)
+  final _nameController = TextEditingController(text: 'Panekkatt Oil and Flour Mill');
+  String _selectedCategory = 'Local Manufacturing & Mill';
+  String _selectedLocation = 'Ponnani, Kerala, India';
+  final _websiteController = TextEditingController(text: 'https://panekkattmill.com');
 
-  // Step 2: Customer & Services
-  final _targetCustomersController = TextEditingController();
-  final _servicesController = TextEditingController();
+  // Step 2: Target Audience & Key Services
+  final _targetCustomersController = TextEditingController(text: 'Local households, organic food lovers, and wholesale buyers in Malappuram district');
+  final _servicesController = TextEditingController(text: 'Cold pressed coconut oil, sesame oil, freshly milled rice flour, wheat flour, and spice powders');
 
-  // Step 3: Goals & Channels
-  final _goalsController = TextEditingController();
-  final _channelsController = TextEditingController();
+  // Step 3: Goals & Marketing Channels
+  final _goalsController = TextEditingController(text: 'Increase local store foot traffic and rank #1 on Google Maps for oil mill near me');
+  final _channelsController = TextEditingController(text: 'Google Business Profile, WhatsApp orders, Instagram');
+
+  final List<String> _categories = [
+    'Restaurant / Cafe',
+    'Local Manufacturing & Mill',
+    'Retail / Supermarket',
+    'Health & Wellness',
+    'Professional Services',
+    'Automotive & Repair',
+    'Beauty & Salon',
+  ];
+
+  final List<String> _locations = [
+    'Ponnani, Kerala, India',
+    'Bengaluru, India',
+    'Mumbai, India',
+    'Delhi NCR, India',
+    'Chennai, India',
+    'Hyderabad, India',
+    'Kochi, Kerala, India',
+  ];
 
   @override
   void dispose() {
     _pageController.dispose();
     _nameController.dispose();
-    _categoryController.dispose();
-    _locationController.dispose();
     _websiteController.dispose();
     _targetCustomersController.dispose();
     _servicesController.dispose();
@@ -51,35 +67,32 @@ class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
         _showError('Please enter your business name');
         return;
       }
-      if (_categoryController.text.trim().isEmpty) {
-        _showError('Please specify your business category');
-        return;
-      }
-    } else if (_currentPage == 1) {
-      if (_targetCustomersController.text.trim().isEmpty) {
-        _showError('Please describe your target customers');
-        return;
-      }
     }
 
-    _pageController.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (_currentPage < 2) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _submitOnboarding();
+    }
   }
 
   void _previousPage() {
-    _pageController.previousPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (_currentPage > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: OptigoTheme.error,
+        backgroundColor: const Color(0xFFEF4444),
       ),
     );
   }
@@ -90,8 +103,8 @@ class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
     final authProvider = context.read<AppAuthProvider>();
     final result = await authProvider.createBusinessAndOnboard(
       name: _nameController.text.trim(),
-      category: _categoryController.text.trim(),
-      location: _locationController.text.trim(),
+      category: _selectedCategory,
+      location: _selectedLocation,
       website: _websiteController.text.trim(),
       targetCustomers: _targetCustomersController.text.trim(),
       services: _servicesController.text.trim(),
@@ -102,44 +115,63 @@ class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
     setState(() => _isSubmitting = false);
 
     if (result == null && mounted) {
-      _showError(authProvider.errorMessage ?? 'Failed to save onboarding. Please try again.');
+      _showError(authProvider.errorMessage ?? 'Failed to complete onboarding. Please try again.');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OptigoTheme.background,
-      appBar: AppBar(
-        title: const Text('Business Setup'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_outlined, size: 20),
-            onPressed: () => context.read<AppAuthProvider>().logout(),
-            tooltip: 'Logout',
-          ),
-        ],
-      ),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // Step Progress Indicator
+            // Top Nav & Step Indicators (Matching Reference Screen 3)
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: OptigoTheme.spacingLG,
-                vertical: OptigoTheme.spacingMD,
-              ),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
                 children: [
-                  _buildStepIndicator(0, 'Business'),
-                  _buildStepDivider(0),
-                  _buildStepIndicator(1, 'Audience'),
-                  _buildStepDivider(1),
-                  _buildStepIndicator(2, 'Goals'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (_currentPage > 0)
+                        IconButton(
+                          onPressed: _previousPage,
+                          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        )
+                      else
+                        const SizedBox(width: 24),
+
+                      // Step Segmented Progress Indicator
+                      Row(
+                        children: List.generate(3, (index) {
+                          final isActive = index <= _currentPage;
+                          return Container(
+                            width: 28,
+                            height: 4,
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            decoration: BoxDecoration(
+                              color: isActive ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        }),
+                      ),
+
+                      IconButton(
+                        onPressed: () => context.read<AppAuthProvider>().logout(),
+                        icon: const Icon(Icons.logout_rounded, size: 18, color: Color(0xFF94A3B8)),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Log Out',
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const Divider(),
 
             // Page View
             Expanded(
@@ -148,10 +180,47 @@ class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (page) => setState(() => _currentPage = page),
                 children: [
-                  _buildStep1(),
-                  _buildStep2(),
-                  _buildStep3(),
+                  _buildStep1BasicInfo(),
+                  _buildStep2Audience(),
+                  _buildStep3Goals(),
                 ],
+              ),
+            ),
+
+            // Bottom Continue Action Button (Matching Reference Screen 3)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: InkWell(
+                onTap: _isSubmitting ? null : _nextPage,
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.28),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: _isSubmitting
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text(
+                            _currentPage == 2 ? 'Complete Setup' : 'Continue',
+                            style: const TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -160,227 +229,225 @@ class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
     );
   }
 
-  Widget _buildStepIndicator(int stepIndex, String title) {
-    final isDone = _currentPage > stepIndex;
-    final isCurrent = _currentPage == stepIndex;
-
-    Color circleColor = OptigoTheme.divider;
-    Color textColor = OptigoTheme.textTertiary;
-
-    if (isCurrent) {
-      circleColor = OptigoTheme.primary;
-      textColor = OptigoTheme.primary;
-    } else if (isDone) {
-      circleColor = OptigoTheme.success;
-      textColor = OptigoTheme.textPrimary;
-    }
-
-    return Row(
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: isCurrent || isDone ? circleColor : Colors.transparent,
-            border: Border.all(color: circleColor, width: 2),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: isDone
-                ? const Icon(Icons.check, size: 16, color: Colors.white)
-                : Text(
-                    '${stepIndex + 1}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: isCurrent ? Colors.white : OptigoTheme.textSecondary,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(width: OptigoTheme.spacingXS),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-            color: textColor,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStepDivider(int stepIndex) {
-    final isDone = _currentPage > stepIndex;
-    return Expanded(
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.symmetric(horizontal: OptigoTheme.spacingSM),
-        color: isDone ? OptigoTheme.success : OptigoTheme.divider,
-      ),
-    );
-  }
-
-  Widget _buildStep1() {
+  // ==========================================================
+  // STEP 1: Tell us about your business (Matching Reference Screen 3)
+  // ==========================================================
+  Widget _buildStep1BasicInfo() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(OptigoTheme.spacingLG),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Tell us about your business',
-            style: Theme.of(context).textTheme.headlineSmall,
+          const SizedBox(height: 12),
+          const Text(
+            'Tell us about\nyour business',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0F172A),
+              letterSpacing: -0.7,
+              height: 1.15,
+            ),
           ),
-          const SizedBox(height: OptigoTheme.spacingXS),
-          Text(
-            'Your AI CMO will tailor recommendations specifically for your industry and location.',
-            style: Theme.of(context).textTheme.bodyMedium,
+          const SizedBox(height: 8),
+          const Text(
+            'This helps AI CMO understand your business better.',
+            style: TextStyle(
+              fontSize: 13.5,
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          const SizedBox(height: OptigoTheme.spacingLG),
+
+          const SizedBox(height: 28),
+
+          // Business Name
           OptigoTextField(
             controller: _nameController,
-            label: 'Business Name *',
-            hintText: 'e.g. Blossom Dental Clinic',
+            label: 'Business name',
+            hintText: 'Coffee House',
             prefixIcon: Icons.storefront_outlined,
           ),
-          const SizedBox(height: OptigoTheme.spacingMD),
-          OptigoTextField(
-            controller: _categoryController,
-            label: 'Category / Industry *',
-            hintText: 'e.g. Dental Care, Italian Restaurant, Auto Repair',
-            prefixIcon: Icons.category_outlined,
+
+          const SizedBox(height: 16),
+
+          // Business Category Dropdown
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Business category',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedCategory,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+                    items: _categories.map((cat) {
+                      return DropdownMenuItem(value: cat, child: Text(cat));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedCategory = val);
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: OptigoTheme.spacingMD),
-          OptigoTextField(
-            controller: _locationController,
-            label: 'Location / City',
-            hintText: 'e.g. Indiranagar, Bangalore',
-            prefixIcon: Icons.location_on_outlined,
+
+          const SizedBox(height: 16),
+
+          // Business Location Dropdown / Input
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Business location',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedLocation,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+                    items: _locations.map((loc) {
+                      return DropdownMenuItem(value: loc, child: Text(loc));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedLocation = val);
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: OptigoTheme.spacingMD),
+
+          const SizedBox(height: 16),
+
+          // Website (Optional)
           OptigoTextField(
             controller: _websiteController,
-            label: 'Website / Social URL (Optional)',
-            hintText: 'https://blossomdental.in',
+            label: 'Website URL (Optional)',
+            hintText: 'https://yourbusiness.com',
             prefixIcon: Icons.language_outlined,
             keyboardType: TextInputType.url,
           ),
-          const SizedBox(height: OptigoTheme.spacingXL),
-          OptigoButton(
-            text: 'Continue to Audience',
-            onPressed: _nextPage,
-          ),
+
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildStep2() {
+  // ==========================================================
+  // STEP 2: Target Audience & Services
+  // ==========================================================
+  Widget _buildStep2Audience() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(OptigoTheme.spacingLG),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Who are your ideal customers?',
-            style: Theme.of(context).textTheme.headlineSmall,
+          const SizedBox(height: 12),
+          const Text(
+            'Audience &\nOfferings',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0F172A),
+              letterSpacing: -0.7,
+              height: 1.15,
+            ),
           ),
-          const SizedBox(height: OptigoTheme.spacingXS),
-          Text(
-            'Help OptigoAI understand your target demographic and core offerings.',
-            style: Theme.of(context).textTheme.bodyMedium,
+          const SizedBox(height: 8),
+          const Text(
+            'Who are your ideal customers and what do you sell?',
+            style: TextStyle(fontSize: 13.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: OptigoTheme.spacingLG),
+          const SizedBox(height: 28),
+
           OptigoTextField(
             controller: _targetCustomersController,
-            label: 'Target Customers *',
-            hintText: 'e.g. Local families, working professionals looking for cosmetic dentistry',
-            prefixIcon: Icons.people_outline,
+            label: 'Target Customers',
+            hintText: 'e.g. Local families, office workers, tourists...',
             maxLines: 3,
+            prefixIcon: Icons.people_outline,
           ),
-          const SizedBox(height: OptigoTheme.spacingMD),
+          const SizedBox(height: 18),
+
           OptigoTextField(
             controller: _servicesController,
-            label: 'Key Services or Products',
-            hintText: 'e.g. Teeth Whitening, Root Canal, Dental Implants, Braces',
-            prefixIcon: Icons.list_alt_outlined,
+            label: 'Key Products / Services',
+            hintText: 'e.g. Cold pressed oils, fresh bakery, espresso drinks...',
             maxLines: 3,
-          ),
-          const SizedBox(height: OptigoTheme.spacingXL),
-          Row(
-            children: [
-              Expanded(
-                child: OptigoButton(
-                  text: 'Back',
-                  isOutlined: true,
-                  onPressed: _previousPage,
-                ),
-              ),
-              const SizedBox(width: OptigoTheme.spacingMD),
-              Expanded(
-                child: OptigoButton(
-                  text: 'Continue',
-                  onPressed: _nextPage,
-                ),
-              ),
-            ],
+            prefixIcon: Icons.inventory_2_outlined,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStep3() {
+  // ==========================================================
+  // STEP 3: Goals & Growth Focus
+  // ==========================================================
+  Widget _buildStep3Goals() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(OptigoTheme.spacingLG),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Marketing goals & channels',
-            style: Theme.of(context).textTheme.headlineSmall,
+          const SizedBox(height: 12),
+          const Text(
+            'Growth Goals &\nChannels',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0F172A),
+              letterSpacing: -0.7,
+              height: 1.15,
+            ),
           ),
-          const SizedBox(height: OptigoTheme.spacingXS),
-          Text(
-            'What is the primary result you want to achieve right now?',
-            style: Theme.of(context).textTheme.bodyMedium,
+          const SizedBox(height: 8),
+          const Text(
+            'What do you want your AI CMO to prioritize?',
+            style: TextStyle(fontSize: 13.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: OptigoTheme.spacingLG),
+          const SizedBox(height: 28),
+
           OptigoTextField(
             controller: _goalsController,
-            label: 'Primary Business Goal',
-            hintText: 'e.g. Increase monthly cosmetic appointments by 30%, get more 5-star reviews',
-            prefixIcon: Icons.flag_outlined,
+            label: 'Primary Marketing Goal',
+            hintText: 'e.g. Rank #1 on Google Maps, get 50 new 5-star reviews...',
             maxLines: 3,
+            prefixIcon: Icons.flag_outlined,
           ),
-          const SizedBox(height: OptigoTheme.spacingMD),
+          const SizedBox(height: 18),
+
           OptigoTextField(
             controller: _channelsController,
-            label: 'Current Marketing Channels',
-            hintText: 'e.g. Google Business Profile, Instagram, Word of mouth',
-            prefixIcon: Icons.campaign_outlined,
+            label: 'Active Marketing Channels',
+            hintText: 'e.g. Google Business Profile, Instagram, WhatsApp...',
             maxLines: 2,
-          ),
-          const SizedBox(height: OptigoTheme.spacingXL),
-          Row(
-            children: [
-              Expanded(
-                child: OptigoButton(
-                  text: 'Back',
-                  isOutlined: true,
-                  onPressed: _previousPage,
-                ),
-              ),
-              const SizedBox(width: OptigoTheme.spacingMD),
-              Expanded(
-                child: OptigoButton(
-                  text: 'Complete Setup',
-                  isLoading: _isSubmitting,
-                  onPressed: _submitOnboarding,
-                ),
-              ),
-            ],
+            prefixIcon: Icons.share_outlined,
           ),
         ],
       ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme.dart';
 import '../presentation/auth/auth_provider.dart';
-import '../presentation/auth/login_screen.dart';
+import '../presentation/onboarding/splash_story_screen.dart';
 import '../presentation/onboarding/business_onboarding_screen.dart';
 import '../presentation/main_shell.dart';
 
@@ -30,24 +30,24 @@ class AuthRouter extends StatelessWidget {
     if (authProvider.status == AuthStatus.initial ||
         (authProvider.status == AuthStatus.loading && authProvider.user == null)) {
       return Scaffold(
-        backgroundColor: OptigoTheme.background,
+        backgroundColor: Colors.white,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                'assets/images/logo.png',
-                width: 160,
-                height: 160,
+                'assets/images/optigo-bot.png',
+                width: 140,
+                height: 140,
                 fit: BoxFit.contain,
               ),
-              const SizedBox(height: OptigoTheme.spacingLG),
+              const SizedBox(height: 24),
               const SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(OptigoTheme.primary),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
                 ),
               ),
             ],
@@ -57,7 +57,7 @@ class AuthRouter extends StatelessWidget {
     }
 
     if (!authProvider.isAuthenticated) {
-      return const LoginScreen();
+      return const SplashStoryScreen();
     }
 
     if (authProvider.currentBusiness == null ||
