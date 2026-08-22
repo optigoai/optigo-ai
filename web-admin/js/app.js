@@ -325,6 +325,38 @@ async function loadUsage() {
 }
 
 function renderUsage(data) {
+  // 1. Render Per-User AI Consumption
+  const usersTbody = document.getElementById('usage-users-tbody');
+  if (usersTbody && data.by_user) {
+    if (data.by_user.length === 0) {
+      usersTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">No per-user AI invocations logged yet.</td></tr>`;
+    } else {
+      usersTbody.innerHTML = data.by_user.map(u => {
+        const lastActiveFormatted = u.last_active ? new Date(u.last_active).toLocaleString() : 'N/A';
+        const initials = (u.user_name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        return `
+          <tr>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#3B82F6,#6366F1); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.75rem; color:white;">
+                  ${initials}
+                </div>
+                <strong>${escapeHtml(u.user_name)}</strong>
+              </div>
+            </td>
+            <td><code style="color:#94A3B8;">${escapeHtml(u.user_email)}</code></td>
+            <td><span class="badge badge-pill">${escapeHtml(u.organization_name)}</span></td>
+            <td><span class="badge badge-pill" style="font-weight:700;">${u.calls.toLocaleString()} calls</span></td>
+            <td><strong>${u.tokens.toLocaleString()}</strong></td>
+            <td><strong style="color:#34D399;">$${u.cost_usd.toFixed(4)}</strong></td>
+            <td style="font-size:0.78rem; color:var(--text-muted);">${lastActiveFormatted}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+
+  // 2. Render Feature Breakdown
   const featureTbody = document.getElementById('usage-feature-tbody');
   if (featureTbody && data.by_feature) {
     if (data.by_feature.length === 0) {
@@ -341,6 +373,7 @@ function renderUsage(data) {
     }
   }
 
+  // 3. Render Model Breakdown
   const modelTbody = document.getElementById('usage-model-tbody');
   if (modelTbody && data.by_model) {
     if (data.by_model.length === 0) {

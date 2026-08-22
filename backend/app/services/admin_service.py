@@ -320,9 +320,52 @@ class AdminService:
             for row in model_agg
         ]
 
+        # Group by User & Organization
+        user_agg = await self.db.execute(
+            select(
+                AIRequestLog.user_id,
+                AIRequestLog.organization_id,
+                User.email.label("user_email"),
+                User.full_name.label("user_full_name"),
+                Organization.name.label("org_name"),
+                func.count(AIRequestLog.id).label("count"),
+                func.sum(func.coalesce(AIRequestLog.input_tokens, 0) + func.coalesce(AIRequestLog.output_tokens, 0)).label("tokens"),
+                func.sum(func.coalesce(AIRequestLog.estimated_cost_usd, 0.0)).label("cost"),
+                func.max(AIRequestLog.created_at).label("last_active"),
+            )
+            .outerjoin(User, AIRequestLog.user_id == User.id)
+            .outerjoin(Organization, AIRequestLog.organization_id == Organization.id)
+            .group_by(AIRequestLog.user_id, AIRequestLog.organization_id, User.email, User.full_name, Organization.name)
+            .order_by(func.sum(func.coalesce(AIRequestLog.estimated_cost_usd, 0.0)).desc())
+        )
+        by_user = []
+        for row in user_agg:
+            name = row.user_full_name
+            email = row.user_email
+            org = row.org_name or "Independent / Direct"
+            if not email and row.organization_id:
+                name = f"{org} (Automations)"
+                email = "system-automation@optigoai.com"
+            elif not email:
+                name = "System / Background"
+                email = "system@optigoai.com"
+
+            by_user.append({
+                "user_id": row.user_id,
+                "organization_id": row.organization_id,
+                "user_name": name,
+                "user_email": email,
+                "organization_name": org,
+                "calls": row.count,
+                "tokens": int(row.tokens or 0),
+                "cost_usd": round(float(row.cost or 0.0), 4),
+                "last_active": row.last_active.isoformat() if row.last_active else None,
+            })
+
         return {
             "by_feature": by_feature,
             "by_model": by_model,
+            "by_user": by_user,
             "recent_logs": [
                 {
                     "id": l.id,

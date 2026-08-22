@@ -251,6 +251,34 @@
 
       <!-- TAB 5: AI USAGE & COST MONITORING -->
       <div class="tab-view" id="view-usage" style="display:none;">
+        <!-- Top Full-Width Card: Per-User AI Usage -->
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">AI Consumption & Cost per User / Tenant</div>
+              <div class="card-subtitle">Real-time breakdown of model invocations, tokens, and estimated cost per registered user</div>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>User / Business Owner</th>
+                  <th>Email</th>
+                  <th>Organization / Tenant</th>
+                  <th>Invocations</th>
+                  <th>Tokens Consumed</th>
+                  <th>Est. Cost (USD)</th>
+                  <th>Last Active</th>
+                </tr>
+              </thead>
+              <tbody id="usage-users-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap:24px;">
           <div class="card">
             <div class="card-header">
