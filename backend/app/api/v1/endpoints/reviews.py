@@ -149,22 +149,29 @@ async def get_review_intelligence(
     review_repo = ReviewRepository(db)
     reviews = await review_repo.list_by_business(business_id=business_id)
 
-    # 1. Compute empirical sentiment counts
     total = len(reviews)
     if total == 0:
         return {
-            "positive_percentage": 85,
-            "neutral_percentage": 10,
-            "negative_percentage": 5,
-            "top_feedback": [
-                {"keyword": "High Quality Service", "percentage": 50, "sentiment": "positive"},
-                {"keyword": "Prompt Response", "percentage": 35, "sentiment": "positive"},
-                {"keyword": "Friendly Team", "percentage": 25, "sentiment": "positive"},
-                {"keyword": "Fair Pricing", "percentage": 20, "sentiment": "positive"},
-            ],
-            "executive_summary": "Great customer satisfaction with strong ratings.",
+            "positive_percentage": 0,
+            "neutral_percentage": 0,
+            "negative_percentage": 0,
+            "top_feedback": [],
+            "executive_summary": "No customer reviews received yet.",
         }
 
+    # Check cache in health_analysis
+    current_analysis = business.health_analysis or {}
+    cached_intel = current_analysis.get("review_intelligence")
+    if cached_intel and cached_intel.get("total_analyzed") == total and cached_intel.get("top_feedback"):
+        return {
+            "positive_percentage": cached_intel.get("positive_percentage", 0),
+            "neutral_percentage": cached_intel.get("neutral_percentage", 0),
+            "negative_percentage": cached_intel.get("negative_percentage", 0),
+            "top_feedback": cached_intel.get("top_feedback", []),
+            "executive_summary": cached_intel.get("executive_summary", ""),
+        }
+
+    # 1. Compute empirical sentiment counts
     pos_count = sum(1 for r in reviews if r.rating >= 4 or (r.sentiment and r.sentiment.value == "positive"))
     neg_count = sum(1 for r in reviews if r.rating <= 2 or (r.sentiment and r.sentiment.value == "negative"))
     neu_count = total - (pos_count + neg_count)
@@ -173,7 +180,7 @@ async def get_review_intelligence(
     neg_pct = round((neg_count / total) * 100)
     neu_pct = max(0, 100 - (pos_pct + neg_pct))
 
-    # 2. Extract review text dictionaries for AI NLP / LLM extraction
+    # 2. Extract review text dictionaries for real AI NLP / LLM extraction
     reviews_payload = [
         {
             "id": r.id,
@@ -185,6 +192,15 @@ async def get_review_intelligence(
         for r in reviews if r.text
     ]
 
+    if not reviews_payload:
+        return {
+            "positive_percentage": pos_pct,
+            "neutral_percentage": neu_pct,
+            "negative_percentage": neg_pct,
+            "top_feedback": [],
+            "executive_summary": f"Received {total} star ratings without written comments.",
+        }
+
     ai_service = AIService(db=db)
     try:
         intel = await ai_service.analyze_review_intelligence(
@@ -194,7 +210,7 @@ async def get_review_intelligence(
             category=business.category or "Local Business",
             reviews=reviews_payload,
         )
-        return {
+        response_payload = {
             "positive_percentage": pos_pct,
             "neutral_percentage": neu_pct,
             "negative_percentage": neg_pct,
@@ -207,19 +223,23 @@ async def get_review_intelligence(
                 for tf in intel.top_feedback
             ],
             "executive_summary": intel.executive_summary,
+            "total_analyzed": total,
         }
+
+        # Cache in business health_analysis
+        current_analysis["review_intelligence"] = response_payload
+        business.health_analysis = dict(current_analysis)
+        await db.flush()
+
+        return response_payload
     except Exception:
-        # Graceful fallback derived dynamically from actual reviews
+        # If AI call encounters temporary rate limit, return calculated sentiment with empty keywords (never fake preset)
         return {
             "positive_percentage": pos_pct,
             "neutral_percentage": neu_pct,
             "negative_percentage": neg_pct,
-            "top_feedback": [
-                {"keyword": f"{business.category or 'Quality'} Excellence", "percentage": 48, "sentiment": "positive"},
-                {"keyword": "Helpful & Polite Staff", "percentage": 34, "sentiment": "positive"},
-                {"keyword": "Fast Turnaround Time", "percentage": 26, "sentiment": "positive"},
-                {"keyword": "Reasonable & Fair Cost", "percentage": 20, "sentiment": "positive"},
-            ],
-            "executive_summary": "Customers consistently share positive feedback about your service and reliability.",
+            "top_feedback": [],
+            "executive_summary": "Customer review analysis in progress.",
         }
+
 

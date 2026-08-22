@@ -26,46 +26,37 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   bool _isSyncing = false;
   bool _initialized = false;
 
-  // Top Carousel PageView & Auto-Scroll Timer (3 Seconds)
+  // Top Carousel PageView & One-Time Auto-Scroll Timer (4 Seconds Once)
   final PageController _topCarouselController = PageController();
   int _currentTopPageIndex = 0;
-  Timer? _autoScrollTimer;
+  Timer? _oneTimeScrollTimer;
   Map<String, dynamic>? _reviewIntelligence;
   bool _isLoadingIntelligence = false;
 
   @override
   void initState() {
     super.initState();
-    _startAutoScroll();
+    _startOneTimeScroll();
   }
 
   @override
   void dispose() {
-    _autoScrollTimer?.cancel();
+    _oneTimeScrollTimer?.cancel();
     _topCarouselController.dispose();
     super.dispose();
   }
 
-  void _startAutoScroll() {
-    _autoScrollTimer?.cancel();
-    _autoScrollTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_topCarouselController.hasClients && mounted) {
-        final nextIndex = (_currentTopPageIndex + 1) % 2;
+  void _startOneTimeScroll() {
+    _oneTimeScrollTimer?.cancel();
+    _oneTimeScrollTimer = Timer(const Duration(seconds: 4), () {
+      if (_topCarouselController.hasClients && _currentTopPageIndex == 0 && mounted) {
         _topCarouselController.animateToPage(
-          nextIndex,
-          duration: const Duration(milliseconds: 550),
+          1,
+          duration: const Duration(milliseconds: 600),
           curve: Curves.easeInOutCubic,
         );
       }
     });
-  }
-
-  void _pauseAutoScroll() {
-    _autoScrollTimer?.cancel();
-  }
-
-  void _resumeAutoScroll() {
-    _startAutoScroll();
   }
 
   @override
@@ -346,20 +337,15 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       children: [
         SizedBox(
           height: 250,
-          child: GestureDetector(
-            onPanDown: (_) => _pauseAutoScroll(),
-            onPanCancel: _resumeAutoScroll,
-            onPanEnd: (_) => _resumeAutoScroll(),
-            child: PageView(
-              controller: _topCarouselController,
-              onPageChanged: (index) {
-                setState(() => _currentTopPageIndex = index);
-              },
-              children: [
-                _buildRatingSummaryCard(),
-                _buildReviewIntelligenceCard(),
-              ],
-            ),
+          child: PageView(
+            controller: _topCarouselController,
+            onPageChanged: (index) {
+              setState(() => _currentTopPageIndex = index);
+            },
+            children: [
+              _buildRatingSummaryCard(),
+              _buildReviewIntelligenceCard(),
+            ],
           ),
         ),
         const SizedBox(height: 8),
@@ -536,9 +522,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   // ==========================================
   Widget _buildReviewIntelligenceCard() {
     // 1. Dynamic sentiment percentages from intelligence or actual reviews
-    int posPct = 76;
-    int neuPct = 18;
-    int negPct = 6;
+    int posPct = 0;
+    int neuPct = 0;
+    int negPct = 0;
 
     if (_reviewIntelligence != null && _reviewIntelligence!['positive_percentage'] != null) {
       posPct = (_reviewIntelligence!['positive_percentage'] as num).toInt();
@@ -553,14 +539,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       neuPct = (100 - (posPct + negPct)).clamp(0, 100);
     }
 
-    // 2. Dynamic top feedback keywords from AI intelligence or reviews
+    // 2. Real top feedback keywords from AI intelligence
     List<Map<String, dynamic>> feedbackKeywords = [];
     if (_reviewIntelligence != null && _reviewIntelligence!['top_feedback'] is List) {
       feedbackKeywords = List<Map<String, dynamic>>.from(_reviewIntelligence!['top_feedback']);
-    }
-
-    if (feedbackKeywords.isEmpty) {
-      feedbackKeywords = _computeDynamicFeedbackFromReviews();
     }
 
     return Container(
@@ -680,45 +662,59 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
           const SizedBox(height: 6),
 
-          // Feedback Keyword List
+          // Feedback Keyword List (Real Detected Keywords Only)
           Expanded(
-            child: ListView.separated(
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: feedbackKeywords.take(4).length,
-              separatorBuilder: (_, __) => const Divider(height: 6, thickness: 0.5, color: Color(0xFFF1F5F9)),
-              itemBuilder: (context, idx) {
-                final item = feedbackKeywords[idx];
-                final kw = item['keyword']?.toString() ?? 'Service Quality';
-                final pct = (item['percentage'] as num?)?.toInt() ?? 35;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
+            child: feedbackKeywords.isEmpty
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
                       child: Text(
-                        kw,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        'No review keywords detected yet.',
+                        style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1E293B),
+                          color: Color(0xFF94A3B8),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$pct%',
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF475569),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                  )
+                : ListView.separated(
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    itemCount: feedbackKeywords.take(4).length,
+                    separatorBuilder: (_, __) => const Divider(height: 6, thickness: 0.5, color: Color(0xFFF1F5F9)),
+                    itemBuilder: (context, idx) {
+                      final item = feedbackKeywords[idx];
+                      final kw = item['keyword']?.toString() ?? 'Service';
+                      final pct = (item['percentage'] as num?)?.toInt() ?? 0;
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              kw,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$pct%',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -763,54 +759,6 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         ],
       ),
     );
-  }
-
-  List<Map<String, dynamic>> _computeDynamicFeedbackFromReviews() {
-    if (_allReviews.isEmpty) {
-      return [
-        {'keyword': 'High Quality Service', 'percentage': 48},
-        {'keyword': 'Helpful & Friendly Team', 'percentage': 34},
-        {'keyword': 'Quick Turnaround', 'percentage': 26},
-        {'keyword': 'Value for Money', 'percentage': 20},
-      ];
-    }
-
-    final total = _allReviews.length;
-    final candidates = [
-      {'keyword': 'Good Quality & Service', 'match': ['quality', 'service', 'best', 'good', 'great']},
-      {'keyword': 'Friendly & Helpful Staff', 'match': ['friendly', 'staff', 'team', 'helpful', 'polite']},
-      {'keyword': 'Fast & Quick Delivery', 'match': ['quick', 'fast', 'speed', 'on time', 'prompt']},
-      {'keyword': 'Value for Money', 'match': ['price', 'pricing', 'value', 'cheap', 'affordable', 'worth']},
-      {'keyword': 'Nice Ambiance & Cleanliness', 'match': ['ambiance', 'clean', 'place', 'atmosphere']},
-    ];
-
-    final result = <Map<String, dynamic>>[];
-    for (final c in candidates) {
-      int occurrences = 0;
-      final matches = c['match'] as List<String>;
-      for (final r in _allReviews) {
-        final text = (r.text ?? '').toLowerCase();
-        if (matches.any((m) => text.contains(m))) {
-          occurrences++;
-        }
-      }
-      final pct = occurrences > 0 ? ((occurrences / total) * 100).round() : 0;
-      if (pct > 0) {
-        result.add({'keyword': c['keyword'], 'percentage': pct});
-      }
-    }
-
-    if (result.isEmpty) {
-      result.addAll([
-        {'keyword': 'High Quality Service', 'percentage': 48},
-        {'keyword': 'Helpful & Friendly Staff', 'percentage': 34},
-        {'keyword': 'Quick Turnaround Time', 'percentage': 26},
-        {'keyword': 'Value for Money', 'percentage': 20},
-      ]);
-    }
-
-    result.sort((a, b) => (b['percentage'] as int).compareTo(a['percentage'] as int));
-    return result;
   }
 
   Widget _buildStarProgressBar(int stars, double ratio) {

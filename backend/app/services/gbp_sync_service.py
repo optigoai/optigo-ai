@@ -97,6 +97,13 @@ class GBPSyncService:
 
         rating_summary = await self.review_repo.get_rating_summary(business_id)
 
+        # 6. Trigger background AI review intelligence analysis
+        try:
+            from app.workers.tasks import analyze_review_intelligence_task
+            analyze_review_intelligence_task.delay(business_id, organization_id)
+        except Exception:
+            pass
+
         return {
             "business_id": business_id,
             "gbp_id": business.gbp_account_id,
@@ -105,3 +112,4 @@ class GBPSyncService:
             "average_rating": rating_summary["average_rating"],
             "metrics": gbp_metrics,
         }
+
