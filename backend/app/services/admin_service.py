@@ -192,8 +192,8 @@ class AdminService:
         result = await self.db.execute(select(User).where(User.email == admin_email))
         admin = result.scalar_one_or_none()
 
+        pwd = settings.admin_default_password if settings.admin_default_password != "CHANGE_ME_ON_FIRST_LOGIN" else "Admin@Optigo123!"
         if not admin:
-            pwd = settings.admin_default_password if settings.admin_default_password != "CHANGE_ME_ON_FIRST_LOGIN" else "Admin@Optigo123!"
             admin = User(
                 email=admin_email,
                 password_hash=hash_password(pwd),
@@ -202,6 +202,9 @@ class AdminService:
                 is_active=True,
             )
             self.db.add(admin)
+            await self.db.flush()
+        elif admin.role != UserRole.ADMIN:
+            admin.role = UserRole.ADMIN
             await self.db.flush()
 
     async def _ensure_default_features(self) -> None:
