@@ -778,10 +778,12 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Profile Pill + Notification Circle
+                // Top Profile Pill + AI Refresh + Notification Circle
                 OptigoTopBar(
                   subtitle: 'Google Visibility & SEO',
                   onNotificationTap: widget.onNavigateToRecommendations,
+                  onRefreshTap: _handleRunFreshAudit,
+                  isRefreshing: _isAuditing,
                 ),
 
                 const SizedBox(height: 12),

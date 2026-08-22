@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   BusinessIntelligenceModel? _intelligence;
   List<RecommendationModel> _recommendations = [];
   bool _initialized = false;
+  bool _isLoading = false;
 
   @override
   void didChangeDependencies() {
@@ -45,7 +46,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadData() async {
-    await Future.wait([_loadIntelligence(), _loadRecommendations()]);
+    setState(() => _isLoading = true);
+    try {
+      await Future.wait([_loadIntelligence(), _loadRecommendations()]);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadIntelligence() async {
@@ -106,9 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Top Profile Pill + Notification Circle
+                // 1. Top Profile Pill + AI Refresh + Notification Circle
                 OptigoTopBar(
                   onNotificationTap: widget.onNavigateToRecommendations,
+                  onRefreshTap: _loadData,
+                  isRefreshing: _isLoading,
                 ),
 
                 const SizedBox(height: 12),

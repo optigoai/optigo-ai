@@ -156,10 +156,12 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Top Profile Pill + Notification Circle
+                // 1. Top Profile Pill + AI Refresh + Notification Circle
                 OptigoTopBar(
                   subtitle: 'Customer Reviews & Reputation',
                   onNotificationTap: widget.onNavigateToRecommendations,
+                  onRefreshTap: _loadReviews,
+                  isRefreshing: _isLoadingReviews,
                 ),
 
                 const SizedBox(height: 12),

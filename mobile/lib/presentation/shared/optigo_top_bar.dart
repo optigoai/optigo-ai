@@ -7,6 +7,8 @@ class OptigoTopBar extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onMenuTap;
+  final VoidCallback? onRefreshTap;
+  final bool isRefreshing;
   final bool showBackButton;
 
   const OptigoTopBar({
@@ -14,6 +16,8 @@ class OptigoTopBar extends StatelessWidget {
     this.subtitle,
     this.onNotificationTap,
     this.onMenuTap,
+    this.onRefreshTap,
+    this.isRefreshing = false,
     this.showBackButton = false,
   });
 
@@ -200,48 +204,90 @@ class OptigoTopBar extends StatelessWidget {
             ),
           ),
 
-          // Right: Circular Isolated Notification Bell
-          InkWell(
-            onTap: onNotificationTap ?? () => NotificationModal.show(context),
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFF1F5F9)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Icon(
-                    Icons.notifications_none_rounded,
-                    size: 22,
-                    color: Color(0xFF0F172A),
-                  ),
-                  Positioned(
-                    top: 10,
-                    right: 11,
-                    child: Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (onRefreshTap != null) ...[
+                InkWell(
+                  onTap: isRefreshing ? null : onRefreshTap,
+                  borderRadius: BorderRadius.circular(24),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFE0E7FF)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6366F1).withValues(alpha: 0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: isRefreshing
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
+                            )
+                          : const Icon(
+                              Icons.auto_awesome,
+                              size: 20,
+                              color: Color(0xFF4F46E5),
+                            ),
                     ),
                   ),
-                ],
+                ),
+                const SizedBox(width: 8),
+              ],
+
+              // Right: Circular Isolated Notification Bell
+              InkWell(
+                onTap: onNotificationTap ?? () => NotificationModal.show(context),
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(
+                        Icons.notifications_none_rounded,
+                        size: 22,
+                        color: Color(0xFF0F172A),
+                      ),
+                      Positioned(
+                        top: 10,
+                        right: 11,
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),

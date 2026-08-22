@@ -181,10 +181,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Bar
+                // Top Bar with Top AI Refresh Action
                 OptigoTopBar(
                   subtitle: 'Daily AI Strategic Priorities',
                   onNotificationTap: widget.onNavigateToReviews,
+                  onRefreshTap: _handleGenerateFresh,
+                  isRefreshing: _isGenerating,
                 ),
 
                 const SizedBox(height: 12),
@@ -539,22 +541,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             id: 'important',
             label: 'Important ($important)',
             icon: Icons.star_rounded,
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: _isGenerating ? null : _handleGenerateFresh,
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: _isGenerating
-                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)))
-                  : const Icon(Icons.tune_rounded, size: 16, color: Color(0xFF64748B)),
-            ),
           ),
         ],
       ),
