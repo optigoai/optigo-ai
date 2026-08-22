@@ -71,7 +71,15 @@ class _MainShellState extends State<MainShell> {
         backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
         elevation: 4,
-        icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFF60A5FA)),
+        icon: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.asset(
+            'assets/images/optigo-bot.png',
+            width: 22,
+            height: 22,
+            fit: BoxFit.contain,
+          ),
+        ),
         label: const Text(
           'Ask AI CMO',
           style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, letterSpacing: 0.1),

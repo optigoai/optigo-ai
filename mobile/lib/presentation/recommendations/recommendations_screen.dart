@@ -373,36 +373,33 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
               // AI Mascot Avatar Graphic
               Container(
-                width: 72,
-                height: 72,
+                width: 76,
+                height: 76,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: const Color(0xFFC7D2FE)),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    const Icon(Icons.smart_toy_rounded, size: 36, color: Color(0xFF4F46E5)),
-                    Positioned(
-                      bottom: 4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4F46E5),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          'AI',
-                          style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.white),
-                        ),
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
                   ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Image.asset(
+                      'assets/images/optigo-bot.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -410,9 +407,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
           const SizedBox(height: 18),
 
-          // Metrics Stats Row (Matching Reference)
+          // Metrics Stats Row (Fixed overflow with compact flexible padding)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(16),
@@ -427,7 +424,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                   value: '$total',
                   label: 'Total Actions',
                 ),
-                Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                Container(width: 1, height: 26, color: const Color(0xFFE2E8F0)),
                 _buildMetricItem(
                   icon: Icons.error_outline_rounded,
                   iconColor: const Color(0xFFEF4444),
@@ -435,7 +432,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                   value: '$needAttention',
                   label: 'Need Attention',
                 ),
-                Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                Container(width: 1, height: 26, color: const Color(0xFFE2E8F0)),
                 _buildMetricItem(
                   icon: Icons.check_circle_outline_rounded,
                   iconColor: const Color(0xFF10B981),
@@ -463,37 +460,41 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               color: iconBg,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 16),
+            child: Icon(icon, color: iconColor, size: 14),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
-                  height: 1.1,
+          const SizedBox(width: 6),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    height: 1.1,
+                  ),
                 ),
-              ),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF64748B),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF64748B),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -836,13 +837,20 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
-            decoration: const BoxDecoration(
-              color: Color(0xFFEDE9FE),
-              shape: BoxShape.circle,
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEDE9FE),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFC4B5FD)),
             ),
-            child: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF6D28D9), size: 20),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: Image.asset('assets/images/optigo-bot.png', fit: BoxFit.contain),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

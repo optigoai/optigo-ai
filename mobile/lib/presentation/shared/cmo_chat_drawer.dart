@@ -177,14 +177,19 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
                 Row(
                   children: [
                     Container(
-                      width: 36,
-                      height: 36,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF2563EB),
-                        shape: BoxShape.circle,
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFC7D2FE)),
                       ),
-                      child: const Center(
-                        child: Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(2),
+                          child: Image.asset('assets/images/optigo-bot.png', fit: BoxFit.contain),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -341,12 +346,17 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(4),
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
                           color: const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFDBEAFE)),
                         ),
-                        child: const Icon(Icons.auto_awesome, size: 12, color: Color(0xFF2563EB)),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.asset('assets/images/optigo-bot.png', fit: BoxFit.contain),
+                        ),
                       ),
                       const SizedBox(width: 6),
                       const Text(
