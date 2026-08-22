@@ -5,10 +5,13 @@
 Main application entry point.
 """
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.core.config import settings
 from app.core.logging import setup_logging, get_logger
@@ -52,6 +55,18 @@ def create_app() -> FastAPI:
 
     # Mount API router
     app.include_router(api_router)
+
+    # Mount Admin Web Portal static files
+    admin_static_dir = os.path.join(os.path.dirname(__file__), "static", "admin")
+    if os.path.exists(admin_static_dir):
+        app.mount("/admin-static", StaticFiles(directory=admin_static_dir), name="admin_static")
+
+    @app.get("/admin", include_in_schema=False)
+    async def serve_admin_portal():
+        index_file = os.path.join(admin_static_dir, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        return {"message": "Admin portal static assets not found"}
 
     return app
 

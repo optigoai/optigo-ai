@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/services/feature_flag_service.dart';
 import 'home/home_screen.dart';
 import 'recommendations/recommendations_screen.dart';
 import 'content/content_studio_screen.dart';
@@ -15,6 +16,12 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    FeatureFlagService().syncFlags();
+  }
 
   void _navigateToTab(int index) {
     setState(() => _currentIndex = index);
@@ -62,20 +69,28 @@ class _MainShellState extends State<MainShell> {
         index: _currentIndex,
         children: screens,
       ),
-      floatingActionButton: GestureDetector(
-        onTap: () => CmoChatDrawer.show(
-          context,
-          currentScreen: ['home', 'actions', 'create', 'seo', 'reviews'][_currentIndex],
-          onNavigate: _handleRouteNavigate,
-        ),
-        child: Container(
-          height: 72,
-          margin: const EdgeInsets.only(bottom: 2),
-          child: Image.asset(
-            'assets/images/ask-optigo-btn.png',
-            fit: BoxFit.contain,
-          ),
-        ),
+      floatingActionButton: ListenableBuilder(
+        listenable: FeatureFlagService(),
+        builder: (context, _) {
+          if (!FeatureFlagService().isEnabled('ai_cmo_chat')) {
+            return const SizedBox.shrink();
+          }
+          return GestureDetector(
+            onTap: () => CmoChatDrawer.show(
+              context,
+              currentScreen: ['home', 'actions', 'create', 'seo', 'reviews'][_currentIndex],
+              onNavigate: _handleRouteNavigate,
+            ),
+            child: Container(
+              height: 72,
+              margin: const EdgeInsets.only(bottom: 2),
+              child: Image.asset(
+                'assets/images/ask-optigo-btn.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          );
+        },
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

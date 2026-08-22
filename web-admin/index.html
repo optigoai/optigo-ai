@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OptigoAI — Executive Admin Web Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/admin.css">
+</head>
+<body>
+
+  <div class="admin-container">
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+      <div class="brand-header">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">OptigoAI</div>
+          <span class="badge-admin">Admin Portal</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <ul class="nav-menu">
+        <li class="nav-item active" data-tab="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <span>Executive Overview</span>
+        </li>
+        <li class="nav-item" data-tab="organizations">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 0 1 2 2v2H4V5a2 2 0 0 1 2-2zM9 10h2v2H9zM13 10h2v2h-2zM9 14h2v2H9zM13 14h2v2h-2z"/></svg>
+          <span>Organizations & Tenants</span>
+        </li>
+        <li class="nav-item" data-tab="businesses">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>All Businesses</span>
+        </li>
+        <li class="nav-item" data-tab="features">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Feature Flags & Controls</span>
+        </li>
+        <li class="nav-item" data-tab="usage">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>AI Usage & Cost Monitoring</span>
+        </li>
+        <li class="nav-item" data-tab="health">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span>System Health Radar</span>
+        </li>
+      </ul>
+
+      <!-- Sidebar Footer User Card -->
+      <div class="sidebar-footer">
+        <div class="admin-profile">
+          <div class="admin-avatar">AD</div>
+          <div class="admin-info">
+            <span class="admin-name">Super Administrator</span>
+            <span class="admin-role">admin@optigoai.com</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="admin-main">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="page-title-group">
+          <h1 id="page-main-title">Executive Overview</h1>
+          <p id="page-sub-title">Real-time platform metrics, active tenants, and AI consumption</p>
+        </div>
+        <div class="top-actions">
+          <button class="btn btn-secondary" id="btn-refresh-data">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span>Synchronize</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 1: EXECUTIVE OVERVIEW -->
+      <div class="tab-view" id="view-dashboard">
+        <!-- KPI Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Organizations</span>
+              <div class="stat-icon">🏢</div>
+            </div>
+            <div class="stat-value" id="stat-orgs">--</div>
+            <div class="stat-footer"><span class="stat-trend-up">↑ 100%</span> Active tenants</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">SMB Businesses</span>
+              <div class="stat-icon">🏪</div>
+            </div>
+            <div class="stat-value" id="stat-businesses">--</div>
+            <div class="stat-footer"><span class="stat-trend-up">↑ 12%</span> Month over month</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Registered Users</span>
+              <div class="stat-icon">👥</div>
+            </div>
+            <div class="stat-value" id="stat-users">--</div>
+            <div class="stat-footer">Business owners & managers</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">AI Invocations</span>
+              <div class="stat-icon">⚡</div>
+            </div>
+            <div class="stat-value" id="stat-ai-calls">--</div>
+            <div class="stat-footer">CMO, Copy & SEO calls</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Tokens Consumed</span>
+              <div class="stat-icon">🧠</div>
+            </div>
+            <div class="stat-value" id="stat-tokens">--</div>
+            <div class="stat-footer">GPT-4o & Gemini 1.5</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">AI Cost (USD)</span>
+              <div class="stat-icon">💳</div>
+            </div>
+            <div class="stat-value" id="stat-cost">--</div>
+            <div class="stat-footer">Estimated provider usage</div>
+          </div>
+        </div>
+
+        <!-- Quick Summary Cards -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap:24px;">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Dynamic Feature Governance</div>
+                <div class="card-subtitle">Instant feature control over all connected mobile clients</div>
+              </div>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:16px;">
+              Admin feature flags allow instant enablement or emergency shutdown of AI Chat, Content Studio, Crawlers, and Auto-reply modules without redeploying mobile apps.
+            </p>
+            <button class="btn btn-primary" onclick="switchTab('features')">Configure Feature Flags →</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Tenant Multi-Tenancy</div>
+                <div class="card-subtitle">Row-level security and strict organization isolation</div>
+              </div>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:16px;">
+              Every business record, review, content piece, and SEO analysis is strictly bound to its parent organization ID with zero cross-tenant data leaks.
+            </p>
+            <button class="btn btn-secondary" onclick="switchTab('organizations')">Manage Organizations →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: ORGANIZATIONS -->
+      <div class="tab-view" id="view-organizations" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Tenant Organizations</div>
+              <div class="card-subtitle">All active client organizations and access states</div>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Organization Name</th>
+                  <th>Tenant Slug</th>
+                  <th>Businesses</th>
+                  <th>Users</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="orgs-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: BUSINESSES -->
+      <div class="tab-view" id="view-businesses" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Registered Businesses</div>
+              <div class="card-subtitle">All onboarded SMB storefronts and services</div>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Business Name</th>
+                  <th>Category</th>
+                  <th>Location</th>
+                  <th>Website URL</th>
+                  <th>Onboarding</th>
+                </tr>
+              </thead>
+              <tbody id="businesses-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: FEATURE FLAGS & CONTROLS -->
+      <div class="tab-view" id="view-features" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Mobile App Feature Toggles</div>
+              <div class="card-subtitle">Changes take effect immediately across all active mobile clients</div>
+            </div>
+          </div>
+          <div class="features-grid" id="features-container"></div>
+        </div>
+      </div>
+
+      <!-- TAB 5: AI USAGE & COST MONITORING -->
+      <div class="tab-view" id="view-usage" style="display:none;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap:24px;">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Usage by Marketing Feature</div>
+                <div class="card-subtitle">Token distribution across OptigoAI modules</div>
+              </div>
+            </div>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Invocations</th>
+                  <th>Tokens</th>
+                  <th>Est. Cost</th>
+                </tr>
+              </thead>
+              <tbody id="usage-feature-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">AI Provider & Model Latency</div>
+                <div class="card-subtitle">Performance across OpenAI and Google Gemini models</div>
+              </div>
+            </div>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Provider</th>
+                  <th>Model</th>
+                  <th>Calls</th>
+                  <th>Avg. Latency</th>
+                </tr>
+              </thead>
+              <tbody id="usage-model-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: SYSTEM HEALTH RADAR -->
+      <div class="tab-view" id="view-health" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Infrastructure & Component Health</div>
+              <div class="card-subtitle">Live health status of databases, queues, and AI microservices</div>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;" id="health-components-container"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Live Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="./js/api.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

@@ -39,4 +39,5 @@ class ApiConstants {
   static const String notifications = '$apiPrefix/notifications';
   static const String seo = '$apiPrefix/seo';
   static const String competitors = '$apiPrefix/competitors';
+  static const String features = '$apiPrefix/features/active';
 }

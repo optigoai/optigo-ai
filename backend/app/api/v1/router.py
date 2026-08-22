@@ -18,6 +18,8 @@ from app.api.v1.endpoints import (
     analytics,
     notifications,
     gsc,
+    admin,
+    features,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -60,4 +62,10 @@ api_router.include_router(notifications.router)
 
 # External Integrations: Google Search Console
 api_router.include_router(gsc.router)
+
+# Phase 12: Internal Admin Portal APIs
+api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
+
+# Phase 12: Dynamic Client Feature Flags
+api_router.include_router(features.router, prefix="/features", tags=["Features"])
 
