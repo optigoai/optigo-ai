@@ -816,7 +816,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
   // Matching Reference Screen 3
   // ==========================================================
   Widget _buildStep3CreativeStudio() {
-    final bizName = context.read<AppAuthProvider>().currentBusiness?.name ?? 'Panekkatt Oil & Flour Mill';
+    final bizName = context.read<AppAuthProvider>().currentBusiness?.name ?? 'My Business';
 
     return SingleChildScrollView(
       key: const ValueKey('step_3'),

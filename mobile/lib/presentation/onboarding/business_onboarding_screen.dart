@@ -16,19 +16,19 @@ class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
   int _currentPage = 0;
   bool _isSubmitting = false;
 
-  // Step 1: Basic Info (Matching Reference Screen 3)
-  final _nameController = TextEditingController(text: 'Panekkatt Oil and Flour Mill');
-  String _selectedCategory = 'Local Manufacturing & Mill';
-  String _selectedLocation = 'Ponnani, Kerala, India';
-  final _websiteController = TextEditingController(text: 'https://panekkattmill.com');
+  // Step 1: Basic Info
+  final _nameController = TextEditingController();
+  String _selectedCategory = 'Restaurant / Cafe';
+  String _selectedLocation = 'Bengaluru, India';
+  final _websiteController = TextEditingController();
 
   // Step 2: Target Audience & Key Services
-  final _targetCustomersController = TextEditingController(text: 'Local households, organic food lovers, and wholesale buyers in Malappuram district');
-  final _servicesController = TextEditingController(text: 'Cold pressed coconut oil, sesame oil, freshly milled rice flour, wheat flour, and spice powders');
+  final _targetCustomersController = TextEditingController();
+  final _servicesController = TextEditingController();
 
   // Step 3: Goals & Marketing Channels
-  final _goalsController = TextEditingController(text: 'Increase local store foot traffic and rank #1 on Google Maps for oil mill near me');
-  final _channelsController = TextEditingController(text: 'Google Business Profile, WhatsApp orders, Instagram');
+  final _goalsController = TextEditingController();
+  final _channelsController = TextEditingController();
 
   final List<String> _categories = [
     'Restaurant / Cafe',

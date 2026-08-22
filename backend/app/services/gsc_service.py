@@ -116,7 +116,7 @@ class GoogleSearchConsoleService:
         end_d = date.today() - timedelta(days=2)  # GSC has a 2-day lag
         start_d = end_d - timedelta(days=28)
 
-        site_url = conn.site_url or "https://panekkattmill.com"
+        site_url = conn.site_url or "https://example.com"
         rows = await self.provider.query_search_analytics(
             access_token=access_token,
             site_url=site_url,
@@ -192,9 +192,9 @@ class GoogleSearchConsoleService:
             }
             for m in metrics
         ] if metrics else [
-            {"query": "cold pressed coconut oil near me", "clicks": 142, "impressions": 1850, "ctr": 7.7, "position": 1.4},
-            {"query": "best flour mill ponnani", "clicks": 98, "impressions": 1120, "ctr": 8.8, "position": 1.2},
-            {"query": "fresh sesame oil wholesale", "clicks": 64, "impressions": 890, "ctr": 7.2, "position": 2.8},
+            {"query": f"{business.name} near me", "clicks": 142, "impressions": 1850, "ctr": 7.7, "position": 1.4},
+            {"query": f"best {business.category.lower() if business.category else 'store'} in {business.location or 'my city'}".strip(), "clicks": 98, "impressions": 1120, "ctr": 8.8, "position": 1.2},
+            {"query": f"{business.name} reviews and timings", "clicks": 64, "impressions": 890, "ctr": 7.2, "position": 2.8},
         ]
 
         freshness = self._compute_freshness(conn.last_synced_at if conn else None)

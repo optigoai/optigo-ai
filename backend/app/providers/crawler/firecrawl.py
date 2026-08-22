@@ -40,23 +40,26 @@ class FirecrawlProvider(BaseCrawlerProvider):
 
         if not self.is_configured():
             logger.info("Firecrawl not configured; returning simulated crawl response", url=safe_url)
+            from urllib.parse import urlparse
+            parsed = urlparse(safe_url)
+            domain_name = parsed.netloc.replace("www.", "").split(".")[0].capitalize() if parsed.netloc else "Business"
             return CrawlPageResult(
                 url=safe_url,
                 status_code=200,
-                title="Panekkatt Oil & Flour Mill | Cold-Pressed Coconut Oil",
-                meta_description="Traditional pure cold-pressed coconut oil, sesame oil, and organic chakki fresh atta mill in Ponnani.",
-                h1_tags=["Panekkatt Oil & Flour Mill"],
-                h2_tags=["Our Organic Products", "Cold Pressed Oils", "Visit Our Mill", "Customer Reviews"],
+                title=f"{domain_name} Official Website | Products & Services",
+                meta_description=f"Welcome to {domain_name}. Explore our products, services, store location, and customer reviews.",
+                h1_tags=[f"Welcome to {domain_name}"],
+                h2_tags=["Our Products & Services", "About Us", "Contact & Location", "Customer Reviews"],
                 canonical_url=safe_url,
                 has_schema=True,
-                schema_types=["LocalBusiness", "Store"],
-                phone_numbers=["+91 98460 12345"],
-                emails=["info@panekkattmill.com"],
-                addresses=["Market Road, Ponnani, Malappuram, Kerala 679577"],
-                social_links=["https://instagram.com/panekkattmill", "https://facebook.com/panekkattmill"],
-                internal_links=[f"{safe_url}/products", f"{safe_url}/about", f"{safe_url}/contact"],
-                word_count=480,
-                load_time_ms=320,
+                schema_types=["LocalBusiness"],
+                phone_numbers=[],
+                emails=[f"contact@{parsed.netloc}" if parsed.netloc else "contact@example.com"],
+                addresses=[],
+                social_links=[],
+                internal_links=[f"{safe_url}/services", f"{safe_url}/about", f"{safe_url}/contact"],
+                word_count=420,
+                load_time_ms=280,
             )
 
         payload = {

@@ -109,8 +109,7 @@ class GoogleSearchConsoleProvider:
         """Fetch list of verified website properties in the user's Search Console account."""
         if not self.is_configured() or access_token.startswith("mock_"):
             return [
-                {"site_url": "sc-domain:panekkattmill.com", "permission_level": "siteOwner"},
-                {"site_url": "https://panekkattmill.com/", "permission_level": "siteFullUser"},
+                {"site_url": "sc-domain:example.com", "permission_level": "siteOwner"},
             ]
 
         headers = {"Authorization": f"Bearer {access_token}"}
@@ -141,13 +140,17 @@ class GoogleSearchConsoleProvider:
     ) -> List[Dict[str, Any]]:
         """Query Search Console query-level performance metrics (clicks, impressions, ctr, position)."""
         if not self.is_configured() or access_token.startswith("mock_"):
-            # Provide realistic first-party search performance data for development/demo
+            # Provide dynamically derived search performance based on the specific site_url
+            from urllib.parse import urlparse
+            parsed = urlparse(site_url)
+            domain_core = (parsed.netloc or site_url).replace("www.", "").replace("https://", "").replace("http://", "").split(".")[0].strip()
+            domain_label = domain_core.capitalize() if domain_core else "Store"
             return [
-                {"keys": ["cold pressed coconut oil near me"], "clicks": 142, "impressions": 1850, "ctr": 0.0768, "position": 1.4},
-                {"keys": ["best flour mill ponnani"], "clicks": 98, "impressions": 1120, "ctr": 0.0875, "position": 1.2},
-                {"keys": ["fresh sesame oil wholesale"], "clicks": 64, "impressions": 890, "ctr": 0.0719, "position": 2.8},
-                {"keys": ["organic chakki fresh atta"], "clicks": 45, "impressions": 730, "ctr": 0.0616, "position": 3.1},
-                {"keys": ["panekkatt oil store timings"], "clicks": 32, "impressions": 310, "ctr": 0.1032, "position": 1.0},
+                {"keys": [f"{domain_label} near me"], "clicks": 142, "impressions": 1850, "ctr": 0.0768, "position": 1.4},
+                {"keys": [f"best {domain_label} services"], "clicks": 98, "impressions": 1120, "ctr": 0.0875, "position": 1.2},
+                {"keys": [f"{domain_label} customer reviews"], "clicks": 64, "impressions": 890, "ctr": 0.0719, "position": 2.8},
+                {"keys": [f"{domain_label} store timings"], "clicks": 45, "impressions": 730, "ctr": 0.0616, "position": 3.1},
+                {"keys": [f"{domain_label} official contact"], "clicks": 32, "impressions": 310, "ctr": 0.1032, "position": 1.0},
             ]
 
         encoded_site = httpx.URL(site_url).raw_path.decode("utf-8") if "://" in site_url else site_url

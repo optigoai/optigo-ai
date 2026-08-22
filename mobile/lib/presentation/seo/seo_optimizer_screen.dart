@@ -536,7 +536,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     final business = context.read<AppAuthProvider>().currentBusiness;
     final defaultUrl = (business?.website != null && business!.website!.isNotEmpty && !business.website!.contains('localhost'))
         ? business.website!
-        : 'https://panekkattmill.com';
+        : '';
     final urlController = TextEditingController(text: defaultUrl);
 
     showModalBottomSheet(
