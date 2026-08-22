@@ -12,17 +12,29 @@ let featuresData = [];
 let orgsData = [];
 let businessesData = [];
 let usageData = null;
+let autoRefreshTimer = null;
 
 function initApp() {
   setupNavigation();
   setupAuthHandling();
   setupRefreshButton();
+  startAutoRefresh();
 
   if (!window.api.token) {
     showAuthModal();
   } else {
     loadAllData();
   }
+}
+
+function startAutoRefresh() {
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  // Auto-refresh every 3.5 seconds silently
+  autoRefreshTimer = setInterval(() => {
+    if (window.api.token) {
+      loadAllDataSilently();
+    }
+  }, 3500);
 }
 
 function setupAuthHandling() {
@@ -149,6 +161,21 @@ async function loadAllData() {
   }
 }
 
+async function loadAllDataSilently() {
+  try {
+    await Promise.all([
+      loadStats(),
+      loadFeatures(),
+      loadOrganizations(),
+      loadBusinesses(),
+      loadUsage(),
+      loadHealth(),
+    ]);
+  } catch (_) {
+    // Silent catch for background polling
+  }
+}
+
 async function loadStats() {
   try {
     statsData = await window.api.getStats();
@@ -196,6 +223,10 @@ function renderFeatures(features) {
     container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:30px; color:var(--text-muted);">No feature flags found. Click Synchronize to load from backend.</div>`;
     return;
   }
+
+  // Avoid re-rendering if user is currently interacting with toggles
+  const focused = document.activeElement && document.activeElement.type === 'checkbox';
+  if (focused) return;
 
   container.innerHTML = features.map(f => {
     const formattedName = f.feature_name
@@ -320,19 +351,19 @@ async function loadUsage() {
     usageData = await window.api.getUsage();
     renderUsage(usageData);
   } catch (err) {
-    renderUsage({ by_feature: [], by_model: [], recent_logs: [] });
+    renderUsage({ by_user: [], by_feature: [], by_model: [], recent_logs: [] });
   }
 }
 
 function renderUsage(data) {
-  // 1. Render Per-User AI Consumption
+  // 1. Render Per-User AI Consumption with Business and Organization Linkage
   const usersTbody = document.getElementById('usage-users-tbody');
   if (usersTbody && data.by_user) {
     if (data.by_user.length === 0) {
-      usersTbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">No per-user AI invocations logged yet.</td></tr>`;
+      usersTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">No per-user AI invocations logged yet.</td></tr>`;
     } else {
       usersTbody.innerHTML = data.by_user.map(u => {
-        const lastActiveFormatted = u.last_active ? new Date(u.last_active).toLocaleString() : 'N/A';
+        const lastActiveFormatted = u.last_active ? new Date(u.last_active).toLocaleString() : 'Never';
         const initials = (u.user_name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         return `
           <tr>
@@ -345,6 +376,7 @@ function renderUsage(data) {
               </div>
             </td>
             <td><code style="color:#94A3B8;">${escapeHtml(u.user_email)}</code></td>
+            <td><span class="badge" style="background:rgba(59,130,246,0.15); color:#60A5FA; border:1px solid rgba(59,130,246,0.3); font-weight:700;">${escapeHtml(u.business_name || 'Direct')}</span></td>
             <td><span class="badge badge-pill">${escapeHtml(u.organization_name)}</span></td>
             <td><span class="badge badge-pill" style="font-weight:700;">${u.calls.toLocaleString()} calls</span></td>
             <td><strong>${u.tokens.toLocaleString()}</strong></td>
