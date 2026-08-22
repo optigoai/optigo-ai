@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../app/app.dart';
 import '../shared/optigo_button.dart';
 import '../shared/optigo_text_field.dart';
 import 'auth_provider.dart';
@@ -40,7 +41,10 @@ class _SignupScreenState extends State<SignupScreen> {
     );
 
     if (success && mounted) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthRouter()),
+        (route) => false,
+      );
     } else if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

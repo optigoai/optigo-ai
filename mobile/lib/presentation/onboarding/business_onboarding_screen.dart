@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../app/app.dart';
 import '../shared/optigo_text_field.dart';
 import '../auth/auth_provider.dart';
 
@@ -114,7 +115,12 @@ class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
 
     setState(() => _isSubmitting = false);
 
-    if (result == null && mounted) {
+    if (result != null && mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthRouter()),
+        (route) => false,
+      );
+    } else if (result == null && mounted) {
       _showError(authProvider.errorMessage ?? 'Failed to complete onboarding. Please try again.');
     }
   }
