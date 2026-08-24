@@ -195,134 +195,148 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   @override
   Widget build(BuildContext context) {
     final pendingCount = _allReviews.where((r) => !r.isReplied).length;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadReviews,
-          color: const Color(0xFF2563EB),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Top Profile Pill + AI Refresh + Notification Circle
-                OptigoTopBar(
-                  subtitle: 'Customer Reviews & Reputation',
-                  onNotificationTap: widget.onNavigateToRecommendations,
-                  onRefreshTap: _loadReviews,
-                  isRefreshing: _isLoadingReviews,
-                ),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFE8F1FD),
+              Color(0xFFEFF5FE),
+              Color(0xFFF6F9FD),
+              Color(0xFFF8FAFC),
+            ],
+            stops: [0.0, 0.22, 0.55, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadReviews,
+            color: const Color(0xFF2563EB),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. Top Profile Pill + AI Refresh + Notification Circle
+                  OptigoTopBar(
+                    subtitle: 'Customer Reviews & Reputation',
+                    onNotificationTap: widget.onNavigateToRecommendations,
+                    onRefreshTap: _loadReviews,
+                    isRefreshing: _isLoadingReviews,
+                  ),
 
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // Large Editorial Title + Sync Button Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Reviews',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F172A),
-                        letterSpacing: -0.8,
-                      ),
-                    ),
-                    InkWell(
-                      onTap: _isSyncing ? null : _handleSyncGbp,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                  // Large Editorial Title + Sync Button Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Reviews & Insights',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0F172A),
+                          letterSpacing: -0.6,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (_isSyncing)
-                              const SizedBox(
-                                width: 13,
-                                height: 13,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
-                              )
-                            else
-                              const Icon(Icons.sync_rounded, size: 15, color: Color(0xFF2563EB)),
-                            const SizedBox(width: 5),
-                            Text(
-                              _isSyncing ? 'Syncing...' : 'Sync Google',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF2563EB),
+                      ),
+                      InkWell(
+                        onTap: _isSyncing ? null : _handleSyncGbp,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.02),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_isSyncing)
+                                const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
+                                )
+                              else
+                                const Icon(Icons.sync_rounded, size: 16, color: Color(0xFF2563EB)),
+                              const SizedBox(width: 6),
+                              Text(
+                                _isSyncing ? 'Syncing...' : 'Sync GBP',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF2563EB),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 2. Auto-Scrolling Top Carousel: Star Ratings & AI Review Intelligence
+                  _buildTopCarousel(),
+
+                  const SizedBox(height: 18),
+
+                  // 3. Filter Pills (All, Positive, Negative, Pending)
+                  _buildFilterPills(pendingCount: pendingCount),
+
+                  const SizedBox(height: 16),
+
+                  // 4. Reviews List
+                  if (_isLoadingReviews)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: CircularProgressIndicator(color: Color(0xFF2563EB)),
+                      ),
+                    )
+                  else if (_filteredReviews.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFF1F5F9)),
+                      ),
+                      child: const Center(
+                        child: Column(
+                          children: [
+                            Icon(Icons.rate_review_outlined, size: 36, color: Color(0xFF94A3B8)),
+                            SizedBox(height: 10),
+                            Text(
+                              'No reviews found in this category.',
+                              style: TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    )
+                  else
+                    ..._filteredReviews.map((r) => _buildReviewCard(r)),
 
-                const SizedBox(height: 16),
-
-                // 2. Auto-Scrolling Top Carousel: Star Ratings & AI Review Intelligence
-                _buildTopCarousel(),
-
-                const SizedBox(height: 18),
-
-                // 3. Filter Pills (All, Positive, Negative, Pending)
-                _buildFilterPills(pendingCount: pendingCount),
-
-                const SizedBox(height: 16),
-
-                // 4. Reviews List
-                if (_isLoadingReviews)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: CircularProgressIndicator(color: Color(0xFF2563EB)),
-                    ),
-                  )
-                else if (_filteredReviews.isEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
-                    ),
-                    child: const Center(
-                      child: Column(
-                        children: [
-                          Icon(Icons.rate_review_outlined, size: 36, color: Color(0xFF94A3B8)),
-                          SizedBox(height: 10),
-                          Text(
-                            'No reviews found in this category.',
-                            style: TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  ..._filteredReviews.map((r) => _buildReviewCard(r)),
-
-                const SizedBox(height: 36),
-              ],
+                  const SizedBox(height: 36),
+                ],
+              ),
             ),
           ),
         ),

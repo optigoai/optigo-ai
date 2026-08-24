@@ -184,39 +184,54 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top Profile / Notifications Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: OptigoTopBar(
-                subtitle: 'AI Content & Campaign Studio',
-                onNotificationTap: widget.onNavigateToRecommendations,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFE8F1FD),
+              Color(0xFFEFF5FE),
+              Color(0xFFF6F9FD),
+              Color(0xFFF8FAFC),
+            ],
+            stops: [0.0, 0.22, 0.55, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Top Profile / Notifications Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: OptigoTopBar(
+                  subtitle: 'AI Content & Campaign Studio',
+                  onNotificationTap: widget.onNavigateToRecommendations,
+                ),
               ),
-            ),
 
-            // Animated Step View
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0.05, 0),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: _buildCurrentStepView(),
+              // Animated Step View
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.05, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _buildCurrentStepView(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

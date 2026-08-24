@@ -1667,79 +1667,94 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     final hasFailingFindings = websiteFindings.any((f) => f['status'] == 'fail' || f['status'] == 'warning');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadData,
-          color: const Color(0xFF2563EB),
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF2563EB)),
-                )
-              : SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 1. TOP BAR (Optigo Profile Pill + Notification Circle)
-                      OptigoTopBar(
-                        subtitle: 'Google Visibility & SEO',
-                        onNotificationTap: widget.onNavigateToRecommendations,
-                        onRefreshTap: _handleRunFreshAudit,
-                        isRefreshing: _isAuditing,
-                      ),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFE8F1FD),
+              Color(0xFFEFF5FE),
+              Color(0xFFF6F9FD),
+              Color(0xFFF8FAFC),
+            ],
+            stops: [0.0, 0.22, 0.55, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            color: const Color(0xFF2563EB),
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF2563EB)),
+                  )
+                : SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 1. TOP BAR (Optigo Profile Pill + Notification Circle)
+                        OptigoTopBar(
+                          subtitle: 'Google Visibility & SEO',
+                          onNotificationTap: widget.onNavigateToRecommendations,
+                          onRefreshTap: _handleRunFreshAudit,
+                          isRefreshing: _isAuditing,
+                        ),
 
-                      const SizedBox(height: 12),
+                        const SizedBox(height: 12),
 
-                      // 2. SEO OVERVIEW TITLE + DATE PICKER
-                      _buildTitleRow(),
+                        // 2. SEO OVERVIEW TITLE + DATE PICKER
+                        _buildTitleRow(),
 
-                      const SizedBox(height: 14),
+                        const SizedBox(height: 14),
 
-                      // 3. TOP DOMAIN / WEBSITE ISSUE BANNER & EDIT
-                      _buildWebsiteStatusBanner(hasWebsite, website, hasFailingFindings, websiteFindings),
+                        // 3. TOP DOMAIN / WEBSITE ISSUE BANNER & EDIT
+                        _buildWebsiteStatusBanner(hasWebsite, website, hasFailingFindings, websiteFindings),
 
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                      // 4. HORIZONTAL METRICS CARDS (Avg Rank, Local Visibility, Impressions, Website Clicks)
-                      _buildHorizontalMetricCards(
-                        avgRankNum,
-                        top3Percent,
-                        avgRankDelta,
-                        visibilityScore,
-                        hasWebsite,
-                      ),
+                        // 4. HORIZONTAL METRICS CARDS (Avg Rank, Local Visibility, Impressions, Website Clicks)
+                        _buildHorizontalMetricCards(
+                          avgRankNum,
+                          top3Percent,
+                          avgRankDelta,
+                          visibilityScore,
+                          hasWebsite,
+                        ),
 
-                      const SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
-                      // 5. VISIBILITY TREND LINE CHART CARD (Real points)
-                      _buildVisibilityTrendCard(visibilityScore, avgRankDelta),
+                        // 5. VISIBILITY TREND LINE CHART CARD (Real points)
+                        _buildVisibilityTrendCard(visibilityScore, avgRankDelta),
 
-                      const SizedBox(height: 22),
+                        const SizedBox(height: 22),
 
-                      // 6. KEY SEO HEALTH (5 Horizontal Items)
-                      _buildKeySeoHealthSection(hasWebsite, website),
+                        // 6. KEY SEO HEALTH (5 Horizontal Items)
+                        _buildKeySeoHealthSection(hasWebsite, website),
 
-                      const SizedBox(height: 22),
+                        const SizedBox(height: 22),
 
-                      // 6.5 LOCAL COMPETITOR BENCHMARK
-                      _buildCompetitorBenchmarkCard(_audit),
+                        // 6.5 LOCAL COMPETITOR BENCHMARK
+                        _buildCompetitorBenchmarkCard(_audit),
 
-                      const SizedBox(height: 22),
+                        const SizedBox(height: 22),
 
-                      // 7. TOP OPPORTUNITIES (Real AI & Audit findings)
-                      _buildTopOpportunitiesSection(hasWebsite),
+                        // 7. TOP OPPORTUNITIES (Real AI & Audit findings)
+                        _buildTopOpportunitiesSection(hasWebsite),
 
-                      const SizedBox(height: 22),
+                        const SizedBox(height: 22),
 
-                      // 8. KEYWORD RANKINGS (Real Progress Bar + Distribution)
-                      _buildKeywordRankingsSection(top3Percent),
+                        // 8. KEYWORD RANKINGS (Real Progress Bar + Distribution)
+                        _buildKeywordRankingsSection(top3Percent),
 
-                      const SizedBox(height: 36),
-                    ],
+                        const SizedBox(height: 36),
+                      ],
+                    ),
                   ),
-                ),
+          ),
         ),
       ),
     );

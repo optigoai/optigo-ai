@@ -178,118 +178,133 @@ class _HomeScreenState extends State<HomeScreen> {
     final healthScore = _intelligence?.healthScore ?? 78;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadData,
-          color: const Color(0xFF2563EB),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Top Profile Pill + AI Refresh + Notification Circle
-                OptigoTopBar(
-                  onNotificationTap: widget.onNavigateToRecommendations,
-                  onRefreshTap: _loadData,
-                  onNavigateToTab: widget.onNavigateToTab,
-                  isRefreshing: _isLoading,
-                ),
-
-                const SizedBox(height: 12),
-
-                // 2. Large Editorial Headline (Inspired by reference)
-                const Text(
-                  'How is your business\nperforming today?',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
-                    height: 1.15,
-                    letterSpacing: -0.8,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFE8F1FD),
+              Color(0xFFEFF5FE),
+              Color(0xFFF6F9FD),
+              Color(0xFFF8FAFC),
+            ],
+            stops: [0.0, 0.22, 0.55, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            color: const Color(0xFF2563EB),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. Top Profile Pill + AI Refresh + Notification Circle
+                  OptigoTopBar(
+                    onNotificationTap: widget.onNavigateToRecommendations,
+                    onRefreshTap: _loadData,
+                    onNavigateToTab: widget.onNavigateToTab,
+                    isRefreshing: _isLoading,
                   ),
-                ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
-                // 3. Search / AI Prompt Pill Bar
-                InkWell(
-                  onTap:
-                      () => CmoChatDrawer.show(context, currentScreen: 'home'),
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 13,
+                  // 2. Large Editorial Headline (Inspired by reference)
+                  const Text(
+                    'How is your business\nperforming today?',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF0F172A),
+                      height: 1.15,
+                      letterSpacing: -0.8,
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.search_rounded,
-                          size: 20,
-                          color: Color(0xFF94A3B8),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Search actions, keywords, reviews...',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              color: Color(0xFF94A3B8),
-                              fontWeight: FontWeight.w500,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 3. Search / AI Prompt Pill Bar
+                  InkWell(
+                    onTap:
+                        () => CmoChatDrawer.show(context, currentScreen: 'home'),
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 13,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: const Color(0xFFF1F5F9)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.search_rounded,
+                            size: 20,
+                            color: Color(0xFF94A3B8),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Search actions, keywords, reviews...',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: Color(0xFF94A3B8),
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // 4. Hero Bento Grid Metrics (Dark Contrast Card + Clean White Card)
-                _buildHeroBentoRow(healthScore),
+                  // 4. Hero Bento Grid Metrics (Dark Contrast Card + Clean White Card)
+                  _buildHeroBentoRow(healthScore),
 
-                const SizedBox(height: 18),
+                  const SizedBox(height: 18),
 
-                // 5. Multi-Card Insight Visualizer Carousel (Horizontal Scroll with Segmented Tabs)
-                _buildInsightCarousel(),
+                  // 5. Multi-Card Insight Visualizer Carousel (Horizontal Scroll with Segmented Tabs)
+                  _buildInsightCarousel(),
 
-                const SizedBox(height: 18),
+                  const SizedBox(height: 18),
 
-                // 6. AI CMO Strategic Briefing Card
-                _buildAiBriefingCard(),
+                  // 6. AI CMO Strategic Briefing Card
+                  _buildAiBriefingCard(),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // 7. Top Priority Action Card
-                _buildTopPrioritySection(),
+                  // 7. Top Priority Action Card
+                  _buildTopPrioritySection(),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // 8. Quick Actions Section
-                _buildQuickActionsSection(),
+                  // 8. Quick Actions Section
+                  _buildQuickActionsSection(),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // 9. Growth Opportunities & Recent Activity Section
-                _buildGrowthOpportunitiesSection(),
+                  // 9. Growth Opportunities & Recent Activity Section
+                  _buildGrowthOpportunitiesSection(),
 
-                const SizedBox(height: 80),
-              ],
+                  const SizedBox(height: 80),
+                ],
+              ),
             ),
           ),
         ),

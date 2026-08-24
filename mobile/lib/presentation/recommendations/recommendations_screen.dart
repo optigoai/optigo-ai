@@ -170,109 +170,134 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     final displayedList = _filteredAndSortedList;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadRecommendations,
-          color: const Color(0xFF2563EB),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top Bar with Top AI Refresh Action
-                OptigoTopBar(
-                  subtitle: 'Daily AI Strategic Priorities',
-                  onNotificationTap: widget.onNavigateToReviews,
-                  onRefreshTap: _handleGenerateFresh,
-                  isRefreshing: _isGenerating,
-                ),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFE8F1FD),
+              Color(0xFFEFF5FE),
+              Color(0xFFF6F9FD),
+              Color(0xFFF8FAFC),
+            ],
+            stops: [0.0, 0.22, 0.55, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadRecommendations,
+            color: const Color(0xFF2563EB),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top Bar with Top AI Refresh Action
+                  OptigoTopBar(
+                    subtitle: 'Daily AI Strategic Priorities',
+                    onNotificationTap: widget.onNavigateToReviews,
+                    onRefreshTap: _handleGenerateFresh,
+                    isRefreshing: _isGenerating,
+                  ),
 
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // 1. Today's AI Insight Hero Card (Matching Reference Screen)
-                _buildHeroInsightCard(
-                  total: totalCount,
-                  needAttention: attentionDisplay,
-                  completed: completedDisplay,
-                ),
+                  // 1. Today's AI Insight Hero Card (Matching Reference Screen)
+                  _buildHeroInsightCard(
+                    total: totalCount,
+                    needAttention: attentionDisplay,
+                    completed: completedDisplay,
+                  ),
 
-                const SizedBox(height: 18),
+                  const SizedBox(height: 18),
 
-                // 2. Filter Pills Row (All, Need Attention, Important)
-                _buildFilterPills(
-                  total: totalCount,
-                  needAttention: attentionDisplay,
-                  important: _recommendations.where((r) => r.isImportant && !r.isCompleted).length,
-                ),
+                  // 2. Filter Pills Row (All, Need Attention, Important)
+                  _buildFilterPills(
+                    total: totalCount,
+                    needAttention: attentionDisplay,
+                    important: _recommendations.where((r) => r.isImportant && !r.isCompleted).length,
+                  ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // 3. Section Header: Recommended for You + Sort Dropdown
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Recommended for You',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F172A),
-                        letterSpacing: -0.4,
-                      ),
-                    ),
-                    PopupMenuButton<String>(
-                      initialValue: _sortBy,
-                      onSelected: (val) => setState(() => _sortBy = val),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Sort: ${_sortBy[0].toUpperCase()}${_sortBy.substring(1)}',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF64748B)),
-                          ],
+                  // 3. Section Header: Recommended for You + Sort Dropdown
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Recommended for You',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0F172A),
+                          letterSpacing: -0.4,
                         ),
                       ),
-                      itemBuilder: (ctx) => [
-                        const PopupMenuItem(value: 'priority', child: Text('Sort by Priority')),
-                        const PopupMenuItem(value: 'impact', child: Text('Sort by Impact')),
-                        const PopupMenuItem(value: 'effort', child: Text('Sort by Effort')),
-                      ],
+                      PopupMenuButton<String>(
+                        initialValue: _sortBy,
+                        onSelected: (val) => setState(() => _sortBy = val),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Sort: ${_sortBy[0].toUpperCase()}${_sortBy.substring(1)}',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF64748B)),
+                            ],
+                          ),
+                        ),
+                        itemBuilder: (ctx) => [
+                          const PopupMenuItem(value: 'priority', child: Text('Sort by Priority')),
+                          const PopupMenuItem(value: 'impact', child: Text('Sort by Impact')),
+                          const PopupMenuItem(value: 'effort', child: Text('Sort by Effort')),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // 4. Action Cards List
+                  if (_isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(
+                        child: CircularProgressIndicator(color: Color(0xFF2563EB)),
+                      ),
+                    )
+                  else if (displayedList.isEmpty)
+                    _buildEmptyState()
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: displayedList.length,
+                      itemBuilder: (context, index) {
+                        final rec = displayedList[index];
+                        return _buildActionCard(rec);
+                      },
                     ),
-                  ],
-                ),
 
-                const SizedBox(height: 14),
+                  const SizedBox(height: 20),
 
-                // 4. Action Cards List
-                if (_isLoading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40),
-                    child: Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
-                  )
-                else if (displayedList.isEmpty)
-                  _buildEmptyState()
-                else
-                  ...displayedList.map((rec) => _buildActionCard(rec)),
+                  // 5. Bottom Ask AI CMO Banner (Matching Reference Screen)
+                  _buildAskCmoBanner(),
 
-                const SizedBox(height: 18),
-
-                // 5. Bottom Ask AI CMO Banner (Matching Reference Screen)
-                _buildAskCmoBanner(),
-
-                const SizedBox(height: 36),
-              ],
+                  const SizedBox(height: 36),
+                ],
+              ),
             ),
           ),
         ),

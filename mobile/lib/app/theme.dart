@@ -27,6 +27,19 @@ class OptigoTheme {
   static const Color divider = Color(0xFFE5E7EB);
   static const Color border = Color(0xFFD1D5DB);
 
+  // ---- Background Gradient ----
+  static const LinearGradient screenBackgroundGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0xFFE8F1FD), // Rich soft blue ambient top
+      Color(0xFFEFF5FE), // Soft azure transition
+      Color(0xFFF6F9FD), // Gentle radiant tint
+      Color(0xFFF8FAFC), // Clean lower canvas
+    ],
+    stops: [0.0, 0.22, 0.55, 1.0],
+  );
+
   // ---- Priority Colors ----
   static const Color urgent = Color(0xFFEF5350);
   static const Color important = Color(0xFFFFA726);
