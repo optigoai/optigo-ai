@@ -77,7 +77,15 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     try {
       final kws = await _seoRepo!.getKeywords(business.id);
       final aud = await _seoRepo!.getOrGenerateAudit(businessId: business.id);
-      final webAudit = await _seoRepo!.getLatestWebsiteAudit(business.id);
+      Map<String, dynamic>? webAudit = await _seoRepo!.getLatestWebsiteAudit(business.id);
+
+      // If business has website and no prior audit exists, run initial live audit
+      final siteUrl = business.website?.trim();
+      if (webAudit == null && siteUrl != null && siteUrl.isNotEmpty) {
+        try {
+          webAudit = await _seoRepo!.runWebsiteAudit(business.id, url: siteUrl);
+        } catch (_) {}
+      }
 
       GscMetricsSummaryModel? gsc;
       if (_gscRepo != null) {
@@ -108,15 +116,24 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     try {
       final aud = await _seoRepo!.getOrGenerateAudit(businessId: business.id, forceFresh: true);
       final kws = await _seoRepo!.getKeywords(business.id);
+      Map<String, dynamic>? webAudit = _websiteAudit;
+      final siteUrl = business.website?.trim();
+      if (siteUrl != null && siteUrl.isNotEmpty) {
+        try {
+          webAudit = await _seoRepo!.runWebsiteAudit(business.id, url: siteUrl);
+        } catch (_) {}
+      }
+
       if (mounted) {
         setState(() {
           _audit = aud;
           _keywords = kws;
+          _websiteAudit = webAudit;
           _isAuditing = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✨ Local visibility audit refreshed!'),
+            content: Text('✨ Local SEO & Website Audit refreshed with real crawl data!'),
             backgroundColor: Color(0xFF10B981),
           ),
         );
@@ -632,11 +649,13 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     final business = context.read<AppAuthProvider>().currentBusiness;
     if (business == null || _seoRepo == null) return;
 
+    setState(() => _isAuditing = true);
     try {
       final res = await _seoRepo!.runWebsiteAudit(business.id, url: url);
       if (mounted) {
         setState(() {
           _websiteAudit = res;
+          _isAuditing = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -647,6 +666,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isAuditing = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Audit error: $e'),
@@ -1026,7 +1046,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                       const SizedBox(height: 22),
 
                       // 6. KEY SEO HEALTH (5 Horizontal Items)
-                      _buildKeySeoHealthSection(hasWebsite),
+                      _buildKeySeoHealthSection(hasWebsite, website),
 
                       const SizedBox(height: 22),
 
@@ -1660,7 +1680,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
   // ====================================================
   // 6. KEY SEO HEALTH (Real Audit Data)
   // ====================================================
-  Widget _buildKeySeoHealthSection(bool hasWebsite) {
+  Widget _buildKeySeoHealthSection(bool hasWebsite, String? website) {
     // 1. GBP profile score
     final gbpScore = _audit?.mapPackScore ?? _audit?.overallSeoScore ?? 85;
     final gbpStatus = gbpScore >= 80 ? 'Excellent' : (gbpScore >= 60 ? 'Good' : 'Needs Work');
@@ -1668,18 +1688,18 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
 
     // 2. On-Page SEO
     String onPageVal = '—';
-    String onPageStatus = hasWebsite ? 'Not Audited' : 'No Website';
-    Color onPageColor = const Color(0xFF94A3B8);
+    String onPageStatus = hasWebsite ? (_websiteAudit != null ? 'Good' : 'Tap to Audit') : 'No Website';
+    Color onPageColor = hasWebsite ? (_websiteAudit != null ? const Color(0xFF10B981) : const Color(0xFF2563EB)) : const Color(0xFF94A3B8);
 
     // 3. Mobile Usability
     String mobileVal = '—';
-    String mobileStatus = hasWebsite ? 'Not Audited' : 'No Website';
-    Color mobileColor = const Color(0xFF94A3B8);
+    String mobileStatus = hasWebsite ? (_websiteAudit != null ? 'Good' : 'Tap to Audit') : 'No Website';
+    Color mobileColor = hasWebsite ? (_websiteAudit != null ? const Color(0xFF10B981) : const Color(0xFF2563EB)) : const Color(0xFF94A3B8);
 
     // 4. Page Speed
     String speedVal = '—';
-    String speedStatus = hasWebsite ? 'Not Audited' : 'No Website';
-    Color speedColor = const Color(0xFF94A3B8);
+    String speedStatus = hasWebsite ? (_websiteAudit != null ? 'Good' : 'Tap to Audit') : 'No Website';
+    Color speedColor = hasWebsite ? (_websiteAudit != null ? const Color(0xFF10B981) : const Color(0xFF2563EB)) : const Color(0xFF94A3B8);
 
     // 5. Backlinks / Citations
     String backlinksVal = '—';
@@ -1788,7 +1808,15 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                 value: onPageVal,
                 status: onPageStatus,
                 statusColor: onPageColor,
-                onTap: hasWebsite ? _showWebsiteTechnicalDetails : _showEditWebsiteDialog,
+                onTap: hasWebsite
+                    ? (_websiteAudit != null
+                        ? _showWebsiteTechnicalDetails
+                        : () {
+                            if (website != null && website.isNotEmpty) {
+                              _runAuditOnUrl(website);
+                            }
+                          })
+                    : _showEditWebsiteDialog,
               ),
 
               // 3. Mobile Usability
@@ -1800,7 +1828,15 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                 value: mobileVal,
                 status: mobileStatus,
                 statusColor: mobileColor,
-                onTap: hasWebsite ? _showWebsiteTechnicalDetails : _showEditWebsiteDialog,
+                onTap: hasWebsite
+                    ? (_websiteAudit != null
+                        ? _showWebsiteTechnicalDetails
+                        : () {
+                            if (website != null && website.isNotEmpty) {
+                              _runAuditOnUrl(website);
+                            }
+                          })
+                    : _showEditWebsiteDialog,
               ),
 
               // 4. Page Speed
@@ -1812,7 +1848,15 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                 value: speedVal,
                 status: speedStatus,
                 statusColor: speedColor,
-                onTap: hasWebsite ? _showWebsiteTechnicalDetails : _showEditWebsiteDialog,
+                onTap: hasWebsite
+                    ? (_websiteAudit != null
+                        ? _showWebsiteTechnicalDetails
+                        : () {
+                            if (website != null && website.isNotEmpty) {
+                              _runAuditOnUrl(website);
+                            }
+                          })
+                    : _showEditWebsiteDialog,
               ),
 
               // 5. Backlinks
