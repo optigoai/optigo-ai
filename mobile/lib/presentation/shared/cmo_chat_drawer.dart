@@ -41,34 +41,6 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
   final List<CmoChatMessage> _messages = [];
   bool _isLoading = false;
 
-  final List<Map<String, dynamic>> _quickPrompts = [
-    {
-      'label': "Top Priority",
-      'icon': Icons.bolt_rounded,
-      'prompt': "What is my top marketing priority today?",
-    },
-    {
-      'label': "Draft Review Reply",
-      'icon': Icons.rate_review_rounded,
-      'prompt': "Draft a response for my latest customer review",
-    },
-    {
-      'label': "Create Promo Post",
-      'icon': Icons.campaign_rounded,
-      'prompt': "Create a high-converting promotional post for this week",
-    },
-    {
-      'label': "Boost Google Rank",
-      'icon': Icons.travel_explore_rounded,
-      'prompt': "How can I boost my Google Maps ranking to #1?",
-    },
-    {
-      'label': "Analyze Competitors",
-      'icon': Icons.shield_rounded,
-      'prompt': "Analyze my top competitors in this local area",
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -84,9 +56,36 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
         content:
             "Hello! I am your AI CMO for $bizName. I track your customer reviews, Google Maps ranking, and marketing health in real-time. How can I help you grow today?",
         suggestedActions: [
-          CmoSuggestedAction(label: "What's my top priority today?", route: 'actions', icon: 'insights'),
-          CmoSuggestedAction(label: "How to boost Google ranking?", route: 'seo', icon: 'search'),
-          CmoSuggestedAction(label: "Create a promotional post", route: 'create', icon: 'edit_note'),
+          CmoSuggestedAction(
+            label: "What's my top priority today?",
+            route: 'actions',
+            icon: 'bolt',
+            prompt: "What is my top marketing priority today?",
+          ),
+          CmoSuggestedAction(
+            label: "Draft response for latest review",
+            route: 'reviews',
+            icon: 'rate_review',
+            prompt: "Draft a response for my latest customer review",
+          ),
+          CmoSuggestedAction(
+            label: "Create a promotional post",
+            route: 'create',
+            icon: 'campaign',
+            prompt: "Create a high-converting promotional post for this week",
+          ),
+          CmoSuggestedAction(
+            label: "How to boost Google ranking?",
+            route: 'seo',
+            icon: 'travel_explore',
+            prompt: "How can I boost my Google Maps ranking to #1?",
+          ),
+          CmoSuggestedAction(
+            label: "Analyze local competitors",
+            route: 'seo',
+            icon: 'shield',
+            prompt: "Analyze my top competitors in this local area",
+          ),
         ],
         createdAt: DateTime.now(),
       ),
@@ -246,9 +245,6 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
             ),
           ),
 
-          // Quick Capability Prompts Carousel
-          _buildQuickPromptChips(),
-
           // Message Stream
           Expanded(
             child: ListView.builder(
@@ -323,39 +319,26 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
     );
   }
 
-  Widget _buildQuickPromptChips() {
-    return Container(
-      height: 42,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _quickPrompts.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final item = _quickPrompts[index];
-          return ActionChip(
-            avatar: Icon(
-              item['icon'] as IconData,
-              size: 14,
-              color: const Color(0xFF2563EB),
-            ),
-            label: Text(
-              item['label'] as String,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            backgroundColor: Colors.white,
-            side: const BorderSide(color: Color(0xFFE2E8F0)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            onPressed: () => _handleSendMessage(item['prompt'] as String),
-          );
-        },
-      ),
-    );
+  IconData _getActionIcon(String icon) {
+    switch (icon) {
+      case 'bolt':
+      case 'insights':
+        return Icons.bolt_rounded;
+      case 'rate_review':
+        return Icons.rate_review_rounded;
+      case 'campaign':
+      case 'edit_note':
+        return Icons.campaign_rounded;
+      case 'travel_explore':
+      case 'search':
+        return Icons.travel_explore_rounded;
+      case 'shield':
+        return Icons.shield_rounded;
+      case 'auto_awesome':
+        return Icons.auto_awesome_rounded;
+      default:
+        return Icons.touch_app_rounded;
+    }
   }
 
   Widget _buildMessageBubble(CmoChatMessage msg) {
@@ -387,7 +370,7 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16, right: 28),
+        margin: const EdgeInsets.only(bottom: 16, right: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -452,37 +435,53 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
 
             if (msg.suggestedActions.isNotEmpty) ...[
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: msg.suggestedActions.map((act) {
-                  return InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                      widget.onNavigate?.call(act.route);
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFBFDBFE)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.touch_app_rounded, size: 14, color: Color(0xFF2563EB)),
-                          const SizedBox(width: 5),
-                          Text(
-                            act.label,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: InkWell(
+                      onTap: () {
+                        if (act.prompt != null && act.prompt!.isNotEmpty) {
+                          _handleSendMessage(act.prompt!);
+                        } else {
+                          Navigator.pop(context);
+                          widget.onNavigate?.call(act.route);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFBFDBFE)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _getActionIcon(act.icon),
+                              size: 16,
+                              color: const Color(0xFF2563EB),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                act.label,
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF2563EB),
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 14,
                               color: Color(0xFF2563EB),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -550,20 +549,14 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
             ),
             const SizedBox(height: 8),
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFFF1F5F9)),
               ),
-              child: Text(
-                draft,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: Color(0xFF334155),
-                  height: 1.4,
-                ),
-              ),
+              child: _buildInlineRichText(draft),
             ),
             const SizedBox(height: 10),
             Row(
@@ -646,22 +639,14 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
             ),
             const SizedBox(height: 8),
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFFF1F5F9)),
               ),
-              child: Text(
-                caption,
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF334155),
-                  height: 1.4,
-                ),
-              ),
+              child: _buildInlineRichText(caption),
             ),
             if (hashtags.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -744,73 +729,158 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
   }
 
   Widget _buildFormattedContent(String content) {
-    final paragraphs = content.split('\n\n');
+    final lines = content.split('\n');
+    final List<Widget> widgets = [];
+    int i = 0;
+
+    while (i < lines.length) {
+      final line = lines[i];
+      final trimmed = line.trim();
+
+      if (trimmed.isEmpty) {
+        widgets.add(const SizedBox(height: 6));
+        i++;
+        continue;
+      }
+
+      // 1. Dividers (***, ---, ___)
+      if (trimmed == '***' || trimmed == '---' || trimmed == '___') {
+        widgets.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 6),
+            child: Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+          ),
+        );
+        i++;
+        continue;
+      }
+
+      // 2. Headings (#, ##, ###, ####)
+      if (trimmed.startsWith('# ') ||
+          trimmed.startsWith('## ') ||
+          trimmed.startsWith('### ') ||
+          trimmed.startsWith('#### ')) {
+        int level = 1;
+        if (trimmed.startsWith('#### ')) {
+          level = 4;
+        } else if (trimmed.startsWith('### ')) {
+          level = 3;
+        } else if (trimmed.startsWith('## ')) {
+          level = 2;
+        }
+
+        final headerText = trimmed.replaceFirst(RegExp(r'^#+\s*'), '');
+        final double fontSize = level == 1 ? 16.0 : (level == 2 ? 15.0 : (level == 3 ? 14.0 : 13.5));
+
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 4),
+            child: Text(
+              headerText,
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF0F172A),
+                letterSpacing: -0.2,
+              ),
+            ),
+          ),
+        );
+        i++;
+        continue;
+      }
+
+      // 3. Blockquotes (> ...)
+      if (trimmed.startsWith('> ') || trimmed.startsWith('>')) {
+        final quoteText = trimmed.replaceFirst(RegExp(r'^>\s*'), '');
+        widgets.add(
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(8),
+              border: const Border(
+                left: BorderSide(color: Color(0xFF2563EB), width: 3.5),
+              ),
+            ),
+            child: _buildInlineRichText(quoteText),
+          ),
+        );
+        i++;
+        continue;
+      }
+
+      // 4. Bullet lists (- ..., * ..., • ...)
+      if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ')) {
+        final itemText = trimmed.substring(2).trim();
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5, left: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 6),
+                  child: Icon(Icons.circle, size: 5, color: Color(0xFF2563EB)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: _buildInlineRichText(itemText)),
+              ],
+            ),
+          ),
+        );
+        i++;
+        continue;
+      }
+
+      // 5. Numbered lists (1. ..., 2. ...)
+      final numMatch = RegExp(r'^(\d+)\.\s+(.*)$').firstMatch(trimmed);
+      if (numMatch != null) {
+        final numStr = numMatch.group(1)!;
+        final itemText = numMatch.group(2)!;
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5, left: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$numStr. ',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+                Expanded(child: _buildInlineRichText(itemText)),
+              ],
+            ),
+          ),
+        );
+        i++;
+        continue;
+      }
+
+      // 6. Normal text paragraph line
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: _buildInlineRichText(trimmed),
+        ),
+      );
+      i++;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < paragraphs.length; i++) ...[
-          _buildParagraph(paragraphs[i]),
-          if (i < paragraphs.length - 1) const SizedBox(height: 10),
-        ],
-      ],
+      children: widgets,
     );
-  }
-
-  Widget _buildParagraph(String text) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) return const SizedBox.shrink();
-
-    // Check for bullet list lines
-    final lines = trimmed.split('\n');
-    if (lines.length > 1 && lines.any((l) => l.trim().startsWith('- ') || l.trim().startsWith('* ') || l.trim().startsWith('• '))) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: lines.map((line) {
-          final l = line.trim();
-          if (l.startsWith('- ') || l.startsWith('* ') || l.startsWith('• ')) {
-            final itemText = l.substring(2);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6, left: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 6),
-                    child: Icon(Icons.circle, size: 5, color: Color(0xFF2563EB)),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildInlineRichText(itemText)),
-                ],
-              ),
-            );
-          }
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: _buildInlineRichText(l),
-          );
-        }).toList(),
-      );
-    }
-
-    // Header check: ###
-    if (trimmed.startsWith('### ')) {
-      return Text(
-        trimmed.substring(4),
-        style: const TextStyle(
-          fontSize: 14.5,
-          fontWeight: FontWeight.w900,
-          color: Color(0xFF0F172A),
-        ),
-      );
-    }
-
-    return _buildInlineRichText(trimmed);
   }
 
   Widget _buildInlineRichText(String text) {
     final List<InlineSpan> spans = [];
-    final regex = RegExp(r'(\*\*([^*]+)\*\*|\*([^*]+)\*|`([^`]+)`)');
+    final regex = RegExp(r'(\*\*([^*]+)\*\*|`([^`]+)`|\*([^*]+)\*|_([^_]+)_)');
     int lastIndex = 0;
 
     for (final match in regex.allMatches(text)) {
@@ -820,7 +890,8 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
           style: const TextStyle(
             fontSize: 13.5,
             color: Color(0xFF1E293B),
-            height: 1.5,
+            height: 1.45,
+            fontWeight: FontWeight.w500,
           ),
         ));
       }
@@ -834,27 +905,16 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
             fontSize: 13.5,
             fontWeight: FontWeight.w800,
             color: Color(0xFF0F172A),
-            height: 1.5,
-          ),
-        ));
-      } else if (fullMatch.startsWith('*') && fullMatch.endsWith('*')) {
-        final italicContent = match.group(3) ?? '';
-        spans.add(TextSpan(
-          text: italicContent,
-          style: const TextStyle(
-            fontSize: 13.5,
-            fontStyle: FontStyle.italic,
-            color: Color(0xFF2563EB),
-            fontWeight: FontWeight.w600,
-            height: 1.5,
+            height: 1.45,
           ),
         ));
       } else if (fullMatch.startsWith('`') && fullMatch.endsWith('`')) {
-        final codeContent = match.group(4) ?? '';
+        final codeContent = match.group(3) ?? '';
         spans.add(WidgetSpan(
           alignment: PlaceholderAlignment.middle,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+            margin: const EdgeInsets.symmetric(horizontal: 2),
             decoration: BoxDecoration(
               color: const Color(0xFFEFF6FF),
               borderRadius: BorderRadius.circular(5),
@@ -870,6 +930,19 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
             ),
           ),
         ));
+      } else if ((fullMatch.startsWith('*') && fullMatch.endsWith('*')) ||
+          (fullMatch.startsWith('_') && fullMatch.endsWith('_'))) {
+        final italicContent = match.group(4) ?? match.group(5) ?? '';
+        spans.add(TextSpan(
+          text: italicContent,
+          style: const TextStyle(
+            fontSize: 13.5,
+            fontStyle: FontStyle.italic,
+            color: Color(0xFF2563EB),
+            fontWeight: FontWeight.w600,
+            height: 1.45,
+          ),
+        ));
       }
 
       lastIndex = match.end;
@@ -881,7 +954,8 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
         style: const TextStyle(
           fontSize: 13.5,
           color: Color(0xFF1E293B),
-          height: 1.5,
+          height: 1.45,
+          fontWeight: FontWeight.w500,
         ),
       ));
     }

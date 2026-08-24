@@ -6,11 +6,13 @@ class CmoSuggestedAction {
   final String label;
   final String route;
   final String icon;
+  final String? prompt;
 
   CmoSuggestedAction({
     required this.label,
     required this.route,
     required this.icon,
+    this.prompt,
   });
 
   factory CmoSuggestedAction.fromJson(Map<String, dynamic> json) {
@@ -18,6 +20,7 @@ class CmoSuggestedAction {
       label: json['label'] as String? ?? 'Take Action',
       route: json['route'] as String? ?? 'home',
       icon: json['icon'] as String? ?? 'auto_awesome',
+      prompt: json['prompt'] as String?,
     );
   }
 }
