@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 
@@ -29,6 +30,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
   SeoAuditModel? _audit;
   GscMetricsSummaryModel? _gscSummary;
   Map<String, dynamic>? _websiteAudit;
+  List<Map<String, dynamic>> _visibilityHistory = [];
 
   bool _isLoading = true;
   bool _isAuditing = false;
@@ -39,7 +41,6 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     'Last 7 Days',
     'Last 14 Days',
     'Last 30 Days',
-    'This Month',
   ];
 
   @override
@@ -79,6 +80,11 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
       final aud = await _seoRepo!.getOrGenerateAudit(businessId: business.id);
       Map<String, dynamic>? webAudit = await _seoRepo!.getLatestWebsiteAudit(business.id);
 
+      int days = 7;
+      if (_selectedDateRange.contains('14')) days = 14;
+      if (_selectedDateRange.contains('30')) days = 30;
+      final history = await _seoRepo!.getVisibilityHistory(business.id, days: days);
+
       // If business has website and no prior audit exists, run initial live audit
       final siteUrl = business.website?.trim();
       if (webAudit == null && siteUrl != null && siteUrl.isNotEmpty) {
@@ -99,6 +105,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
           _keywords = kws;
           _audit = aud;
           _websiteAudit = webAudit;
+          _visibilityHistory = history;
           _gscSummary = gsc;
           _isLoading = false;
         });
@@ -116,6 +123,11 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     try {
       final aud = await _seoRepo!.getOrGenerateAudit(businessId: business.id, forceFresh: true);
       final kws = await _seoRepo!.getKeywords(business.id);
+      int days = 7;
+      if (_selectedDateRange.contains('14')) days = 14;
+      if (_selectedDateRange.contains('30')) days = 30;
+      final history = await _seoRepo!.getVisibilityHistory(business.id, days: days);
+
       Map<String, dynamic>? webAudit = _websiteAudit;
       final siteUrl = business.website?.trim();
       if (siteUrl != null && siteUrl.isNotEmpty) {
@@ -129,6 +141,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
           _audit = aud;
           _keywords = kws;
           _websiteAudit = webAudit;
+          _visibilityHistory = history;
           _isAuditing = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -438,7 +451,53 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                       child: Text('No new keyword recommendations found.', style: TextStyle(color: Color(0xFF64748B))),
                     ),
                   )
-                else
+                else ...[
+                  // Batch Track All Button
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final untracked = discovered
+                              .map((e) => (e['keyword'] ?? '').toString().trim())
+                              .where((kw) => kw.isNotEmpty && !_keywords.any((k) => k.keyword.toLowerCase() == kw.toLowerCase()))
+                              .toList();
+                          if (untracked.isNotEmpty) {
+                            final createdList = await _seoRepo!.addKeywordsBatch(business.id, untracked);
+                            setState(() {
+                              _keywords.insertAll(0, createdList);
+                            });
+                            setModalState(() {});
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('✨ Added ${createdList.length} high-impact keywords to tracking!'),
+                                  backgroundColor: const Color(0xFF10B981),
+                                ),
+                              );
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('All discovered keywords are already tracked!')),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.playlist_add_check_rounded, size: 18),
+                        label: Text(
+                          'Track All High-Impact (${discovered.length})',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: ListView.separated(
                       itemCount: discovered.length,
@@ -512,6 +571,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                       },
                     ),
                   ),
+                ],
               ],
             ),
           );
@@ -643,6 +703,182 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
         );
       }
     }
+  }
+
+  Future<void> _showJsonLdSchemaModal() async {
+    final business = context.read<AppAuthProvider>().currentBusiness;
+    if (business == null || _seoRepo == null) return;
+
+    try {
+      final schemaData = await _seoRepo!.generateJsonLdSchema(business.id);
+      final snippet = (schemaData['code_snippet'] ?? '').toString();
+
+      if (mounted) {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.white,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          builder: (ctx) => Container(
+            height: MediaQuery.of(ctx).size.height * 0.78,
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.code_rounded, color: Color(0xFF2563EB), size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('JSON-LD Schema Markup', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                          Text('Google LocalBusiness Schema for Rich Results', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Paste this code snippet into the <head> of your website to help Google index your business NAP, location, and operating hours:',
+                  style: TextStyle(fontSize: 12.5, color: Color(0xFF475569), height: 1.4),
+                ),
+                const SizedBox(height: 14),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F172A),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFF1E293B)),
+                    ),
+                    child: SingleChildScrollView(
+                      child: SelectableText(
+                        snippet,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: Color(0xFF38BDF8),
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: snippet));
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('✨ LocalBusiness Schema copied to clipboard!'),
+                          backgroundColor: Color(0xFF10B981),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    label: const Text('Copy Schema Code', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to generate Schema markup: $e')),
+        );
+      }
+    }
+  }
+
+  void _showGscConnectSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F3FF),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.query_stats_rounded, color: Color(0xFF8B5CF6), size: 24),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Google Search Console', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                      Text('Sync live search impressions & query clicks', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Connecting Google Search Console enables OptigoAI to track real daily search impressions, customer click-through rates, and query trends directly from Google.',
+              style: TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.45),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _handleSyncGsc();
+                },
+                icon: const Icon(Icons.sync_rounded, size: 18),
+                label: const Text('Connect & Sync GSC', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B5CF6),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _runAuditOnUrl(String url) async {
@@ -916,9 +1152,19 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                 trailing: opt == _selectedDateRange
                     ? const Icon(Icons.check_circle_rounded, color: Color(0xFF2563EB), size: 20)
                     : null,
-                onTap: () {
+                onTap: () async {
                   setState(() => _selectedDateRange = opt);
                   Navigator.of(ctx).pop();
+                  final business = context.read<AppAuthProvider>().currentBusiness;
+                  if (business != null && _seoRepo != null) {
+                    int days = 7;
+                    if (opt.contains('14')) days = 14;
+                    if (opt.contains('30')) days = 30;
+                    final hist = await _seoRepo!.getVisibilityHistory(business.id, days: days);
+                    if (mounted) {
+                      setState(() => _visibilityHistory = hist);
+                    }
+                  }
                 },
               ),
               const Divider(height: 1, color: Color(0xFFF1F5F9)),
@@ -1047,6 +1293,11 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
 
                       // 6. KEY SEO HEALTH (5 Horizontal Items)
                       _buildKeySeoHealthSection(hasWebsite, website),
+
+                      const SizedBox(height: 22),
+
+                      // 6.5 LOCAL COMPETITOR BENCHMARK
+                      _buildCompetitorBenchmarkCard(_audit),
 
                       const SizedBox(height: 22),
 
@@ -1447,7 +1698,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             iconBg: const Color(0xFFF5F3FF),
             iconColor: const Color(0xFF8B5CF6),
             borderColor: const Color(0xFFE9D5FF),
-            onTap: (_gscSummary != null && _gscSummary!.isConnected) ? null : _handleSyncGsc,
+            onTap: (_gscSummary != null && _gscSummary!.isConnected) ? null : _showGscConnectSheet,
           ),
           const SizedBox(width: 12),
 
@@ -1463,7 +1714,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             borderColor: const Color(0xFFFED7AA),
             isActive: clicksActive,
             onTap: hasWebsite
-                ? (_gscSummary?.isConnected == true ? _showWebsiteTechnicalDetails : _handleSyncGsc)
+                ? (_gscSummary?.isConnected == true ? _showWebsiteTechnicalDetails : _showGscConnectSheet)
                 : _showEditWebsiteDialog,
           ),
         ],
@@ -1589,28 +1840,33 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
   // 5. VISIBILITY TREND LINE CHART CARD (Real points)
   // ====================================================
   Widget _buildVisibilityTrendCard(int currentScore, double rankDelta) {
-    // Generate real 7-day date labels
-    final now = DateTime.now();
-    final dateLabels = List.generate(7, (i) {
-      final day = now.subtract(Duration(days: 6 - i));
-      return DateFormat('MMM d').format(day);
-    });
+    final List<String> dateLabels;
+    final List<double> trendPoints;
 
-    // Real dynamic trend line (smooth variation without fake plunge)
-    final score = currentScore > 0 ? currentScore.toDouble() : 50.0;
-    final trendPoints = [
-      (score - 2.5).clamp(10.0, 100.0),
-      (score - 1.5).clamp(10.0, 100.0),
-      (score - 0.5).clamp(10.0, 100.0),
-      (score - 1.0).clamp(10.0, 100.0),
-      (score + 0.5).clamp(10.0, 100.0),
-      (score - 0.2).clamp(10.0, 100.0),
-      score.clamp(10.0, 100.0),
-    ];
+    if (_visibilityHistory.isNotEmpty) {
+      dateLabels = _visibilityHistory.map((e) => (e['label'] ?? '').toString()).toList();
+      trendPoints = _visibilityHistory.map((e) => ((e['score'] ?? 50) as num).toDouble().clamp(10.0, 100.0)).toList();
+    } else {
+      final now = DateTime.now();
+      dateLabels = List.generate(7, (i) {
+        final day = now.subtract(Duration(days: 6 - i));
+        return DateFormat('MMM d').format(day);
+      });
+      final score = currentScore > 0 ? currentScore.toDouble() : 50.0;
+      trendPoints = [
+        (score - 2.5).clamp(10.0, 100.0),
+        (score - 1.5).clamp(10.0, 100.0),
+        (score - 0.5).clamp(10.0, 100.0),
+        (score - 1.0).clamp(10.0, 100.0),
+        (score + 0.5).clamp(10.0, 100.0),
+        (score - 0.2).clamp(10.0, 100.0),
+        score.clamp(10.0, 100.0),
+      ];
+    }
 
     final statusText = rankDelta > 0
-        ? '+${(rankDelta * 5).round()}% vs last 7 days'
-        : (rankDelta < 0 ? '-${(rankDelta.abs() * 5).round()}% vs last 7 days' : 'Stable vs last 7 days');
+        ? '+${(rankDelta * 5).round()}% vs previous'
+        : (rankDelta < 0 ? '-${(rankDelta.abs() * 5).round()}% vs previous' : 'Stable vs previous');
 
     return Container(
       width: double.infinity,
@@ -1672,6 +1928,107 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompetitorBenchmarkCard(SeoAuditModel? audit) {
+    final insights = audit?.competitorInsights ?? [];
+    if (insights.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.storefront_outlined, color: Color(0xFF2563EB), size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Local Competitor Benchmark',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Top ranking competitors in your local market',
+                      style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          for (int i = 0; i < insights.length; i++) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              margin: EdgeInsets.only(bottom: i < insights.length - 1 ? 8 : 0),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: i == 0 ? const Color(0xFFFEF3C7) : const Color(0xFFE2E8F0),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '#${i + 1}',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                          color: i == 0 ? const Color(0xFFB45309) : const Color(0xFF475569),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      insights[i],
+                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -2037,6 +2394,18 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
         'action': _showGbpOptimizerModal,
       });
     }
+
+    // 4. Schema Markup opportunity
+    opportunities.add({
+      'title': 'Generate LocalBusiness Schema Markup',
+      'desc': 'Boost Google rich snippets and map pack relevance with structured JSON-LD.',
+      'impact': 'High Impact',
+      'impactColor': const Color(0xFF10B981),
+      'icon': Icons.code_rounded,
+      'iconBg': const Color(0xFFECFDF5),
+      'iconColor': const Color(0xFF10B981),
+      'action': _showJsonLdSchemaModal,
+    });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2467,22 +2836,40 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
           ),
 
           // Rank Delta indicator
-          if (delta != 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: delta > 0 ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                delta > 0 ? '↑$delta' : '↓${delta.abs()}',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: delta > 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                ),
-              ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: delta > 0
+                  ? const Color(0xFFECFDF5)
+                  : (delta < 0 ? const Color(0xFFFEF2F2) : const Color(0xFFF1F5F9)),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  delta > 0
+                      ? Icons.arrow_upward_rounded
+                      : (delta < 0 ? Icons.arrow_downward_rounded : Icons.remove_rounded),
+                  size: 11,
+                  color: delta > 0
+                      ? const Color(0xFF059669)
+                      : (delta < 0 ? const Color(0xFFDC2626) : const Color(0xFF64748B)),
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  delta != 0 ? '${delta.abs()}' : 'Stable',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: delta > 0
+                        ? const Color(0xFF059669)
+                        : (delta < 0 ? const Color(0xFFDC2626) : const Color(0xFF64748B)),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
           IconButton(
             icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF94A3B8)),

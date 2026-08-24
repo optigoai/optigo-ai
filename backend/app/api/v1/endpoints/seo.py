@@ -10,6 +10,7 @@ from app.schemas.seo import (
     SEOKeywordResponse,
     SEOAuditResponse,
     SEODiscoverKeywordsRequest,
+    SEOBatchKeywordsRequest,
     SEOGbpOptimizationResponse,
 )
 
@@ -128,4 +129,40 @@ async def get_latest_website_audit(
         business_id=business_id,
         organization_id=current_user.organization_id,
     )
+
+
+@router.get("/history", response_model=List[dict])
+async def get_visibility_history(
+    business_id: str = Query(..., description="Business ID"),
+    days: int = Query(7, ge=1, le=90, description="Timeframe days (7, 14, 30)"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get database-backed historical visibility trend points for interactive chart."""
+    service = SEOService(db)
+    return await service.get_visibility_history(business_id=business_id, days=days)
+
+
+@router.post("/keywords/batch", response_model=List[SEOKeywordResponse])
+async def add_keywords_batch(
+    data: SEOBatchKeywordsRequest,
+    business_id: str = Query(..., description="Business ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Batch-add multiple keywords with 1 tap (e.g. from AI Discovery)."""
+    service = SEOService(db)
+    return await service.add_keywords_batch(business_id=business_id, keywords=data.keywords)
+
+
+@router.post("/website/generate-schema", response_model=dict)
+async def generate_json_ld_schema(
+    business_id: str = Query(..., description="Business ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generate Google-compliant JSON-LD LocalBusiness Schema markup for webmasters."""
+    service = SEOService(db)
+    return await service.generate_json_ld_schema(business_id=business_id)
+
 

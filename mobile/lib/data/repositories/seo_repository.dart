@@ -95,4 +95,34 @@ class SeoRepository {
       return null;
     }
   }
+
+  Future<List<Map<String, dynamic>>> getVisibilityHistory(String businessId, {int days = 7}) async {
+    try {
+      final response = await _apiClient.get('${ApiConstants.seo}/history?business_id=$businessId&days=$days');
+      if (response is List) {
+        return List<Map<String, dynamic>>.from(response);
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<SeoKeywordModel>> addKeywordsBatch(String businessId, List<String> keywords) async {
+    final response = await _apiClient.post(
+      '${ApiConstants.seo}/keywords/batch?business_id=$businessId',
+      body: {'keywords': keywords},
+    );
+    if (response is List) {
+      return response.map((item) => SeoKeywordModel.fromJson(item)).toList();
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>> generateJsonLdSchema(String businessId) async {
+    final response = await _apiClient.post(
+      '${ApiConstants.seo}/website/generate-schema?business_id=$businessId',
+    );
+    return response as Map<String, dynamic>;
+  }
 }

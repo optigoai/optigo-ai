@@ -50,6 +50,10 @@ class SEODiscoverKeywordsRequest(BaseModel):
     target_services: Optional[List[str]] = None
 
 
+class SEOBatchKeywordsRequest(BaseModel):
+    keywords: List[str]
+
+
 class SEOGbpOptimizationResponse(BaseModel):
     optimized_title: str
     optimized_description: str

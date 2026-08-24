@@ -1,8 +1,9 @@
 from typing import List, Optional
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 
-from app.models.seo import SEOKeyword, SEOAudit
+from app.models.seo import SEOKeyword, SEOAudit, SEOAuditSnapshot
 
 
 class SEORepository:
@@ -59,3 +60,20 @@ class SEORepository:
         await self.db.commit()
         await self.db.refresh(audit_obj)
         return audit_obj
+
+    async def save_snapshot(self, snapshot: SEOAuditSnapshot) -> SEOAuditSnapshot:
+        self.db.add(snapshot)
+        await self.db.commit()
+        await self.db.refresh(snapshot)
+        return snapshot
+
+    async def get_snapshots(self, business_id: str, days: int = 7) -> List[SEOAuditSnapshot]:
+        since = datetime.utcnow() - timedelta(days=days)
+        stmt = (
+            select(SEOAuditSnapshot)
+            .where(SEOAuditSnapshot.business_id == business_id, SEOAuditSnapshot.recorded_at >= since)
+            .order_by(SEOAuditSnapshot.recorded_at.asc())
+        )
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+

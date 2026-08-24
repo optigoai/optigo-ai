@@ -40,3 +40,16 @@ class SEOAudit(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     business = relationship("Business", back_populates="seo_audits")
+
+
+class SEOAuditSnapshot(Base):
+    __tablename__ = "seo_audit_snapshots"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    business_id = Column(String, ForeignKey("businesses.id", ondelete="CASCADE"), nullable=False, index=True)
+    visibility_score = Column(Integer, nullable=False, default=70)
+    map_pack_score = Column(Integer, nullable=False, default=65)
+    organic_rank_avg = Column(Integer, nullable=True, default=10)
+    top3_ratio = Column(Integer, nullable=True, default=30)
+    recorded_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
