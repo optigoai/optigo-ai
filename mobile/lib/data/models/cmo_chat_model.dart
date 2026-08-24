@@ -27,6 +27,8 @@ class CmoChatMessage {
   final String role; // 'user' or 'assistant'
   final String content;
   final List<CmoSuggestedAction> suggestedActions;
+  final String? actionType; // 'review_reply', 'social_post', 'keyword_audit', etc.
+  final Map<String, dynamic>? actionPayload;
   final DateTime createdAt;
 
   CmoChatMessage({
@@ -34,6 +36,8 @@ class CmoChatMessage {
     required this.role,
     required this.content,
     required this.suggestedActions,
+    this.actionType,
+    this.actionPayload,
     required this.createdAt,
   });
 
@@ -46,6 +50,8 @@ class CmoChatMessage {
       suggestedActions: rawActions
           .map((a) => CmoSuggestedAction.fromJson(a as Map<String, dynamic>))
           .toList(),
+      actionType: json['action_type'] as String?,
+      actionPayload: json['action_payload'] as Map<String, dynamic>?,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),

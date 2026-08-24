@@ -18,4 +18,6 @@ class ChatMessageResponse(BaseModel):
     role: str  # user, assistant
     content: str
     suggested_actions: Optional[List[dict[str, Any]]] = None
+    action_type: Optional[str] = None
+    action_payload: Optional[dict[str, Any]] = None
     created_at: datetime

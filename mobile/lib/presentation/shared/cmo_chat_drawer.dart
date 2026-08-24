@@ -3,6 +3,7 @@
 // ==================================================
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/cmo_chat_model.dart';
 import '../../data/repositories/cmo_chat_repository.dart';
@@ -39,6 +40,34 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
   final ScrollController _scrollController = ScrollController();
   final List<CmoChatMessage> _messages = [];
   bool _isLoading = false;
+
+  final List<Map<String, dynamic>> _quickPrompts = [
+    {
+      'label': "Top Priority",
+      'icon': Icons.bolt_rounded,
+      'prompt': "What is my top marketing priority today?",
+    },
+    {
+      'label': "Draft Review Reply",
+      'icon': Icons.rate_review_rounded,
+      'prompt': "Draft a response for my latest customer review",
+    },
+    {
+      'label': "Create Promo Post",
+      'icon': Icons.campaign_rounded,
+      'prompt': "Create a high-converting promotional post for this week",
+    },
+    {
+      'label': "Boost Google Rank",
+      'icon': Icons.travel_explore_rounded,
+      'prompt': "How can I boost my Google Maps ranking to #1?",
+    },
+    {
+      'label': "Analyze Competitors",
+      'icon': Icons.shield_rounded,
+      'prompt': "Analyze my top competitors in this local area",
+    },
+  ];
 
   @override
   void initState() {
@@ -217,6 +246,9 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
             ),
           ),
 
+          // Quick Capability Prompts Carousel
+          _buildQuickPromptChips(),
+
           // Message Stream
           Expanded(
             child: ListView.builder(
@@ -287,6 +319,41 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickPromptChips() {
+    return Container(
+      height: 42,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _quickPrompts.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final item = _quickPrompts[index];
+          return ActionChip(
+            avatar: Icon(
+              item['icon'] as IconData,
+              size: 14,
+              color: const Color(0xFF2563EB),
+            ),
+            label: Text(
+              item['label'] as String,
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            backgroundColor: Colors.white,
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            onPressed: () => _handleSendMessage(item['prompt'] as String),
+          );
+        },
       ),
     );
   }
@@ -378,6 +445,11 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
               ),
             ),
 
+            if (msg.actionType != null && msg.actionPayload != null) ...[
+              const SizedBox(height: 10),
+              _buildFunctionalActionCard(msg),
+            ],
+
             if (msg.suggestedActions.isNotEmpty) ...[
               const SizedBox(height: 10),
               Wrap(
@@ -421,6 +493,254 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
         ),
       ),
     );
+  }
+
+  Widget _buildFunctionalActionCard(CmoChatMessage msg) {
+    final payload = msg.actionPayload ?? {};
+    final type = msg.actionType;
+
+    if (type == 'review_reply') {
+      final draft = payload['draft_reply'] as String? ?? '';
+      final reviewer = payload['reviewer_name'] as String? ?? 'Customer';
+      final rating = payload['rating'] as int? ?? 5;
+
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.rate_review_rounded, size: 16, color: Color(0xFFF59E0B)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Draft for $reviewer ($rating★)',
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'Ready to Post',
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFB45309),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Text(
+                draft,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF334155),
+                  height: 1.4,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: draft));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Reply copied to clipboard!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 14, color: Color(0xFF2563EB)),
+                    label: const Text(
+                      'Copy Reply',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      side: const BorderSide(color: Color(0xFFBFDBFE)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      widget.onNavigate?.call('reviews');
+                    },
+                    icon: const Icon(Icons.send_rounded, size: 14, color: Colors.white),
+                    label: const Text(
+                      'Open Reviews',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else if (type == 'social_post') {
+      final caption = payload['caption'] as String? ?? '';
+      final hashtags = (payload['hashtags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.campaign_rounded, size: 16, color: Color(0xFF8B5CF6)),
+                SizedBox(width: 6),
+                Text(
+                  'Generated Social Post',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Text(
+                caption,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF334155),
+                  height: 1.4,
+                ),
+              ),
+            ),
+            if (hashtags.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: hashtags.map((tag) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F3FF),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      tag,
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF7C3AED),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: caption));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Caption copied to clipboard!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 14, color: Color(0xFF8B5CF6)),
+                    label: const Text(
+                      'Copy Caption',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF8B5CF6)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      side: const BorderSide(color: Color(0xFFDDD6FE)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      widget.onNavigate?.call('create');
+                    },
+                    icon: const Icon(Icons.edit_note_rounded, size: 15, color: Colors.white),
+                    label: const Text(
+                      'Creative Studio',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
   Widget _buildFormattedContent(String content) {
