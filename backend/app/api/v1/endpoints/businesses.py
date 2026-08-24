@@ -6,6 +6,7 @@ from app.api.v1.deps import get_db, get_current_user, get_org_id
 from app.models.user import User
 from app.schemas import (
     BusinessCreateRequest,
+    BusinessUpdateRequest,
     BusinessOnboardingRequest,
     BusinessResponse,
     GBPSyncResponse,
@@ -60,6 +61,29 @@ async def get_business(
     org_id = get_org_id(current_user)
     service = BusinessService(db)
     business = await service.get_business(business_id, org_id)
+    return BusinessResponse.model_validate(business)
+
+
+@router.patch("/{business_id}", response_model=BusinessResponse)
+async def update_business(
+    business_id: str,
+    req: BusinessUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update business details such as website, phone, location, name, or description."""
+    org_id = get_org_id(current_user)
+    service = BusinessService(db)
+    business = await service.update_business(
+        business_id=business_id,
+        organization_id=org_id,
+        name=req.name,
+        category=req.category,
+        location=req.location,
+        website=req.website,
+        phone=req.phone,
+        description=req.description,
+    )
     return BusinessResponse.model_validate(business)
 
 

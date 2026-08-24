@@ -37,6 +37,29 @@ class BusinessRepository {
     return BusinessModel.fromJson(response);
   }
 
+  Future<BusinessModel> updateBusiness({
+    required String businessId,
+    String? name,
+    String? category,
+    String? location,
+    String? website,
+    String? phone,
+    String? description,
+  }) async {
+    final response = await _apiClient.patch(
+      '${ApiConstants.businesses}/$businessId',
+      body: {
+        if (name != null) 'name': name.trim(),
+        if (category != null) 'category': category.trim(),
+        if (location != null) 'location': location.trim(),
+        if (website != null) 'website': website.trim(),
+        if (phone != null) 'phone': phone.trim(),
+        if (description != null) 'description': description.trim(),
+      },
+    );
+    return BusinessModel.fromJson(response);
+  }
+
   Future<BusinessModel> submitOnboarding({
     required String businessId,
     required String targetCustomers,

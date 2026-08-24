@@ -173,4 +173,25 @@ class AppAuthProvider extends ChangeNotifier {
       notifyListeners();
     } catch (_) {}
   }
+
+  Future<bool> updateWebsite(String newWebsite) async {
+    if (_currentBusiness == null) return false;
+    try {
+      final updated = await _bizRepo.updateBusiness(
+        businessId: _currentBusiness!.id,
+        website: newWebsite.trim(),
+      );
+      _currentBusiness = updated;
+      final idx = _businesses.indexWhere((b) => b.id == updated.id);
+      if (idx != -1) {
+        _businesses[idx] = updated;
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

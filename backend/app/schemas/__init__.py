@@ -103,6 +103,15 @@ class BusinessOnboardingRequest(BaseModel):
     marketing_channels: Optional[str] = None
 
 
+class BusinessUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    location: Optional[str] = None
+    website: Optional[str] = None
+    phone: Optional[str] = None
+    description: Optional[str] = None
+
+
 class BusinessResponse(BaseModel):
     id: str
     name: str

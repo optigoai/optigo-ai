@@ -83,3 +83,28 @@ class BusinessRepository:
         business.onboarding_completed = True
         await self.db.flush()
         return business
+
+    async def update(
+        self,
+        business: Business,
+        name: Optional[str] = None,
+        category: Optional[str] = None,
+        location: Optional[str] = None,
+        website: Optional[str] = None,
+        phone: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Business:
+        if name is not None:
+            business.name = name
+        if category is not None:
+            business.category = category
+        if location is not None:
+            business.location = location
+        if website is not None:
+            business.website = website
+        if phone is not None:
+            business.phone = phone
+        if description is not None:
+            business.description = description
+        await self.db.flush()
+        return business

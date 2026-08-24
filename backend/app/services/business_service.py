@@ -64,3 +64,25 @@ class BusinessService:
             ai_business_profile=ai_business_profile,
             health_score=health_score,
         )
+
+    async def update_business(
+        self,
+        business_id: str,
+        organization_id: str,
+        name: Optional[str] = None,
+        category: Optional[str] = None,
+        location: Optional[str] = None,
+        website: Optional[str] = None,
+        phone: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Business:
+        business = await self.get_business(business_id, organization_id)
+        return await self.repo.update(
+            business=business,
+            name=name,
+            category=category,
+            location=location,
+            website=website,
+            phone=phone,
+            description=description,
+        )
