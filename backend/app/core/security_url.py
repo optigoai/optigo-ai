@@ -85,20 +85,26 @@ def validate_and_sanitize_url(url: str) -> str:
 
 def _verify_ip_is_public(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> None:
     """Verify that an IP address is publicly routable on the internet."""
+    # Explicit AWS / GCP metadata IP
+    if str(ip) == "169.254.169.254":
+        raise SecurityURLException("Access to cloud metadata endpoints is forbidden.")
+
+    # Allow IPv6 NAT64 prefix (RFC 6052 64:ff9b::/96) commonly used by 5G and modern ISP networks
+    if isinstance(ip, ipaddress.IPv6Address):
+        nat64_net = ipaddress.ip_network("64:ff9b::/96")
+        if ip in nat64_net:
+            return
+
     if (
         ip.is_private
         or ip.is_loopback
         or ip.is_link_local
         or ip.is_multicast
-        or ip.is_reserved
         or ip.is_unspecified
+        or (ip.is_reserved and not getattr(ip, "is_global", False))
     ):
         logger.warning("Blocked SSRF attempt targeting non-public IP", ip=str(ip))
         raise SecurityURLException("Target URL resolves to a private, loopback, or restricted IP address.")
-
-    # Explicit AWS / GCP metadata IP
-    if str(ip) == "169.254.169.254":
-        raise SecurityURLException("Access to cloud metadata endpoints is forbidden.")
 
 
 def _verify_dns_resolution(hostname: str) -> None:
