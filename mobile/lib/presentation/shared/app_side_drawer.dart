@@ -49,20 +49,21 @@ class AppSideDrawer extends StatelessWidget {
   void _confirmLogout(BuildContext context, AppAuthProvider authProvider) {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
         content: const Text('Are you sure you want to log out of OptigoAI?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
             child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w700)),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.of(context).popUntil((route) => route.isFirst);
-              authProvider.logout();
+            onPressed: () async {
+              Navigator.of(ctx, rootNavigator: true).pop(); // Close dialog
+              Navigator.of(context, rootNavigator: true).pop(); // Close side drawer
+              await authProvider.logout();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
@@ -315,10 +316,7 @@ class AppSideDrawer extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _confirmLogout(context, authProvider);
-                  },
+                  onPressed: () => _confirmLogout(context, authProvider),
                   icon: const Icon(Icons.logout_rounded, size: 16, color: Color(0xFFEF4444)),
                   label: const Text(
                     'Log Out',
