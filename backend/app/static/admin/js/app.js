@@ -334,16 +334,15 @@ function renderBusinesses(businesses) {
   if (!tbody) return;
 
   if (!businesses || businesses.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">No businesses registered yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-muted);">No businesses registered yet.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = businesses.map(b => `
     <tr class="clickable-row" onclick="openBusinessDetail('${b.id}')" title="Click to view full DB profile and edit details">
       <td>
-        <div style="display:flex; align-items:center; justify-content:space-between;">
-          <strong>${escapeHtml(b.name)}</strong>
-          <span style="font-size:0.72rem; color:#60A5FA; background:rgba(59, 130, 246, 0.15); padding:2px 8px; border-radius:6px;">View & Edit ↗</span>
+        <div style="font-weight:700; color:var(--text-primary);">
+          ${escapeHtml(b.name)}
         </div>
       </td>
       <td><span class="badge badge-pill">${escapeHtml(b.category || 'General')}</span></td>
@@ -357,6 +356,11 @@ function renderBusinesses(businesses) {
         <span class="badge ${b.onboarding_completed ? 'badge-active' : 'badge-suspended'}">
           ${b.onboarding_completed ? 'Onboarded' : 'Pending'}
         </span>
+      </td>
+      <td>
+        <button type="button" class="btn btn-primary" style="padding:4px 12px; font-size:0.75rem; font-weight:700;" onclick="event.stopPropagation(); openBusinessDetail('${b.id}')">
+          Inspect & Edit ↗
+        </button>
       </td>
     </tr>
   `).join('');

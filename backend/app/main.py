@@ -79,7 +79,14 @@ def create_app() -> FastAPI:
     async def serve_admin_portal():
         index_file = os.path.join(admin_static_dir, "index.html")
         if os.path.exists(index_file):
-            return FileResponse(index_file)
+            return FileResponse(
+                index_file,
+                headers={
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                },
+            )
         return {"message": "Admin portal static assets not found"}
 
     return app
