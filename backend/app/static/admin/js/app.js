@@ -291,7 +291,7 @@ function renderOrganizations(orgs) {
         <td><code>${escapeHtml(o.slug)}</code></td>
         <td>
           ${firstBiz 
-            ? `<button class="badge badge-pill" style="cursor:pointer; background:rgba(59,130,246,0.18); color:#60A5FA; border:1px solid rgba(59,130,246,0.35); font-weight:700;" onclick="openBusinessDetail('${firstBiz.id}')">${o.businesses_count} Business${o.businesses_count > 1 ? 'es' : ''} (Inspect ↗)</button>` 
+            ? `<button class="badge badge-pill" style="cursor:pointer; background:var(--primary-light); color:var(--primary); border:1px solid rgba(37,99,235,0.3); font-weight:700;" onclick="openBusinessDetail('${firstBiz.id}')">${o.businesses_count} Business${o.businesses_count > 1 ? 'es' : ''} (Inspect)</button>` 
             : `<span class="badge badge-pill">0 Businesses</span>`}
         </td>
         <td><span class="badge badge-pill">${o.users_count} Users</span></td>
@@ -349,7 +349,7 @@ function renderBusinesses(businesses) {
       <td>${escapeHtml(b.location || 'Not Specified')}</td>
       <td>
         ${b.website 
-          ? `<a href="${escapeHtml(b.website)}" target="_blank" onclick="event.stopPropagation();" style="color:#60A5FA; text-decoration:none;">${escapeHtml(b.website)}</a>` 
+          ? `<a href="${escapeHtml(b.website)}" target="_blank" onclick="event.stopPropagation();" style="color:var(--primary); font-weight:600; text-decoration:none;">${escapeHtml(b.website)}</a>` 
           : '<span style="color:var(--text-muted);">N/A</span>'}
       </td>
       <td>
@@ -358,8 +358,8 @@ function renderBusinesses(businesses) {
         </span>
       </td>
       <td>
-        <button type="button" class="btn btn-primary" style="padding:4px 12px; font-size:0.75rem; font-weight:700;" onclick="event.stopPropagation(); openBusinessDetail('${b.id}')">
-          Inspect & Edit ↗
+        <button type="button" class="btn btn-secondary" style="padding:5px 12px; font-size:0.75rem; font-weight:700; color:var(--primary); border-color:rgba(37,99,235,0.3); background:var(--primary-light);" onclick="event.stopPropagation(); openBusinessDetail('${b.id}')">
+          Inspect & Edit
         </button>
       </td>
     </tr>
@@ -423,7 +423,7 @@ async function openBusinessDetail(businessId) {
 
     // Tab 4: Database & Marketing Stats
     const stats = data.stats || {};
-    document.getElementById('stat-biz-reviews').innerText = `${stats.reviews_count || 0} (${stats.average_rating || 0.0}★ Avg)`;
+    document.getElementById('stat-biz-reviews').innerText = `${stats.reviews_count || 0} (${stats.average_rating || 0.0} Avg Rating)`;
     document.getElementById('stat-biz-keywords').innerText = `${stats.keywords_count || 0} (${stats.top3_keywords_count || 0} in Top 3)`;
     
     if (stats.latest_audit && stats.latest_audit.overall_score) {
@@ -566,7 +566,7 @@ async function handleSaveBusinessModal() {
     }
 
     await window.api.updateBusiness(activeBusinessDetailId, payload);
-    showToast(`✓ Business '${payload.name}' updated successfully in the database!`, 'success');
+    showToast(`Business '${payload.name}' updated successfully in the database!`, 'success');
 
     // Refresh modal header & table
     document.getElementById('modal-biz-title').innerText = payload.name;
@@ -601,7 +601,7 @@ async function handleSaveUserModal(userId) {
       role: role,
       is_active: isActive,
     });
-    showToast(`✓ User '${name}' updated successfully!`, 'success');
+    showToast(`User '${name}' updated successfully!`, 'success');
   } catch (err) {
     showToast(`Failed to update user: ${err.message}`, 'error');
   }
@@ -714,9 +714,13 @@ function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) return;
 
+  const iconSvg = type === 'success'
+    ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+    : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<span>${type === 'success' ? '✓' : '⚠️'}</span> <span>${escapeHtml(message)}</span>`;
+  toast.innerHTML = `<span style="display:flex; align-items:center;">${iconSvg}</span> <span>${escapeHtml(message)}</span>`;
   container.appendChild(toast);
 
   setTimeout(() => {
