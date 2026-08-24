@@ -914,102 +914,529 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
   }
 
   void _showWebsiteTechnicalDetails() {
+    final authProvider = context.read<AppAuthProvider>();
+    final business = authProvider.currentBusiness;
     final webAudit = _websiteAudit;
     if (webAudit == null) {
       _showEditWebsiteDialog();
       return;
     }
 
-    final findings = (webAudit['findings'] as List? ?? []);
-    final url = webAudit['url'] ?? '';
+    final findings = (webAudit['findings'] as List? ?? []).cast<Map<String, dynamic>>();
+    final url = (webAudit['site_url'] ?? webAudit['url'] ?? business?.website ?? '').toString();
+    final overallScore = webAudit['overall_score'] ?? 70;
+    final techScore = webAudit['technical_score'] ?? 75;
+    final contentScore = webAudit['content_score'] ?? 70;
+    final localScore = webAudit['local_signals_score'] ?? 65;
+    final actionableRecs = (webAudit['actionable_recommendations'] as List? ?? []).map((e) => e.toString()).toList();
+
+    String activeFilter = 'all'; // 'all', 'issues', 'passed'
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => Container(
-        height: MediaQuery.of(ctx).size.height * 0.7,
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final passingCount = findings.where((f) => f['status'] == 'pass').length;
+          final failingCount = findings.where((f) => f['status'] != 'pass').length;
+
+          final filteredFindings = findings.where((f) {
+            if (activeFilter == 'issues') return f['status'] != 'pass';
+            if (activeFilter == 'passed') return f['status'] == 'pass';
+            return true;
+          }).toList();
+
+          return Container(
+            height: MediaQuery.of(ctx).size.height * 0.88,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // 1. Draggable Notch Indicator
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4.5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // 2. Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Technical Crawl Report', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
-                    Text(url, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.travel_explore_rounded, color: Color(0xFF2563EB), size: 22),
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Technical Crawl Report',
+                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              url.isNotEmpty ? url : 'Live site crawl analysis',
+                              style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
                   ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: findings.isEmpty
-                  ? const Center(
-                      child: Text('No crawl findings recorded yet.', style: TextStyle(color: Color(0xFF64748B))),
-                    )
-                  : ListView.separated(
-                      itemCount: findings.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (ctx, i) {
-                        final f = findings[i];
-                        final status = f['status'] ?? 'pass';
-                        final title = f['title'] ?? '';
-                        final fix = f['fix'];
+                const SizedBox(height: 14),
 
-                        final isPass = status == 'pass';
-                        return Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isPass ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: isPass ? const Color(0xFFBBF7D0) : const Color(0xFFFECACA)),
-                          ),
-                          child: Column(
+                // 3. Health Score Overview Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              const Text(
+                                'Overall SEO Health',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
+                              ),
+                              const SizedBox(height: 4),
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
                                 children: [
-                                  Icon(
-                                    isPass ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
-                                    size: 16,
-                                    color: isPass ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                                  Text(
+                                    '$overallScore',
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w900,
+                                      color: overallScore >= 80
+                                          ? const Color(0xFF10B981)
+                                          : (overallScore >= 60 ? const Color(0xFF2563EB) : const Color(0xFFDC2626)),
+                                      letterSpacing: -0.5,
+                                    ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
+                                  const Text(
+                                    '/100',
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8)),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: failingCount > 0 ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: failingCount > 0 ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0),
+                                      ),
+                                    ),
                                     child: Text(
-                                      title,
+                                      failingCount > 0 ? '$failingCount Issues to Fix' : 'All Checks Passed',
                                       style: TextStyle(
-                                        fontSize: 13,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.w800,
-                                        color: isPass ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                                        color: failingCount > 0 ? const Color(0xFFDC2626) : const Color(0xFF059669),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              if (fix != null) ...[
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Fix: $fix',
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF475569), height: 1.3),
-                                ),
-                              ],
                             ],
                           ),
-                        );
-                      },
-                    ),
+                          // Mini Re-crawl button
+                          OutlinedButton.icon(
+                            onPressed: _isAuditing
+                                ? null
+                                : () async {
+                                    Navigator.of(ctx).pop();
+                                    if (url.isNotEmpty) {
+                                      _runAuditOnUrl(url);
+                                    }
+                                  },
+                            icon: _isAuditing
+                                ? const SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
+                                  )
+                                : const Icon(Icons.refresh_rounded, size: 14),
+                            label: Text(_isAuditing ? 'Crawling...' : 'Re-crawl', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF2563EB),
+                              side: const BorderSide(color: Color(0xFFBFDBFE)),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Breakdown Sub-Pills
+                      Row(
+                        children: [
+                          _buildScorePill('Technical', '$techScore%'),
+                          const SizedBox(width: 8),
+                          _buildScorePill('Content', '$contentScore%'),
+                          const SizedBox(width: 8),
+                          _buildScorePill('Local NAP', '$localScore%'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // 4. Filter Chips
+                Row(
+                  children: [
+                    _buildFilterChip('All (${findings.length})', 'all', activeFilter, (val) => setModalState(() => activeFilter = val)),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Needs Fix ($failingCount)', 'issues', activeFilter, (val) => setModalState(() => activeFilter = val), badgeColor: const Color(0xFFDC2626)),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Passed ($passingCount)', 'passed', activeFilter, (val) => setModalState(() => activeFilter = val), badgeColor: const Color(0xFF10B981)),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // 5. Findings List
+                Expanded(
+                  child: filteredFindings.isEmpty
+                      ? Center(
+                          child: Text(
+                            activeFilter == 'issues' ? '🎉 Great job! No crawl issues found.' : 'No checks in this category.',
+                            style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: filteredFindings.length + (actionableRecs.isNotEmpty && activeFilter != 'passed' ? 1 : 0),
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (ctx, i) {
+                            // Render AI CMO Action Plan card at top if applicable
+                            if (actionableRecs.isNotEmpty && activeFilter != 'passed' && i == 0) {
+                              return Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Row(
+                                      children: [
+                                        Icon(Icons.auto_awesome, color: Color(0xFF2563EB), size: 16),
+                                        SizedBox(width: 6),
+                                        Text('AI CMO Priority Action Plan', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF1E40AF))),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    for (final rec in actionableRecs)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 5),
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('• ', style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.w900)),
+                                            Expanded(
+                                              child: Text(
+                                                rec,
+                                                style: const TextStyle(fontSize: 12, color: Color(0xFF1E3A8A), height: 1.35),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            }
+
+                            final actualIndex = (actionableRecs.isNotEmpty && activeFilter != 'passed') ? i - 1 : i;
+                            final f = filteredFindings[actualIndex];
+                            final status = f['status'] ?? 'pass';
+                            final title = f['title'] ?? '';
+                            final fix = f['fix'];
+                            final impact = f['impact'] ?? (status == 'pass' ? 'Positive' : 'Medium');
+                            final isPass = status == 'pass';
+
+                            // Determine Category & Action
+                            String category = 'On-Page SEO';
+                            String? actionLabel;
+                            IconData? actionIcon;
+                            VoidCallback? actionCallback;
+
+                            final lowerTitle = title.toLowerCase();
+                            if (lowerTitle.contains('schema')) {
+                              category = 'Structured Data';
+                              if (!isPass) {
+                                actionLabel = 'Generate JSON-LD Schema';
+                                actionIcon = Icons.code_rounded;
+                                actionCallback = () {
+                                  Navigator.of(ctx).pop();
+                                  _showJsonLdSchemaModal();
+                                };
+                              }
+                            } else if (lowerTitle.contains('meta description')) {
+                              category = 'Meta Description';
+                              if (!isPass) {
+                                actionLabel = 'Copy AI Meta Tag';
+                                actionIcon = Icons.copy_rounded;
+                                actionCallback = () {
+                                  final bizName = business?.name ?? 'Our Business';
+                                  final loc = business?.location ?? 'Local Area';
+                                  final cat = business?.category ?? 'Services';
+                                  final metaTag = '<meta name="description" content="$bizName offers premier $cat in $loc. Visit us for high quality customer service and best pricing.">';
+                                  Clipboard.setData(ClipboardData(text: metaTag));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('✨ Meta description tag copied to clipboard!'),
+                                      backgroundColor: Color(0xFF10B981),
+                                    ),
+                                  );
+                                };
+                              }
+                            } else if (lowerTitle.contains('h1')) {
+                              category = 'Header Hierarchy';
+                              if (!isPass) {
+                                actionLabel = 'Copy Suggested <h1>';
+                                actionIcon = Icons.copy_rounded;
+                                actionCallback = () {
+                                  final bizName = business?.name ?? 'Casarasa';
+                                  final cat = business?.category ?? 'Restaurant';
+                                  final loc = business?.location ?? 'Edappal';
+                                  final h1Tag = '<h1>$bizName — Best $cat in $loc</h1>';
+                                  Clipboard.setData(ClipboardData(text: h1Tag));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('✨ Suggested <h1> tag copied to clipboard!'),
+                                      backgroundColor: Color(0xFF10B981),
+                                    ),
+                                  );
+                                };
+                              }
+                            } else if (lowerTitle.contains('phone')) {
+                              category = 'Contact & NAP';
+                              if (!isPass) {
+                                actionLabel = 'Copy Clickable Phone Link';
+                                actionIcon = Icons.call_rounded;
+                                actionCallback = () {
+                                  final phone = business?.phone ?? '+1234567890';
+                                  final phoneLink = '<a href="tel:$phone">$phone</a>';
+                                  Clipboard.setData(ClipboardData(text: phoneLink));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('✨ Clickable phone link copied to clipboard!'),
+                                      backgroundColor: Color(0xFF10B981),
+                                    ),
+                                  );
+                                };
+                              }
+                            } else if (lowerTitle.contains('title')) {
+                              category = 'Page Title';
+                            }
+
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: isPass ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isPass ? const Color(0xFFBBF7D0) : const Color(0xFFFECACA),
+                                  width: 1.2,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Category + Impact Row
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                                        decoration: BoxDecoration(
+                                          color: isPass ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          category,
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: isPass ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                                          ),
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            isPass ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+                                            size: 14,
+                                            color: isPass ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            isPass ? 'PASS' : impact.toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w900,
+                                              color: isPass ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Finding Title
+                                  Text(
+                                    title,
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: isPass ? const Color(0xFF14532D) : const Color(0xFF7F1D1D),
+                                    ),
+                                  ),
+
+                                  // Fix Box
+                                  if (fix != null) ...[
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: const Color(0xFFFECACA)),
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Icon(Icons.build_circle_outlined, size: 14, color: Color(0xFFDC2626)),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              'Fix: $fix',
+                                              style: const TextStyle(fontSize: 11.5, color: Color(0xFF475569), height: 1.35),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+
+                                  // 1-Tap Action Button
+                                  if (actionLabel != null && actionCallback != null) ...[
+                                    const SizedBox(height: 10),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 36,
+                                      child: ElevatedButton.icon(
+                                        onPressed: actionCallback,
+                                        icon: Icon(actionIcon ?? Icons.arrow_forward_rounded, size: 14),
+                                        label: Text(actionLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: category == 'Structured Data' ? const Color(0xFF2563EB) : const Color(0xFF0F172A),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          elevation: 0,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildScorePill(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Column(
+          children: [
+            Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
+            const SizedBox(height: 2),
+            Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(
+    String label,
+    String value,
+    String selectedValue,
+    ValueChanged<String> onSelected, {
+    Color? badgeColor,
+  }) {
+    final isSelected = selectedValue == value;
+    return InkWell(
+      onTap: () => onSelected(value),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? (badgeColor != null ? badgeColor.withValues(alpha: 0.1) : const Color(0xFFEFF6FF)) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? (badgeColor ?? const Color(0xFF2563EB)) : const Color(0xFFE2E8F0),
+            width: isSelected ? 1.4 : 1.0,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected ? (badgeColor ?? const Color(0xFF2563EB)) : const Color(0xFF64748B),
+          ),
         ),
       ),
     );
