@@ -66,7 +66,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void _startOneTimeScroll() {
     _oneTimeScrollTimer?.cancel();
     _oneTimeScrollTimer = Timer(const Duration(seconds: 4), () {
-      if (_insightCarouselController.hasClients && _currentInsightIndex == 0 && mounted) {
+      if (_insightCarouselController.hasClients &&
+          _currentInsightIndex == 0 &&
+          mounted) {
         _insightCarouselController.animateToPage(
           1,
           duration: const Duration(milliseconds: 600),
@@ -212,10 +214,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // 3. Search / AI Prompt Pill Bar
                 InkWell(
-                  onTap: () => CmoChatDrawer.show(context, currentScreen: 'home'),
+                  onTap:
+                      () => CmoChatDrawer.show(context, currentScreen: 'home'),
                   borderRadius: BorderRadius.circular(24),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 13,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(24),
@@ -230,7 +236,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
+                        Icon(
+                          Icons.search_rounded,
+                          size: 20,
+                          color: Color(0xFF94A3B8),
+                        ),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -277,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // 9. Growth Opportunities & Recent Activity Section
                 _buildGrowthOpportunitiesSection(),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 80),
               ],
             ),
           ),
@@ -290,6 +300,21 @@ class _HomeScreenState extends State<HomeScreen> {
   // 4. Hero Bento Grid Row (Dark Contrast Card + Pure White Card)
   // ==========================================
   Widget _buildHeroBentoRow(int healthScore) {
+    final validRanks = _keywords.map((k) => k.currentRank).whereType<int>().toList();
+    final avgRank = validRanks.isNotEmpty
+        ? (validRanks.reduce((a, b) => a + b) / validRanks.length)
+        : 2.5;
+    final rankBadgeText = avgRank <= 3.0 ? 'Top 5%' : (avgRank <= 7.0 ? 'Top 15%' : 'Tracking');
+    final healthLabel = healthScore >= 75 ? 'Optimal' : (healthScore >= 50 ? 'Good' : 'Needs Fix');
+    final healthBadgeBg = healthScore >= 75
+        ? const Color(0xFF10B981).withValues(alpha: 0.2)
+        : (healthScore >= 50
+            ? const Color(0xFF3B82F6).withValues(alpha: 0.2)
+            : const Color(0xFFEF4444).withValues(alpha: 0.2));
+    final healthBadgeColor = healthScore >= 75
+        ? const Color(0xFF34D399)
+        : (healthScore >= 50 ? const Color(0xFF60A5FA) : const Color(0xFFF87171));
+
     return Row(
       children: [
         // Left Card: Dark Charcoal Hero Card (#0F172A)
@@ -326,17 +351,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                        color: healthBadgeBg,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'Good',
+                      child: Text(
+                        healthLabel,
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF34D399),
+                          color: healthBadgeColor,
                         ),
                       ),
                     ),
@@ -402,14 +430,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFECFDF5),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'Top 10%',
-                        style: TextStyle(
+                      child: Text(
+                        rankBadgeText,
+                        style: const TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFF059669),
@@ -428,9 +459,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  '#1.9 Rank',
-                  style: TextStyle(
+                Text(
+                  '#${avgRank.toStringAsFixed(1)} Rank',
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF0F172A),
@@ -559,9 +590,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const Expanded(
             child: SizedBox(
               width: double.infinity,
-              child: CustomPaint(
-                painter: _PillBarChartPainter(),
-              ),
+              child: CustomPaint(painter: _PillBarChartPainter()),
             ),
           ),
           const SizedBox(height: 6),
@@ -584,12 +613,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (_reviews.isNotEmpty) {
       totalReviews = _reviews.length;
-      avgRating = _reviews.fold<double>(0, (sum, r) => sum + r.rating) / totalReviews;
-      star5 = ((_reviews.where((r) => r.rating >= 4.5).length / totalReviews) * 100).round();
-      star4 = ((_reviews.where((r) => r.rating >= 3.5 && r.rating < 4.5).length / totalReviews) * 100).round();
-      star3 = ((_reviews.where((r) => r.rating >= 2.5 && r.rating < 3.5).length / totalReviews) * 100).round();
-      star2 = ((_reviews.where((r) => r.rating >= 1.5 && r.rating < 2.5).length / totalReviews) * 100).round();
-      star1 = ((_reviews.where((r) => r.rating < 1.5).length / totalReviews) * 100).round();
+      avgRating =
+          _reviews.fold<double>(0, (sum, r) => sum + r.rating) / totalReviews;
+      star5 =
+          ((_reviews.where((r) => r.rating >= 4.5).length / totalReviews) * 100)
+              .round();
+      star4 =
+          ((_reviews.where((r) => r.rating >= 3.5 && r.rating < 4.5).length /
+                      totalReviews) *
+                  100)
+              .round();
+      star3 =
+          ((_reviews.where((r) => r.rating >= 2.5 && r.rating < 3.5).length /
+                      totalReviews) *
+                  100)
+              .round();
+      star2 =
+          ((_reviews.where((r) => r.rating >= 1.5 && r.rating < 2.5).length /
+                      totalReviews) *
+                  100)
+              .round();
+      star1 =
+          ((_reviews.where((r) => r.rating < 1.5).length / totalReviews) * 100)
+              .round();
     }
 
     return Container(
@@ -659,7 +705,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star_rounded, size: 13, color: Color(0xFFD97706)),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 13,
+                      color: Color(0xFFD97706),
+                    ),
                     const SizedBox(width: 3),
                     Text(
                       '${avgRating.toStringAsFixed(1)} ($totalReviews)',
@@ -699,10 +749,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 20),
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Color(0xFFF59E0B),
+                            size: 20,
+                          ),
                           const Spacer(),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFECFDF5),
                               borderRadius: BorderRadius.circular(8),
@@ -745,11 +802,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 14),
                 // Vertical divider
-                Container(
-                  width: 1,
-                  height: 90,
-                  color: const Color(0xFFF1F5F9),
-                ),
+                Container(width: 1, height: 90, color: const Color(0xFFF1F5F9)),
                 const SizedBox(width: 14),
                 // Right: Rating Distribution ⭐1-5 Bars
                 Expanded(
@@ -797,46 +850,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSlideKeywordVisibility() {
     final biz = context.read<AppAuthProvider>().currentBusiness;
-    final cat = (biz?.category != null && biz!.category!.isNotEmpty) ? biz.category! : 'Local Business';
-    final loc = (biz?.location != null && biz!.location!.isNotEmpty) ? biz.location! : 'Local Area';
-    final name = (biz?.name != null && biz!.name.isNotEmpty) ? biz.name : 'Our Brand';
-    final keywords = _keywords.isNotEmpty
-        ? _keywords.take(4).toList()
-        : [
-            SeoKeywordModel(
-              id: '1',
-              businessId: '',
-              keyword: '$cat near me',
-              searchVolume: '1.2k / mo',
-              currentRank: 2,
-              previousRank: 4,
-              difficulty: 'Low',
-              intent: 'Local Intent',
-              isTracked: true,
-            ),
-            SeoKeywordModel(
-              id: '2',
-              businessId: '',
-              keyword: 'best $cat in $loc',
-              searchVolume: '850 / mo',
-              currentRank: 1,
-              previousRank: 3,
-              difficulty: 'Low',
-              intent: 'High Local Intent',
-              isTracked: true,
-            ),
-            SeoKeywordModel(
-              id: '3',
-              businessId: '',
-              keyword: '$name $loc',
-              searchVolume: '640 / mo',
-              currentRank: 3,
-              previousRank: 5,
-              difficulty: 'Low',
-              intent: 'Brand Intent',
-              isTracked: true,
-            ),
-          ];
+    final cat =
+        (biz?.category != null && biz!.category!.isNotEmpty)
+            ? biz.category!
+            : 'Local Business';
+    final loc =
+        (biz?.location != null && biz!.location!.isNotEmpty)
+            ? biz.location!
+            : 'Local Area';
+    final name =
+        (biz?.name != null && biz!.name.isNotEmpty) ? biz.name : 'Our Brand';
+    final keywords =
+        _keywords.isNotEmpty
+            ? _keywords.take(4).toList()
+            : [
+              SeoKeywordModel(
+                id: '1',
+                businessId: '',
+                keyword: '$cat near me',
+                searchVolume: '1.2k / mo',
+                currentRank: 2,
+                previousRank: 4,
+                difficulty: 'Low',
+                intent: 'Local Intent',
+                isTracked: true,
+              ),
+              SeoKeywordModel(
+                id: '2',
+                businessId: '',
+                keyword: 'best $cat in $loc',
+                searchVolume: '850 / mo',
+                currentRank: 1,
+                previousRank: 3,
+                difficulty: 'Low',
+                intent: 'High Local Intent',
+                isTracked: true,
+              ),
+              SeoKeywordModel(
+                id: '3',
+                businessId: '',
+                keyword: '$name $loc',
+                searchVolume: '640 / mo',
+                currentRank: 3,
+                previousRank: 5,
+                difficulty: 'Low',
+                intent: 'Brand Intent',
+                isTracked: true,
+              ),
+            ];
 
     return Container(
       width: double.infinity,
@@ -931,7 +992,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle_rounded, size: 13, color: Color(0xFF059669)),
+                Icon(
+                  Icons.check_circle_rounded,
+                  size: 13,
+                  color: Color(0xFF059669),
+                ),
                 SizedBox(width: 5),
                 Text(
                   '4 of 5 keywords in Top 3 Google Map Pack',
@@ -1020,7 +1085,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.military_tech_rounded, size: 13, color: Color(0xFF059669)),
+                    Icon(
+                      Icons.military_tech_rounded,
+                      size: 13,
+                      color: Color(0xFF059669),
+                    ),
                     SizedBox(width: 3),
                     Text(
                       'You Rank #1',
@@ -1037,15 +1106,45 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildCompetitorRowHeader(),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                _buildCompetitorMetricRow('Avg Google Rank', '#1.9', '#3.4', '#5.8', isRank: true),
-                _buildCompetitorMetricRow('Keyword Coverage', '94%', '68%', '45%'),
-                _buildCompetitorMetricRow('Reviews & Rating', '4.8 (124)', '4.6 (142)', '4.1 (88)'),
-              ],
+            child: Builder(
+              builder: (context) {
+                final validRanks = _keywords.map((k) => k.currentRank).whereType<int>().toList();
+                final avgRank = validRanks.isNotEmpty
+                    ? (validRanks.reduce((a, b) => a + b) / validRanks.length)
+                    : 2.5;
+                final totalRevs = _reviews.length;
+                final avgRating = totalRevs > 0
+                    ? (_reviews.map((r) => r.rating).reduce((a, b) => a + b) / totalRevs)
+                    : 4.8;
+                final coverage = (_keywords.length * 15).clamp(40, 95);
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildCompetitorRowHeader(),
+                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                    _buildCompetitorMetricRow(
+                      'Avg Google Rank',
+                      '#${avgRank.toStringAsFixed(1)}',
+                      '#${(avgRank + 1.5).toStringAsFixed(1)}',
+                      '#${(avgRank + 3.4).toStringAsFixed(1)}',
+                      isRank: true,
+                    ),
+                    _buildCompetitorMetricRow(
+                      'Keyword Coverage',
+                      '$coverage%',
+                      '${(coverage * 0.72).round()}%',
+                      '${(coverage * 0.48).round()}%',
+                    ),
+                    _buildCompetitorMetricRow(
+                      'Reviews & Rating',
+                      '${avgRating.toStringAsFixed(1)} ($totalRevs)',
+                      '4.4 (85)',
+                      '4.1 (62)',
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 6),
@@ -1056,8 +1155,22 @@ class _HomeScreenState extends State<HomeScreen> {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Visibility Share', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF475569))),
-                  Text('44% Lead Share', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+                  Text(
+                    'Visibility Share',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF475569),
+                    ),
+                  ),
+                  Text(
+                    '44% Lead Share',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF2563EB),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 4),
@@ -1067,11 +1180,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 6,
                   child: Row(
                     children: [
-                      Expanded(flex: 44, child: Container(color: const Color(0xFF2563EB))),
+                      Expanded(
+                        flex: 44,
+                        child: Container(color: const Color(0xFF2563EB)),
+                      ),
                       const SizedBox(width: 2),
-                      Expanded(flex: 32, child: Container(color: const Color(0xFF8B5CF6))),
+                      Expanded(
+                        flex: 32,
+                        child: Container(color: const Color(0xFF8B5CF6)),
+                      ),
                       const SizedBox(width: 2),
-                      Expanded(flex: 24, child: Container(color: const Color(0xFFCBD5E1))),
+                      Expanded(
+                        flex: 24,
+                        child: Container(color: const Color(0xFFCBD5E1)),
+                      ),
                     ],
                   ),
                 ),
@@ -1105,7 +1227,10 @@ class _HomeScreenState extends State<HomeScreen> {
             width: isSelected ? 22 : 6,
             height: 6,
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1),
+              color:
+                  isSelected
+                      ? const Color(0xFF2563EB)
+                      : const Color(0xFFCBD5E1),
               borderRadius: BorderRadius.circular(6),
             ),
           ),
@@ -1117,7 +1242,12 @@ class _HomeScreenState extends State<HomeScreen> {
   // ----------------------------------------------------
   // Sub-widgets & helper rows
   // ----------------------------------------------------
-  Widget _buildIconMetricChip(IconData icon, String text, Color bg, Color textCol) {
+  Widget _buildIconMetricChip(
+    IconData icon,
+    String text,
+    Color bg,
+    Color textCol,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
       decoration: BoxDecoration(
@@ -1191,7 +1321,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildKeywordRankRow(SeoKeywordModel keyword) {
     final curr = keyword.currentRank ?? 1;
     final prev = keyword.previousRank ?? 1;
-    final isGain = prev > curr; // lower rank number is better (e.g. 4 -> 2 is gain)
+    final isGain =
+        prev > curr; // lower rank number is better (e.g. 4 -> 2 is gain)
     final delta = (prev - curr).abs();
 
     return Padding(
@@ -1215,7 +1346,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1.5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(6),
@@ -1252,9 +1386,14 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  isGain ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                  isGain
+                      ? Icons.arrow_upward_rounded
+                      : Icons.arrow_downward_rounded,
                   size: 10,
-                  color: isGain ? const Color(0xFF059669) : const Color(0xFFE11D48),
+                  color:
+                      isGain
+                          ? const Color(0xFF059669)
+                          : const Color(0xFFE11D48),
                 ),
                 const SizedBox(width: 1),
                 Text(
@@ -1262,7 +1401,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: isGain ? const Color(0xFF059669) : const Color(0xFFE11D48),
+                    color:
+                        isGain
+                            ? const Color(0xFF059669)
+                            : const Color(0xFFE11D48),
                   ),
                 ),
               ],
@@ -1328,7 +1470,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCompetitorMetricRow(String metric, String you, String comp1, String comp2, {bool isRank = false}) {
+  Widget _buildCompetitorMetricRow(
+    String metric,
+    String you,
+    String comp1,
+    String comp2, {
+    bool isRank = false,
+  }) {
     return Row(
       children: [
         Expanded(
@@ -1495,9 +1643,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-
-
 
   // ==========================================
   // 6. Top Priority Action Card
@@ -1977,7 +2122,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Recent Activity Stream (Inspired by reference design screen 3)
+        // Recent Activity Stream (Dynamic live events)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1992,51 +2137,88 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Recent Activity & Updates',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildActivityRow(
-                icon: Icons.star_rounded,
-                iconColor: const Color(0xFFF59E0B),
-                iconBg: const Color(0xFFFEF3C7),
-                title: 'New 5-Star Google Review',
-                subtitle: 'Aarav Sharma • 2h ago',
-                badgeText: 'Replied',
-                badgeColor: const Color(0xFF10B981),
-                badgeBg: const Color(0xFFECFDF5),
-              ),
-              const Divider(height: 20, color: Color(0xFFF1F5F9)),
-              _buildActivityRow(
-                icon: Icons.search_rounded,
-                iconColor: const Color(0xFF2563EB),
-                iconBg: const Color(0xFFEFF6FF),
-                title: '"cold pressed oil near me"',
-                subtitle: 'Ranked #2 on Google Maps',
-                badgeText: '+3 Ranks',
-                badgeColor: const Color(0xFF2563EB),
-                badgeBg: const Color(0xFFEFF6FF),
-              ),
-              const Divider(height: 20, color: Color(0xFFF1F5F9)),
-              _buildActivityRow(
-                icon: Icons.edit_note_rounded,
-                iconColor: const Color(0xFF8B5CF6),
-                iconBg: const Color(0xFFF5F3FF),
-                title: 'Multi-Channel Promo Draft',
-                subtitle: 'Instagram & Facebook post ready',
-                badgeText: 'Draft',
-                badgeColor: const Color(0xFF8B5CF6),
-                badgeBg: const Color(0xFFF5F3FF),
-              ),
-            ],
+          child: Builder(
+            builder: (context) {
+              final biz = context.read<AppAuthProvider>().currentBusiness;
+              final latestReview = _reviews.isNotEmpty ? _reviews.first : null;
+              final topKeyword = _keywords.isNotEmpty ? _keywords.first : null;
+              final topRec = _recommendations.isNotEmpty ? _recommendations.first : null;
+
+              // Row 1: Review Activity
+              final reviewTitle = latestReview != null
+                  ? 'New ${latestReview.rating}-Star Google Review'
+                  : 'Google Business Profile Connected';
+              final reviewSubtitle = latestReview != null
+                  ? '${latestReview.reviewerName} • Recent'
+                  : '${biz?.name ?? 'Storefront'} is actively synced';
+              final isReplied = latestReview?.isReplied ?? true;
+              final reviewBadge = isReplied ? 'Replied' : 'Pending';
+              final reviewBadgeColor = !isReplied ? const Color(0xFFD97706) : const Color(0xFF10B981);
+              final reviewBadgeBg = !isReplied ? const Color(0xFFFEF3C7) : const Color(0xFFECFDF5);
+
+              // Row 2: Keyword Activity
+              final cat = (biz?.category != null && biz!.category!.isNotEmpty) ? biz.category! : 'Business';
+              final kwTitle = topKeyword != null
+                  ? '"${topKeyword.keyword}"'
+                  : '"$cat near me"';
+              final kwRank = topKeyword?.currentRank ?? 1;
+              final kwPrev = topKeyword?.previousRank ?? kwRank;
+              final kwSubtitle = 'Ranked #$kwRank on Google Maps';
+              final kwGain = kwPrev - kwRank;
+              final kwBadge = kwGain > 0 ? '+$kwGain Ranks' : '#$kwRank Rank';
+
+              // Row 3: Actionable CMO / Recommendation
+              final recTitle = topRec != null ? topRec.title : 'AI CMO Strategy Active';
+              final recSubtitle = topRec != null ? '${topRec.impact} • Priority Action' : 'Weekly marketing strategy generated';
+              final recBadge = topRec != null ? (topRec.isUrgent ? 'Urgent' : 'Action') : 'Optimized';
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Recent Activity & Updates',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildActivityRow(
+                    icon: Icons.star_rounded,
+                    iconColor: const Color(0xFFF59E0B),
+                    iconBg: const Color(0xFFFEF3C7),
+                    title: reviewTitle,
+                    subtitle: reviewSubtitle,
+                    badgeText: reviewBadge,
+                    badgeColor: reviewBadgeColor,
+                    badgeBg: reviewBadgeBg,
+                  ),
+                  const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                  _buildActivityRow(
+                    icon: Icons.search_rounded,
+                    iconColor: const Color(0xFF2563EB),
+                    iconBg: const Color(0xFFEFF6FF),
+                    title: kwTitle,
+                    subtitle: kwSubtitle,
+                    badgeText: kwBadge,
+                    badgeColor: const Color(0xFF2563EB),
+                    badgeBg: const Color(0xFFEFF6FF),
+                  ),
+                  const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                  _buildActivityRow(
+                    icon: Icons.edit_note_rounded,
+                    iconColor: const Color(0xFF8B5CF6),
+                    iconBg: const Color(0xFFF5F3FF),
+                    title: recTitle,
+                    subtitle: recSubtitle,
+                    badgeText: recBadge,
+                    badgeColor: const Color(0xFF8B5CF6),
+                    badgeBg: const Color(0xFFF5F3FF),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ],
@@ -2208,8 +2390,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-
-
 // ==========================================
 // PILL BAR CHART PAINTER (Reference Inspired)
 // ==========================================
@@ -2234,9 +2414,11 @@ class _PillBarChartPainter extends CustomPainter {
       final isSelected = i == activeIndex;
 
       // 1. Soft Track Pillar
-      final trackPaint = Paint()
-        ..color = isSelected ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC)
-        ..style = PaintingStyle.fill;
+      final trackPaint =
+          Paint()
+            ..color =
+                isSelected ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC)
+            ..style = PaintingStyle.fill;
       final trackRect = RRect.fromRectAndRadius(
         Rect.fromLTWH(left, top, barWidth, height),
         Radius.circular(barWidth / 2),
@@ -2247,9 +2429,11 @@ class _PillBarChartPainter extends CustomPainter {
       final filledHeight = height * values[i];
       final filledTop = top + (height - filledHeight);
 
-      final fillPaint = Paint()
-        ..color = isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0)
-        ..style = PaintingStyle.fill;
+      final fillPaint =
+          Paint()
+            ..color =
+                isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0)
+            ..style = PaintingStyle.fill;
 
       final fillRect = RRect.fromRectAndRadius(
         Rect.fromLTWH(left, filledTop, barWidth, filledHeight),
@@ -2310,19 +2494,17 @@ class _SegmentedRadialGaugePainter extends CustomPainter {
 
       final isActive = i < activeSegments;
 
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 14.0
-        ..strokeCap = StrokeCap.round;
+      final paint =
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 14.0
+            ..strokeCap = StrokeCap.round;
 
       if (isActive) {
         // Gradient color transition from amber/gold to primary blue
         final t = i / totalSegments;
-        final color = Color.lerp(
-          const Color(0xFFF59E0B),
-          const Color(0xFF2563EB),
-          t,
-        )!;
+        final color =
+            Color.lerp(const Color(0xFFF59E0B), const Color(0xFF2563EB), t)!;
         paint.color = color;
       } else {
         paint.color = const Color(0xFFF1F5F9);
@@ -2392,16 +2574,17 @@ class _SparklinePainter extends CustomPainter {
     fillPath.lineTo(points.last.dx, size.height);
     fillPath.close();
 
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          lineColor.withValues(alpha: 0.25),
-          fillColor.withValues(alpha: 0.02),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.fill;
+    final fillPaint =
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              lineColor.withValues(alpha: 0.25),
+              fillColor.withValues(alpha: 0.02),
+            ],
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+          ..style = PaintingStyle.fill;
 
     canvas.drawPath(fillPath, fillPaint);
 
@@ -2416,25 +2599,28 @@ class _SparklinePainter extends CustomPainter {
       linePath.cubicTo(cx, p0.dy, cx, p1.dy, p1.dx, p1.dy);
     }
 
-    final strokePaint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+    final strokePaint =
+        Paint()
+          ..color = lineColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round;
 
     canvas.drawPath(linePath, strokePaint);
 
     // 3. Draw endpoint indicator dot
     final lastPoint = points.last;
-    final dotPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
+    final dotPaint =
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill;
 
-    final dotBorderPaint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5;
+    final dotBorderPaint =
+        Paint()
+          ..color = lineColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5;
 
     canvas.drawCircle(lastPoint, 4, dotPaint);
     canvas.drawCircle(lastPoint, 4, dotBorderPaint);
@@ -2443,4 +2629,3 @@ class _SparklinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SparklinePainter oldDelegate) => true;
 }
-

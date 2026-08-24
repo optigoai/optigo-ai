@@ -82,8 +82,8 @@ class _MainShellState extends State<MainShell> {
               onNavigate: _handleRouteNavigate,
             ),
             child: Container(
-              height: 72,
-              margin: const EdgeInsets.only(bottom: 2),
+              height: 56,
+              margin: const EdgeInsets.only(bottom: 6, right: 2),
               child: Image.asset(
                 'assets/images/ask-optigo-btn.png',
                 fit: BoxFit.contain,

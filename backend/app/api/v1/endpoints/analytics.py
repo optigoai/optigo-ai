@@ -42,3 +42,17 @@ async def get_competitor_benchmarks(
         business_id=business_id,
         organization_id=current_user.organization_id,
     )
+
+
+@router.get("/dashboard-summary", status_code=status.HTTP_200_OK)
+async def get_dashboard_summary(
+    business_id: str = Query(..., description="Business ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get unified dashboard aggregator metrics and live activity feed for Home screen."""
+    service = RoiAnalyticsService(db)
+    return await service.get_dashboard_summary(
+        business_id=business_id,
+        organization_id=current_user.organization_id,
+    )
