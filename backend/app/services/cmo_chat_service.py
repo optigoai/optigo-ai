@@ -78,7 +78,7 @@ class CmoChatService:
 
         # 2. Construct System Instruction for Gemini
         system_instruction = f"""You are the AI Chief Marketing Officer (AI CMO) for "{business.name}".
-Your role is to act as a highly intelligent, proactive, and factual marketing strategist.
+Your role is to act as a highly intelligent, proactive, executive marketing strategist.
 You have direct, real-time access to the business's database and Google Business profile.
 
 LIVE BUSINESS PROFILE & CONTEXT:
@@ -100,12 +100,18 @@ TRACKED LOCAL SEO KEYWORDS:
 TOP CMO RECOMMENDATIONS:
 {formatted_recs}
 
-CRITICAL OPERATIONAL RULES:
+CRITICAL OPERATIONAL & FORMATTING RULES:
 1. ALWAYS answer the user's question directly, accurately, and factually based on the LIVE DATA provided above.
-2. If the user asks for specific details (such as names of reviewers, customer feedback, rating counts, keyword ranks, or business info), extract the exact data from the context.
-3. Keep responses concise, clear, and structured (use bullet points when listing items).
-4. If the user asks you to draft a review reply or write a promotional post, create an executive-level, ready-to-use draft tailored to the business.
-5. Do NOT give generic canned disclaimers. Speak directly as the business's personal CMO.
+2. Keep responses concise, punchy, and structured for executive reading on a mobile device. Avoid overwhelming walls of text.
+3. DO NOT use markdown hashtag headers (`###` or `##`). Use clean bold labels like `**Section Title:**` instead.
+4. DO NOT wrap whole sentences in italics (`*`). Use bold `**term**` for emphasis and clean bullet points (`• `).
+5. If the user asks for a review reply, provide a warm, professional, brand-appropriate response draft.
+6. If the user asks for promotional content, provide an engaging caption with hashtags.
+7. If the user asks for competitor analysis, provide:
+   - **Top Competitor Focus**: Current benchmark rankings in the local market.
+   - **Our Key Advantages & Gaps**: Review count, rating gaps, and customer service opportunities.
+   - **Tactical Action Plan**: 3 concrete, high-impact moves to dominate local search.
+8. Speak directly as the business's personal CMO with authority and clarity.
 """
 
         reply_content: str = ""
@@ -138,127 +144,115 @@ CRITICAL OPERATIONAL RULES:
         except Exception as e:
             logger.error("Gemini CMO Chat generation failed, using intelligent context fallback", error=str(e))
 
-        # 4. Fallback if Gemini is not configured or offline
         lower_msg = user_message.lower()
+        is_asking_reply = any(k in lower_msg for k in ["draft reply", "draft response", "reply to review", "response for latest review", "reply to "])
+        is_asking_post = any(k in lower_msg for k in ["create a post", "promotional post", "social post", "draft post", "promo post", "instagram post", "google post", "write a post"])
+        is_asking_seo = any(k in lower_msg for k in ["boost google rank", "seo ranking", "google maps ranking", "boost ranking", "track keyword", "keyword"])
+        is_asking_competitor = any(k in lower_msg for k in ["competitor", "competitors", "competition", "outrank"])
+        is_asking_priority = any(k in lower_msg for k in ["top priority", "priority today", "what should i do", "today's action"])
+
+        # 4. Fallback if Gemini is not configured or offline
         if not reply_content:
-            if "name" in lower_msg and "review" in lower_msg:
-                names = [r.reviewer_name for r in reviews if r.reviewer_name]
-                if names:
-                    reply_content = f"Here are the reviewers on your Google Business Profile for {business.name}:\n\n" + "\n".join(f"• {name}" for name in names)
-                else:
-                    reply_content = f"No reviewer names were found on your profile."
-                actions = [
-                    {"label": "Reply to Reviews", "route": "reviews", "icon": "rate_review"},
-                ]
-            elif "reply" in lower_msg or ("review" in lower_msg and ("draft" in lower_msg or "negative" in lower_msg or "unanswered" in lower_msg)):
+            if is_asking_reply:
                 target_rev = pending_reviews[0] if pending_reviews else (reviews[0] if reviews else None)
                 if target_rev:
                     reply_content = (
-                        f"Here is a recommended response for {target_rev.reviewer_name}'s {target_rev.rating}-star review:\n\n"
+                        f"Here is a recommended response for **{target_rev.reviewer_name}** ({target_rev.rating}★ review):\n\n"
                         f"\"Dear {target_rev.reviewer_name}, thank you for visiting {business.name} in {business.location or 'our area'}. "
                         f"We appreciate your valuable feedback and are dedicated to providing you with an outstanding experience every time. We hope to welcome you again soon!\"\n\n"
-                        f"You can apply this reply directly to Google Business Profile."
+                        f"You can copy or apply this reply directly to Google Business Profile."
                     )
-                    action_type = "review_reply"
-                    action_payload = {
-                        "review_id": target_rev.id,
-                        "reviewer_name": target_rev.reviewer_name,
-                        "rating": target_rev.rating,
-                        "draft_reply": f"Dear {target_rev.reviewer_name}, thank you for visiting {business.name}. We appreciate your feedback and look forward to welcoming you again soon!",
-                    }
-                    actions = [
-                        {"label": "Submit Reply", "route": "reviews", "icon": "send"},
-                        {"label": "All Reviews", "route": "reviews", "icon": "rate_review"},
-                    ]
                 else:
-                    reply_content = f"All current customer reviews for {business.name} have already been answered!"
-                    actions = [{"label": "View Reviews", "route": "reviews", "icon": "rate_review"}]
-            elif "post" in lower_msg or "promo" in lower_msg or "social" in lower_msg:
+                    reply_content = f"All current customer reviews for **{business.name}** have already been answered!"
+            elif is_asking_post:
                 cat = business.category or "Store"
                 loc = business.location or "Local Area"
                 reply_content = (
-                    f"Here is a high-converting promotional post draft for {business.name}:\n\n"
-                    f"📢 **Special Focus at {business.name}!**\n"
-                    f"Looking for the best {cat.lower()} experience in {loc}? Visit us today for fresh flavors, great hospitality, and authentic local favorites.\n\n"
+                    f"Here is a high-converting promotional post draft for **{business.name}**:\n\n"
+                    f"Looking for the best {cat.lower()} experience in {loc}? Visit {business.name} today for fresh flavors, great hospitality, and authentic local favorites.\n\n"
                     f"📍 {loc}\n"
                     f"👉 Follow us for weekly specials!\n\n"
                     f"#{business.name.replace(' ', '')} #{cat.replace(' ', '')} #{loc.split(',')[0].replace(' ', '')}Food #LocalFavorites"
                 )
-                action_type = "social_post"
-                action_payload = {
-                    "title": f"Special Showcase at {business.name}",
-                    "caption": f"Looking for the best {cat.lower()} in {loc}? Visit {business.name} today for an authentic culinary experience.",
-                    "hashtags": [f"#{business.name.replace(' ', '')}", f"#{cat.replace(' ', '')}", f"#{loc.split(',')[0].replace(' ', '')}"],
-                }
-                actions = [
-                    {"label": "Publish to Social", "route": "create", "icon": "campaign"},
-                    {"label": "Edit in Studio", "route": "create", "icon": "edit_note"},
-                ]
-            elif "keyword" in lower_msg or "seo" in lower_msg or "rank" in lower_msg:
+            elif is_asking_competitor:
+                reply_content = (
+                    f"**Competitive Landscape Analysis for {business.name}:**\n\n"
+                    f"• **Top Competitor Benchmark**: Competing establishments in {business.location or 'your area'} hold top 3 map ranks primarily driven by steady review volume.\n"
+                    f"• **Our Key Gap**: We currently have {len(pending_reviews)} unanswered customer reviews. Closing this response backlog will immediately improve search relevance.\n"
+                    f"• **Tactical Action**: Implement table-side QR review collection and post weekly promotional updates to capture local search share."
+                )
+            elif is_asking_seo:
                 top_kw = keywords[0].keyword if keywords else f"{business.category or 'Local Business'} near me"
                 reply_content = (
-                    f"You are currently tracking {len(keywords)} local SEO keywords for {business.name}.\n\n"
-                    f"• Primary keyword: \"{top_kw}\"\n"
-                    f"• Google Map Pack Average Rank: #{round(sum(k.current_rank for k in keywords if k.current_rank)/len(keywords), 1) if keywords else 2.5}\n\n"
-                    f"Focusing on table-side review collection and localized GBP posts will push your business to the #1 spot in {business.location or 'your market'}."
+                    f"**Local SEO Performance for {business.name}:**\n\n"
+                    f"• **Tracked Keywords**: {len(keywords)} local search terms\n"
+                    f"• **Primary Search Term**: \"{top_kw}\"\n"
+                    f"• **Google Map Pack Avg Rank**: #{round(sum(k.current_rank for k in keywords if k.current_rank)/len(keywords), 1) if keywords else 2.5}\n\n"
+                    f"To climb to #1, focus on rapid review replies and localized weekly posts embedding your primary search phrases."
                 )
-                action_type = "keyword_audit"
-                action_payload = {
-                    "tracked_count": len(keywords),
-                    "primary_keyword": top_kw,
-                }
-                actions = [
-                    {"label": "Optimize SEO Profile", "route": "seo", "icon": "travel_explore"},
-                    {"label": "Track New Keyword", "route": "seo", "icon": "add"},
-                ]
+            elif is_asking_priority:
+                top_rec = recommendations[0] if recommendations else None
+                rec_text = f"{top_rec.title} - {top_rec.suggested_action}" if top_rec else "Reply to unanswered reviews and publish weekly updates"
+                reply_content = (
+                    f"**Top Marketing Priority Today for {business.name}:**\n\n"
+                    f"• **Immediate Focus**: {rec_text}\n"
+                    f"• **Business Health Score**: {health_score}/100\n"
+                    f"• **Pending Reviews**: {len(pending_reviews)} awaiting your reply"
+                )
             else:
                 reply_content = (
-                    f"Based on your live profile for {business.name} in {business.location or 'your local area'}, "
-                    f"your health score is {health_score}/100. Your primary focus right now is maintaining 100% review reply coverage "
-                    f"and publishing 2-3 weekly promotional updates to dominate local search."
+                    f"Based on live data for **{business.name}** in {business.location or 'your local area'}, "
+                    f"your health score is {health_score}/100. Your primary focus is maintaining 100% review reply coverage "
+                    f"and publishing regular promotional updates to dominate local search."
                 )
-                actions = [
-                    {"label": "View Today's Actions", "route": "actions", "icon": "insights"},
-                    {"label": "Create Post", "route": "create", "icon": "add"},
-                ]
 
-        # 5. Detect and attach functional actions from Gemini response if present
-        if not action_type:
-            lower_res = reply_content.lower()
-            if "dear " in lower_res or "thank you for visiting" in lower_res or "we appreciate your" in lower_res:
+        # 5. Strict Intent-Based Action Card Generation
+        if is_asking_reply:
+            target_rev = pending_reviews[0] if pending_reviews else (reviews[0] if reviews else None)
+            if target_rev:
+                # Extract quoted text if present, otherwise clean summary
+                draft = reply_content.split('"')[1] if '"' in reply_content else (
+                    f"Dear {target_rev.reviewer_name}, thank you for visiting {business.name}. We appreciate your feedback and look forward to welcoming you again soon!"
+                )
                 action_type = "review_reply"
                 action_payload = {
-                    "draft_reply": reply_content.split('"')[1] if '"' in reply_content else reply_content,
+                    "review_id": target_rev.id,
+                    "reviewer_name": target_rev.reviewer_name,
+                    "rating": target_rev.rating,
+                    "draft_reply": draft,
                 }
-            elif "#" in lower_res and ("📢" in lower_res or "looking for" in lower_res or "special" in lower_res):
-                action_type = "social_post"
-                action_payload = {
-                    "caption": reply_content,
-                }
-
-        # Deduce suggested action chips if none present
-        if not actions:
-            lower_res = reply_content.lower() + " " + lower_msg
-            if "review" in lower_res:
                 actions = [
-                    {"label": "View Reviews", "route": "reviews", "icon": "rate_review"},
-                    {"label": "Draft AI Reply", "route": "reviews", "icon": "auto_awesome"},
+                    {"label": "Submit Reply", "route": "reviews", "icon": "send"},
+                    {"label": "All Reviews", "route": "reviews", "icon": "rate_review"},
                 ]
-            elif "post" in lower_res or "campaign" in lower_res or "social" in lower_res:
-                actions = [
-                    {"label": "Create Post", "route": "create", "icon": "edit_note"},
-                    {"label": "Launch Campaign", "route": "create", "icon": "campaign"},
-                ]
-            elif "seo" in lower_res or "keyword" in lower_res or "rank" in lower_res:
-                actions = [
-                    {"label": "Check SEO Rank", "route": "seo", "icon": "search"},
-                    {"label": "Add Keyword", "route": "seo", "icon": "add"},
-                ]
-            else:
-                actions = [
-                    {"label": "Today's Actions", "route": "actions", "icon": "insights"},
-                    {"label": "Create Post", "route": "create", "icon": "edit_note"},
-                ]
+        elif is_asking_post:
+            cat = business.category or "Store"
+            loc = business.location or "Local Area"
+            action_type = "social_post"
+            action_payload = {
+                "title": f"Special Showcase at {business.name}",
+                "caption": reply_content.replace("Here is a high-converting promotional post draft:\n\n", "").strip(),
+                "hashtags": [f"#{business.name.replace(' ', '')}", f"#{cat.replace(' ', '')}", f"#{loc.split(',')[0].replace(' ', '')}"],
+            }
+            actions = [
+                {"label": "Publish to Social", "route": "create", "icon": "campaign"},
+                {"label": "Edit in Studio", "route": "create", "icon": "edit_note"},
+            ]
+        elif is_asking_competitor:
+            actions = [
+                {"label": "View Competitor Rankings", "route": "seo", "icon": "travel_explore"},
+                {"label": "Explore SEO Keywords", "route": "seo", "icon": "search"},
+            ]
+        elif is_asking_seo:
+            actions = [
+                {"label": "Optimize SEO Profile", "route": "seo", "icon": "travel_explore"},
+                {"label": "Add New Keyword", "route": "seo", "icon": "add"},
+            ]
+        else:
+            actions = [
+                {"label": "View Recommendations", "route": "actions", "icon": "insights"},
+                {"label": "Check Reviews", "route": "reviews", "icon": "rate_review"},
+            ]
 
         return {
             "id": str(uuid.uuid4()),

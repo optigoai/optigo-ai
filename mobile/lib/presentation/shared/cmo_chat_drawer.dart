@@ -755,22 +755,19 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
         continue;
       }
 
-      // 2. Headings (#, ##, ###, ####)
-      if (trimmed.startsWith('# ') ||
-          trimmed.startsWith('## ') ||
-          trimmed.startsWith('### ') ||
-          trimmed.startsWith('#### ')) {
+      // 2. Headings (#, ##, ###, #### or lines starting with #)
+      if (trimmed.startsWith('#')) {
         int level = 1;
-        if (trimmed.startsWith('#### ')) {
+        if (trimmed.startsWith('####')) {
           level = 4;
-        } else if (trimmed.startsWith('### ')) {
+        } else if (trimmed.startsWith('###')) {
           level = 3;
-        } else if (trimmed.startsWith('## ')) {
+        } else if (trimmed.startsWith('##')) {
           level = 2;
         }
 
         final headerText = trimmed.replaceFirst(RegExp(r'^#+\s*'), '');
-        final double fontSize = level == 1 ? 16.0 : (level == 2 ? 15.0 : (level == 3 ? 14.0 : 13.5));
+        final double fontSize = level == 1 ? 15.5 : (level == 2 ? 14.5 : (level == 3 ? 14.0 : 13.5));
 
         widgets.add(
           Padding(
@@ -791,7 +788,7 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
       }
 
       // 3. Blockquotes (> ...)
-      if (trimmed.startsWith('> ') || trimmed.startsWith('>')) {
+      if (trimmed.startsWith('>')) {
         final quoteText = trimmed.replaceFirst(RegExp(r'^>\s*'), '');
         widgets.add(
           Container(
@@ -879,14 +876,16 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
   }
 
   Widget _buildInlineRichText(String text) {
+    // Strip any residual leading hashtag markers
+    final cleanText = text.replaceFirst(RegExp(r'^#+\s*'), '');
     final List<InlineSpan> spans = [];
     final regex = RegExp(r'(\*\*([^*]+)\*\*|`([^`]+)`|\*([^*]+)\*|_([^_]+)_)');
     int lastIndex = 0;
 
-    for (final match in regex.allMatches(text)) {
+    for (final match in regex.allMatches(cleanText)) {
       if (match.start > lastIndex) {
         spans.add(TextSpan(
-          text: text.substring(lastIndex, match.start),
+          text: cleanText.substring(lastIndex, match.start),
           style: const TextStyle(
             fontSize: 13.5,
             color: Color(0xFF1E293B),
@@ -938,8 +937,8 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
           style: const TextStyle(
             fontSize: 13.5,
             fontStyle: FontStyle.italic,
-            color: Color(0xFF2563EB),
-            fontWeight: FontWeight.w600,
+            color: Color(0xFF334155),
+            fontWeight: FontWeight.w500,
             height: 1.45,
           ),
         ));
@@ -948,9 +947,9 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
       lastIndex = match.end;
     }
 
-    if (lastIndex < text.length) {
+    if (lastIndex < cleanText.length) {
       spans.add(TextSpan(
-        text: text.substring(lastIndex),
+        text: cleanText.substring(lastIndex),
         style: const TextStyle(
           fontSize: 13.5,
           color: Color(0xFF1E293B),
