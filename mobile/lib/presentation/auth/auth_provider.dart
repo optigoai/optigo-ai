@@ -110,10 +110,15 @@ class AppAuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void switchBusiness(BusinessModel biz) {
+    _currentBusiness = biz;
+    notifyListeners();
+  }
+
   Future<void> _loadBusinesses() async {
     try {
       _businesses = await _bizRepo.getBusinesses();
-      if (_businesses.isNotEmpty) {
+      if (_businesses.isNotEmpty && _currentBusiness == null) {
         _currentBusiness = _businesses.first;
       }
     } catch (_) {}

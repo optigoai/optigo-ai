@@ -193,6 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 OptigoTopBar(
                   onNotificationTap: widget.onNavigateToRecommendations,
                   onRefreshTap: _loadData,
+                  onNavigateToTab: widget.onNavigateToTab,
                   isRefreshing: _isLoading,
                 ),
 

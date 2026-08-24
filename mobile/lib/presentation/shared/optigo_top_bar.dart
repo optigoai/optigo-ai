@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../auth/auth_provider.dart';
 import 'notification_modal.dart';
+import 'app_side_drawer.dart';
 
 class OptigoTopBar extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onMenuTap;
+  final Function(int)? onNavigateToTab;
   final VoidCallback? onRefreshTap;
   final bool isRefreshing;
   final bool showBackButton;
@@ -16,105 +18,14 @@ class OptigoTopBar extends StatelessWidget {
     this.subtitle,
     this.onNotificationTap,
     this.onMenuTap,
+    this.onNavigateToTab,
     this.onRefreshTap,
     this.isRefreshing = false,
     this.showBackButton = false,
   });
 
-  void _showProfileModal(BuildContext context, AppAuthProvider authProvider) {
-    final user = authProvider.user;
-    final business = authProvider.currentBusiness;
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.person_rounded, color: Color(0xFF2563EB), size: 28),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user?.fullName ?? 'Business Owner',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
-                      ),
-                      Text(
-                        user?.email ?? '',
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 8),
-            if (business != null) ...[
-              Row(
-                children: [
-                  const Icon(Icons.storefront_rounded, size: 18, color: Color(0xFF64748B)),
-                  const SizedBox(width: 10),
-                  Text(
-                    business.name,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-            Row(
-              children: [
-                const Icon(Icons.verified_user_outlined, size: 18, color: Color(0xFF64748B)),
-                const SizedBox(width: 10),
-                Text(
-                  'Role: ${user?.role.toUpperCase() ?? 'OWNER'}',
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  authProvider.logout();
-                },
-                icon: const Icon(Icons.logout_rounded, size: 18),
-                label: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.w800)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEF4444),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _openSideDrawer(BuildContext context) {
+    AppSideDrawer.show(context, onNavigateToTab: onNavigateToTab);
   }
 
   @override
@@ -124,8 +35,8 @@ class OptigoTopBar extends StatelessWidget {
 
     final displayName = user?.fullName.isNotEmpty == true
         ? user!.fullName
-        : 'Leon Fernandez';
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'O';
+        : 'Ahmed Yazeen';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'A';
 
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 16),
@@ -134,7 +45,7 @@ class OptigoTopBar extends StatelessWidget {
         children: [
           // Left: Business & User Profile Pill (Storefront + User Name + Switcher Dropdown)
           InkWell(
-            onTap: onMenuTap ?? () => _showProfileModal(context, authProvider),
+            onTap: onMenuTap ?? () => _openSideDrawer(context),
             borderRadius: BorderRadius.circular(30),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
