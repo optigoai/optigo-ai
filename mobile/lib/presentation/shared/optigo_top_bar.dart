@@ -132,16 +132,16 @@ class OptigoTopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left: User Profile Pill (Avatar + Welcome Back & Name)
+          // Left: Business & User Profile Pill (Storefront + User Name + Switcher Dropdown)
           InkWell(
             onTap: onMenuTap ?? () => _showProfileModal(context, authProvider),
             borderRadius: BorderRadius.circular(30),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: const Color(0xFFF1F5F9)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.03),
@@ -173,25 +173,42 @@ class OptigoTopBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // Welcome & Name
+                  // Business Name + User Name
                   Padding(
-                    padding: const EdgeInsets.only(right: 14),
+                    padding: const EdgeInsets.only(right: 4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'Hi, Welcome Back!',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF94A3B8),
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.storefront_rounded,
+                              size: 13,
+                              color: Color(0xFF2563EB),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              authProvider.currentBusiness?.name ?? 'Optigo Business',
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: Color(0xFF2563EB),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 14,
+                              color: Color(0xFF64748B),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 1),
                         Text(
                           displayName,
                           style: const TextStyle(
-                            fontSize: 13.5,
+                            fontSize: 13,
                             fontWeight: FontWeight.w800,
                             color: Color(0xFF0F172A),
                           ),

@@ -264,13 +264,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 18),
 
-                // 5. Multi-Card Insight Visualizer Carousel (Horizontal Scroll)
+                // 5. Multi-Card Insight Visualizer Carousel (Horizontal Scroll with Segmented Tabs)
                 _buildInsightCarousel(),
 
                 const SizedBox(height: 18),
 
-                // 6. Segmented Radial Gauge Performance Card (Reference Inspired)
-                _buildSegmentedPerformanceCard(healthScore),
+                // 6. AI CMO Strategic Briefing Card
+                _buildAiBriefingCard(),
 
                 const SizedBox(height: 24),
 
@@ -305,28 +305,33 @@ class _HomeScreenState extends State<HomeScreen> {
         ? (validRanks.reduce((a, b) => a + b) / validRanks.length)
         : 2.5;
     final rankBadgeText = avgRank <= 3.0 ? 'Top 5%' : (avgRank <= 7.0 ? 'Top 15%' : 'Tracking');
-    final healthLabel = healthScore >= 75 ? 'Optimal' : (healthScore >= 50 ? 'Good' : 'Needs Fix');
+    final healthLabel = healthScore >= 75 ? 'Optimal' : (healthScore >= 50 ? 'Good' : 'Needs Attention');
     final healthBadgeBg = healthScore >= 75
-        ? const Color(0xFF10B981).withValues(alpha: 0.2)
+        ? const Color(0xFF10B981).withValues(alpha: 0.25)
         : (healthScore >= 50
-            ? const Color(0xFF3B82F6).withValues(alpha: 0.2)
-            : const Color(0xFFEF4444).withValues(alpha: 0.2));
+            ? const Color(0xFF3B82F6).withValues(alpha: 0.25)
+            : const Color(0xFFEF4444).withValues(alpha: 0.25));
     final healthBadgeColor = healthScore >= 75
         ? const Color(0xFF34D399)
         : (healthScore >= 50 ? const Color(0xFF60A5FA) : const Color(0xFFF87171));
 
     return Row(
       children: [
-        // Left Card: Dark Charcoal Hero Card (#0F172A)
+        // Left Card: Navy-to-Slate Gradient Hero Card
         Expanded(
           child: Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F172A),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              ),
               borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: const Color(0xFF334155), width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -402,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.03),
@@ -477,11 +482,86 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 5. Multi-Card Insight Visualizer Carousel (Horizontal Scroll)
+  // 5. Multi-Card Insight Visualizer Carousel (Horizontal Scroll with Segmented Tabs)
   // ==========================================
   Widget _buildInsightCarousel() {
+    final tabLabels = ['Views', 'Reviews', 'Keywords', 'Competitors'];
+    final tabIcons = [
+      Icons.bar_chart_rounded,
+      Icons.star_rounded,
+      Icons.travel_explore_rounded,
+      Icons.emoji_events_rounded,
+    ];
+
     return Column(
       children: [
+        // Segmented Tab Selector Pills
+        Container(
+          height: 38,
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: List.generate(4, (index) {
+              final isSelected = _currentInsightIndex == index;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    _insightCarouselController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeInOutCubic,
+                    );
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.white : Colors.transparent,
+                      borderRadius: BorderRadius.circular(11),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          tabIcons[index],
+                          size: 13,
+                          color: isSelected
+                              ? const Color(0xFF2563EB)
+                              : const Color(0xFF64748B),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          tabLabels[index],
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                            color: isSelected
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+
+        // Carousel Slider
         SizedBox(
           height: 250,
           child: PageView(
@@ -1528,16 +1608,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 6. Segmented Radial Gauge Performance Card (Reference Inspired)
+  // 6. AI CMO Strategic Briefing Card
   // ==========================================
-  Widget _buildSegmentedPerformanceCard(int healthScore) {
+  Widget _buildAiBriefingCard() {
+    final biz = context.read<AppAuthProvider>().currentBusiness;
+    final summary = _intelligence?.aiProfile?['business_summary'] as String?;
+    final healthSummary = _intelligence?.healthSummary;
+    final strategicAdvice = _intelligence?.strategicAdvice;
+    
+    final briefingText = (strategicAdvice != null && strategicAdvice.isNotEmpty)
+        ? strategicAdvice
+        : ((healthSummary != null && healthSummary.isNotEmpty)
+            ? healthSummary
+            : ((summary != null && summary.isNotEmpty)
+                ? summary
+                : 'Focusing on timely Google review responses and local search keywords will solidify your #1 ranking in ${biz?.location ?? "your local area"}.'));
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -1552,90 +1645,90 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Marketing Optimization',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 18,
+                      color: Color(0xFF2563EB),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'AI CMO Daily Briefing',
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
               ),
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
-                  Icons.calendar_month_outlined,
-                  size: 16,
-                  color: Color(0xFF64748B),
+                child: const Text(
+                  'Today',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF475569),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Segmented Arc Meter
-          Center(
-            child: SizedBox(
-              width: 240,
-              height: 120,
-              child: CustomPaint(
-                painter: _SegmentedRadialGaugePainter(score: healthScore),
-                child: Align(
-                  alignment: const Alignment(0, 0.5),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$healthScore%',
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
-                          height: 1.0,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      const Text(
-                        'From last week',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          const SizedBox(height: 14),
+          Text(
+            briefingText,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF334155),
+              height: 1.5,
             ),
           ),
-
-          const SizedBox(height: 18),
-
-          // Full-width pill action button
-          SizedBox(
-            width: double.infinity,
-            height: 46,
-            child: OutlinedButton(
-              onPressed: widget.onNavigateToRecommendations,
-              style: OutlinedButton.styleFrom(
-                backgroundColor: const Color(0xFFF8FAFC),
-                side: const BorderSide(color: Color(0xFFE2E8F0)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
+          const SizedBox(height: 16),
+          InkWell(
+            onTap: () => CmoChatDrawer.show(context, currentScreen: 'home'),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: const Text(
-                'See Detail Information',
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
-                ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Discuss Strategy with AI CMO',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF2563EB),
+                    ),
+                  ),
+                  SizedBox(width: 6),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 15,
+                    color: Color(0xFF2563EB),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1645,7 +1738,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 6. Top Priority Action Card
+  // 7. Top Priority Action Card
   // ==========================================
   Widget _buildTopPrioritySection() {
     final pendingRecs = _recommendations.where((r) => r.isPending).toList();
@@ -1657,10 +1750,12 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final title = topRec?.title ?? 'Reply to 6 unanswered reviews';
+    final title = topRec?.title ?? 'Review & optimize business visibility';
     final desc =
         topRec?.explanation ??
-        'Customers are waiting for your response. This can directly impact your reputation.';
+        'Address pending customer feedback and optimize local keywords to maintain strong search rankings.';
+    final pendingCount = pendingRecs.isNotEmpty ? pendingRecs.length : 1;
+    final impactText = topRec?.impact != null ? 'IMPACT: ${topRec!.impact.toUpperCase()}' : 'PRIORITY ACTION';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1669,7 +1764,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Top Priority',
+              'Top Priority Action',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -1710,13 +1805,13 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFFEE2E2), width: 1.2),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFEF4444).withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -1725,22 +1820,22 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Red Rounded Box with Message Icon and Badge Count
+                  // Red Rounded Box with Message Icon and Dynamic Badge Count
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
                       Container(
-                        width: 50,
-                        height: 50,
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEF2F2),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Center(
                           child: Icon(
-                            Icons.chat_bubble_outline_rounded,
+                            Icons.bolt_rounded,
                             color: Color(0xFFEF4444),
-                            size: 24,
+                            size: 26,
                           ),
                         ),
                       ),
@@ -1754,13 +1849,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             shape: BoxShape.circle,
                           ),
                           constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
+                            minWidth: 17,
+                            minHeight: 17,
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
-                              '6',
-                              style: TextStyle(
+                              '$pendingCount',
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w900,
@@ -1773,7 +1868,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 12),
 
-                  // Title, URGENT badge & explanation
+                  // Title, Impact badge & explanation
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1787,13 +1882,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: const Color(0xFFFEE2E2),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
-                            'URGENT',
-                            style: TextStyle(
-                              fontSize: 10,
+                          child: Text(
+                            impactText,
+                            style: const TextStyle(
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w900,
                               color: Color(0xFFDC2626),
-                              letterSpacing: 0.2,
+                              letterSpacing: 0.3,
                             ),
                           ),
                         ),
@@ -1825,9 +1920,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
-              // Action Buttons Row (Take Action + Mark Done)
+              // Action Buttons Row (Execute Action + Mark Done)
               Row(
                 children: [
                   Expanded(
@@ -1844,15 +1939,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           widget.onNavigateToTab!(3);
                         } else if (widget.onNavigateToReviews != null) {
                           widget.onNavigateToReviews!();
+                        } else if (widget.onNavigateToRecommendations != null) {
+                          widget.onNavigateToRecommendations!();
                         }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFEF4444),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: const Text(
@@ -1886,9 +1983,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
@@ -2193,8 +2290,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     badgeText: reviewBadge,
                     badgeColor: reviewBadgeColor,
                     badgeBg: reviewBadgeBg,
+                    onTap: () {
+                      if (widget.onNavigateToReviews != null) {
+                        widget.onNavigateToReviews!();
+                      } else if (widget.onNavigateToTab != null) {
+                        widget.onNavigateToTab!(4);
+                      }
+                    },
                   ),
-                  const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                  const Divider(height: 16, color: Color(0xFFF1F5F9)),
                   _buildActivityRow(
                     icon: Icons.search_rounded,
                     iconColor: const Color(0xFF2563EB),
@@ -2204,8 +2308,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     badgeText: kwBadge,
                     badgeColor: const Color(0xFF2563EB),
                     badgeBg: const Color(0xFFEFF6FF),
+                    onTap: () {
+                      if (widget.onNavigateToTab != null) {
+                        widget.onNavigateToTab!(3);
+                      }
+                    },
                   ),
-                  const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                  const Divider(height: 16, color: Color(0xFFF1F5F9)),
                   _buildActivityRow(
                     icon: Icons.edit_note_rounded,
                     iconColor: const Color(0xFF8B5CF6),
@@ -2215,6 +2324,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     badgeText: recBadge,
                     badgeColor: const Color(0xFF8B5CF6),
                     badgeBg: const Color(0xFFF5F3FF),
+                    onTap: () {
+                      if (widget.onNavigateToRecommendations != null) {
+                        widget.onNavigateToRecommendations!();
+                      } else if (widget.onNavigateToTab != null) {
+                        widget.onNavigateToTab!(1);
+                      }
+                    },
                   ),
                 ],
               );
@@ -2234,57 +2350,73 @@ class _HomeScreenState extends State<HomeScreen> {
     required String badgeText,
     required Color badgeColor,
     required Color badgeBg,
+    VoidCallback? onTap,
   }) {
-    return Row(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-          child: Center(child: Icon(icon, size: 18, color: iconColor)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
-                ),
-                overflow: TextOverflow.ellipsis,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+              child: Center(child: Icon(icon, size: 18, color: iconColor)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: badgeBg,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                badgeText,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: badgeColor,
                 ),
+              ),
+            ),
+            if (onTap != null) ...[
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: Color(0xFF94A3B8),
               ),
             ],
-          ),
+          ],
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: badgeBg,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            badgeText,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: badgeColor,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -2466,65 +2598,6 @@ class _PillBarChartPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// ==========================================
-// SEGMENTED RADIAL GAUGE PAINTER (Reference Inspired)
-// ==========================================
-class _SegmentedRadialGaugePainter extends CustomPainter {
-  final int score;
-
-  const _SegmentedRadialGaugePainter({required this.score});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height);
-    final outerRadius = size.width / 2 - 12;
-    final innerRadius = outerRadius - 18;
-
-    const totalSegments = 26;
-    final activeSegments = ((score / 100) * totalSegments).round();
-
-    const startAngle = pi;
-    const totalAngle = pi;
-    final stepAngle = totalAngle / totalSegments;
-    const gapAngle = 0.035;
-
-    for (int i = 0; i < totalSegments; i++) {
-      final segStart = startAngle + (i * stepAngle) + (gapAngle / 2);
-      final segSweep = stepAngle - gapAngle;
-
-      final isActive = i < activeSegments;
-
-      final paint =
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 14.0
-            ..strokeCap = StrokeCap.round;
-
-      if (isActive) {
-        // Gradient color transition from amber/gold to primary blue
-        final t = i / totalSegments;
-        final color =
-            Color.lerp(const Color(0xFFF59E0B), const Color(0xFF2563EB), t)!;
-        paint.color = color;
-      } else {
-        paint.color = const Color(0xFFF1F5F9);
-      }
-
-      final midRadius = (innerRadius + outerRadius) / 2;
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: midRadius),
-        segStart,
-        segSweep,
-        false,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SegmentedRadialGaugePainter oldDelegate) =>
-      oldDelegate.score != score;
-}
 
 // ==========================================
 // SPARKLINE LINE CHART PAINTER (Mini Reviews Growth)
