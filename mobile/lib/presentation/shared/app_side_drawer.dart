@@ -83,9 +83,15 @@ class AppSideDrawer extends StatelessWidget {
     final currentBiz = authProvider.currentBusiness;
     final businesses = authProvider.businesses;
 
-    final displayName = user?.fullName.isNotEmpty == true ? user!.fullName : 'Ahmed Yazeen';
-    final email = user?.email.isNotEmpty == true ? user!.email : 'ahmed@casaraza.com';
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'A';
+    final displayName = (user?.fullName != null && user!.fullName.trim().isNotEmpty)
+        ? user.fullName.trim()
+        : ((user?.email != null && user!.email.isNotEmpty)
+            ? user.email.split('@')[0]
+            : 'User');
+    final email = user?.email ?? '';
+    final initial = displayName.isNotEmpty
+        ? displayName[0].toUpperCase()
+        : (email.isNotEmpty ? email[0].toUpperCase() : 'U');
     final drawerWidth = (MediaQuery.of(context).size.width * 0.85).clamp(280.0, 360.0);
 
     return Container(
@@ -220,7 +226,7 @@ class AppSideDrawer extends StatelessWidget {
                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                             ),
                             Text(
-                              currentBiz.location ?? 'Edappal, Kerala, India',
+                              currentBiz.location ?? 'Location not set',
                               style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
                             ),
                           ],

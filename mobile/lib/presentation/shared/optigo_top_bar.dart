@@ -32,10 +32,11 @@ class OptigoTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AppAuthProvider>();
     final user = authProvider.user;
-
-    final displayName = user?.fullName.isNotEmpty == true
-        ? user!.fullName
-        : 'Ahmed Yazeen';
+    final displayName = (user?.fullName != null && user!.fullName.trim().isNotEmpty)
+        ? user.fullName.trim()
+        : ((user?.email != null && user!.email.isNotEmpty)
+            ? user.email.split('@')[0]
+            : 'User');
 
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 16),

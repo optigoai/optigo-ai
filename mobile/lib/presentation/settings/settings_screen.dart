@@ -21,7 +21,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final user = authProvider.user;
     final nameController = TextEditingController(text: user?.fullName ?? '');
     final emailController = TextEditingController(text: user?.email ?? '');
-    final phoneController = TextEditingController(text: '+91 98470 12345');
+    final phoneController = TextEditingController(text: authProvider.currentBusiness?.phone ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -622,10 +622,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AppAuthProvider>();
     final user = authProvider.user;
-
-    final displayName = user?.fullName.isNotEmpty == true ? user!.fullName : 'Ahmed Yazeen';
-    final email = user?.email.isNotEmpty == true ? user!.email : 'ahmed@casaraza.com';
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+    final displayName = (user?.fullName != null && user!.fullName.trim().isNotEmpty)
+        ? user.fullName.trim()
+        : ((user?.email != null && user!.email.isNotEmpty)
+            ? user.email.split('@')[0]
+            : 'User');
+    final email = user?.email ?? '';
+    final initial = displayName.isNotEmpty
+        ? displayName[0].toUpperCase()
+        : (email.isNotEmpty ? email[0].toUpperCase() : 'U');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),

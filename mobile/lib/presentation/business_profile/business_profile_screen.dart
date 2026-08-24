@@ -62,8 +62,8 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
               const SizedBox(height: 16),
               _buildDetailItem(Icons.category_rounded, 'Primary Category', category),
               _buildDetailItem(Icons.location_on_rounded, 'Address', location),
-              _buildDetailItem(Icons.phone_rounded, 'Phone Number', phone.isNotEmpty ? phone : '+91 98470 12345'),
-              _buildDetailItem(Icons.language_rounded, 'Website', website.isNotEmpty ? website : 'https://casaraza.com'),
+              _buildDetailItem(Icons.phone_rounded, 'Phone Number', phone.isNotEmpty ? phone : 'Not provided'),
+              _buildDetailItem(Icons.language_rounded, 'Website', website.isNotEmpty ? website : 'Not provided'),
               const SizedBox(height: 16),
               const Text(
                 'Weekly Schedule',
@@ -583,11 +583,11 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
     final authProvider = context.watch<AppAuthProvider>();
     final biz = authProvider.currentBusiness;
 
-    final bizName = biz?.name ?? 'Casaraza';
-    final bizCategory = biz?.category ?? 'Restaurant & Organic Foods';
-    final bizLocation = biz?.location ?? 'Edappal, Malappuram, Kerala';
-    final bizPhone = biz?.phone ?? '+91 98470 12345';
-    final bizWebsite = biz?.website ?? 'https://casaraza.com';
+    final bizName = biz?.name ?? 'My Business';
+    final bizCategory = (biz?.category != null && biz!.category!.isNotEmpty) ? biz.category! : 'Local Business';
+    final bizLocation = (biz?.location != null && biz!.location!.isNotEmpty) ? biz.location! : 'Location not set';
+    final bizPhone = biz?.phone ?? '';
+    final bizWebsite = biz?.website ?? '';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
