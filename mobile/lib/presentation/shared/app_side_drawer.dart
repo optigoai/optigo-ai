@@ -15,14 +15,34 @@ class AppSideDrawer extends StatelessWidget {
   });
 
   static void show(BuildContext context, {Function(int)? onNavigateToTab, VoidCallback? onOpenCmoChat}) {
-    showModalBottomSheet(
+    showGeneralDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => AppSideDrawer(
-        onNavigateToTab: onNavigateToTab,
-        onOpenCmoChat: onOpenCmoChat,
-      ),
+      barrierDismissible: true,
+      barrierLabel: 'SideDrawer',
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      transitionDuration: const Duration(milliseconds: 280),
+      pageBuilder: (ctx, anim1, anim2) {
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: Material(
+            color: Colors.transparent,
+            child: AppSideDrawer(
+              onNavigateToTab: onNavigateToTab,
+              onOpenCmoChat: onOpenCmoChat,
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (ctx, anim, secAnim, child) {
+        final curvedAnim = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(-1.0, 0.0),
+            end: Offset.zero,
+          ).animate(curvedAnim),
+          child: child,
+        );
+      },
     );
   }
 
@@ -65,216 +85,254 @@ class AppSideDrawer extends StatelessWidget {
 
     final displayName = user?.fullName.isNotEmpty == true ? user!.fullName : 'Ahmed Yazeen';
     final email = user?.email.isNotEmpty == true ? user!.email : 'ahmed@casaraza.com';
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'A';
+    final drawerWidth = (MediaQuery.of(context).size.width * 0.85).clamp(280.0, 360.0);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-      decoration: const BoxDecoration(
+      width: drawerWidth,
+      height: double.infinity,
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+        borderRadius: const BorderRadius.horizontal(right: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 30,
+            offset: const Offset(5, 0),
           ),
-
-          // User Profile Header Card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFDBEAFE), width: 2),
-                  ),
-                  child: Center(
-                    child: Text(
-                      initial,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF2563EB)),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Bar with Close Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Account & Navigation',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF64748B),
+                      letterSpacing: 0.5,
                     ),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 20),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              // User Profile Header Card (Matching Reference Screenshot)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFDBEAFE), width: 2),
+                      ),
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF2563EB)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            email,
+                            style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        user?.role.toUpperCase() ?? 'OWNER',
+                        style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Color(0xFF2563EB)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Active Business Card & Switcher (Matching Reference Screenshot)
+              if (currentBiz != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                  ),
+                  child: Row(
                     children: [
-                      Text(
-                        displayName,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2563EB),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.storefront_rounded, size: 16, color: Colors.white),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        email,
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              currentBiz.name,
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                            ),
+                            Text(
+                              currentBiz.location ?? 'Edappal, Kerala, India',
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
                       ),
+                      if (businesses.length > 1)
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.swap_horiz_rounded, color: Color(0xFF2563EB), size: 20),
+                          tooltip: 'Switch Business',
+                          onSelected: (bizId) {
+                            final selected = businesses.firstWhere((b) => b.id == bizId);
+                            authProvider.switchBusiness(selected);
+                          },
+                          itemBuilder: (ctx) => businesses.map((b) {
+                            final isCur = b.id == currentBiz.id;
+                            return PopupMenuItem<String>(
+                              value: b.id,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isCur ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                                    size: 16,
+                                    color: isCur ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(b.name, style: TextStyle(fontWeight: isCur ? FontWeight.w800 : FontWeight.w500)),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(8),
+
+              const SizedBox(height: 18),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              const SizedBox(height: 12),
+
+              // Navigation Links (Matching Reference Screenshot)
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    _buildDrawerNavTile(
+                      title: 'Main Dashboard',
+                      subtitle: 'Real-time marketing overview',
+                      icon: Icons.grid_view_rounded,
+                      onTap: () {
+                        Navigator.pop(context);
+                        onNavigateToTab?.call(0);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildDrawerNavTile(
+                      title: 'Google Business Profile',
+                      subtitle: 'View live GBP profile & hours',
+                      badgeText: '86%',
+                      icon: Icons.storefront_rounded,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const BusinessProfileScreen()),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildDrawerNavTile(
+                      title: 'Settings',
+                      subtitle: 'Account, AI preferences & integrations',
+                      icon: Icons.settings_rounded,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              // Bottom Log Out Button (Matching Reference Screenshot)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _confirmLogout(context, authProvider);
+                  },
+                  icon: const Icon(Icons.logout_rounded, size: 16, color: Color(0xFFEF4444)),
+                  label: const Text(
+                    'Log Out',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFFEF4444)),
                   ),
-                  child: Text(
-                    user?.role.toUpperCase() ?? 'OWNER',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF2563EB)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: Color(0xFFFCA5A5)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          // Active Business Card & Switcher
-          if (currentBiz != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFBFDBFE)),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.storefront_rounded, size: 18, color: Color(0xFF2563EB)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          currentBiz.name,
-                          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-                        ),
-                        Text(
-                          currentBiz.location ?? 'Active Location',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (businesses.length > 1)
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.swap_horiz_rounded, color: Color(0xFF2563EB), size: 20),
-                      tooltip: 'Switch Business',
-                      onSelected: (bizId) {
-                        final selected = businesses.firstWhere((b) => b.id == bizId);
-                        authProvider.switchBusiness(selected);
-                      },
-                      itemBuilder: (ctx) => businesses.map((b) {
-                        final isCur = b.id == currentBiz.id;
-                        return PopupMenuItem<String>(
-                          value: b.id,
-                          child: Row(
-                            children: [
-                              Icon(
-                                isCur ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
-                                size: 16,
-                                color: isCur ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(b.name, style: TextStyle(fontWeight: isCur ? FontWeight.w800 : FontWeight.w500)),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                ],
-              ),
-            ),
-
-          const SizedBox(height: 16),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 10),
-
-          // Main Navigation Items
-          _buildDrawerItem(
-            title: 'Main Dashboard',
-            subtitle: 'Real-time marketing overview',
-            icon: Icons.dashboard_rounded,
-            onTap: () {
-              Navigator.pop(context);
-              onNavigateToTab?.call(0);
-            },
+            ],
           ),
-          _buildDrawerItem(
-            title: 'Google Business Profile',
-            subtitle: 'View live GBP profile & hours',
-            badgeText: '86%',
-            icon: Icons.storefront_rounded,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const BusinessProfileScreen()),
-              );
-            },
-          ),
-          _buildDrawerItem(
-            title: 'Settings',
-            subtitle: 'Account, AI preferences & integrations',
-            icon: Icons.settings_rounded,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-            },
-          ),
-
-          const SizedBox(height: 14),
-
-          // Log Out Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                _confirmLogout(context, authProvider);
-              },
-              icon: const Icon(Icons.logout_rounded, size: 16, color: Color(0xFFEF4444)),
-              label: const Text(
-                'Log Out',
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFFEF4444)),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                side: const BorderSide(color: Color(0xFFFCA5A5)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildDrawerItem({
+  Widget _buildDrawerNavTile({
     required String title,
     required String subtitle,
     required IconData icon,
@@ -283,9 +341,14 @@ class AppSideDrawer extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF1F5F9)),
+        ),
         child: Row(
           children: [
             Container(
@@ -303,7 +366,7 @@ class AppSideDrawer extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                    style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                   ),
                   Text(
                     subtitle,

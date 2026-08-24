@@ -36,7 +36,6 @@ class OptigoTopBar extends StatelessWidget {
     final displayName = user?.fullName.isNotEmpty == true
         ? user!.fullName
         : 'Ahmed Yazeen';
-    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'A';
 
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 16),
@@ -64,22 +63,20 @@ class OptigoTopBar extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Circle Avatar
+                  // Hamburger Menu Icon
                   Container(
                     width: 36,
                     height: 36,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEFF6FF),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
                       shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFDBEAFE)),
                     ),
-                    child: Center(
-                      child: Text(
-                        initial,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF2563EB),
-                        ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.menu_rounded,
+                        size: 20,
+                        color: Color(0xFF2563EB),
                       ),
                     ),
                   ),
