@@ -28,6 +28,16 @@ async def lifespan(app: FastAPI):
         debug=settings.debug,
     )
     
+    # Ensure all tables exist
+    try:
+        from app.core.database import engine, Base
+        import app.models  # noqa: F401
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database schema synchronized (all tables verified)")
+    except Exception as e:
+        logger.warning("Database schema check failed", error=str(e))
+
     # Seed default admin user and feature flags
     try:
         from app.core.database import async_session_factory
