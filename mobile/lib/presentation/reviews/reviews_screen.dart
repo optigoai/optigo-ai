@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/review_model.dart';
 import '../../data/repositories/review_repository.dart';
@@ -1360,84 +1361,188 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
                     if (_activeTabIndex == 1) ...[
                       const SizedBox(height: 18),
 
-                      // AI Suggested Response Mint Box — Auto-expands based on content length without truncation
+                      // Premium AI Suggested Response Card
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDF4),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFBBF7D0), width: 1.2),
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Row(
-                                  children: [
-                                    Icon(Icons.auto_awesome, size: 16, color: Color(0xFF16A34A)),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'AI Suggested Response',
-                                      style: TextStyle(
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF166534),
+                            // Header Bar with AI Badge, Editable Pill, and Action Buttons
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 14, 14, 10),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEFF6FF),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: const Color(0xFFDBEAFE)),
+                                        ),
+                                        child: const Icon(
+                                          Icons.auto_awesome_rounded,
+                                          size: 15,
+                                          color: Color(0xFF2563EB),
+                                        ),
                                       ),
+                                      const SizedBox(width: 8),
+                                      const Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'AI Suggested Response',
+                                            style: TextStyle(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                          Text(
+                                            'Tap text below to edit before posting',
+                                            style: TextStyle(
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      // Copy Draft Button
+                                      IconButton(
+                                        icon: const Icon(Icons.copy_rounded, size: 16, color: Color(0xFF64748B)),
+                                        tooltip: 'Copy reply',
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () {
+                                          Clipboard.setData(ClipboardData(text: _replyTextController.text));
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Response copied to clipboard!'),
+                                              duration: Duration(seconds: 2),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      // Regenerate Button
+                                      IconButton(
+                                        icon: _isGenerating
+                                            ? const SizedBox(
+                                                width: 14,
+                                                height: 14,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  color: Color(0xFF2563EB),
+                                                ),
+                                              )
+                                            : const Icon(Icons.refresh_rounded, size: 18, color: Color(0xFF2563EB)),
+                                        tooltip: 'Regenerate response',
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: _isGenerating ? null : _generateAiReply,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Inner White Canvas for Text
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.02),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
-                                InkWell(
-                                  onTap: _isGenerating ? null : _generateAiReply,
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    child: _isGenerating
-                                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF16A34A)))
-                                        : const Icon(Icons.refresh_rounded, size: 18, color: Color(0xFF16A34A)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            if (_isGenerating)
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 24),
-                                child: Center(
-                                  child: Text(
-                                    'Crafting personalized brand response with Gemini...',
-                                    style: TextStyle(fontSize: 12.5, color: Color(0xFF166534), fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                              )
-                            else
-                              TextField(
-                                controller: _replyTextController,
-                                maxLines: null,
-                                minLines: 3,
-                                keyboardType: TextInputType.multiline,
-                                style: const TextStyle(
-                                  fontSize: 13.5,
-                                  color: Color(0xFF14532D),
-                                  height: 1.5,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.zero,
-                                  isDense: true,
-                                  hintText: 'Type custom reply...',
-                                  hintStyle: TextStyle(color: Color(0xFF86EFAC)),
-                                ),
+                                child: _isGenerating
+                                    ? const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 28),
+                                        child: Column(
+                                          children: [
+                                            SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(strokeWidth: 2.2, color: Color(0xFF2563EB)),
+                                            ),
+                                            SizedBox(height: 10),
+                                            Text(
+                                              'Crafting personalized brand response with Gemini...',
+                                              style: TextStyle(
+                                                fontSize: 12.5,
+                                                color: Color(0xFF64748B),
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : TextField(
+                                        controller: _replyTextController,
+                                        maxLines: null,
+                                        minLines: 4,
+                                        keyboardType: TextInputType.multiline,
+                                        style: const TextStyle(
+                                          fontSize: 13.5,
+                                          color: Color(0xFF1E293B),
+                                          height: 1.55,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.zero,
+                                          isDense: true,
+                                          hintText: 'Type custom reply here...',
+                                          hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                                        ),
+                                      ),
                               ),
+                            ),
+
+                            // Footer Optimization Pill
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.verified_rounded, size: 14, color: Color(0xFF16A34A)),
+                                  SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Optimized for Google Maps SEO & customer retention',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF16A34A),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 22),
 
                       // Big Action Button: Use & Reply
                       InkWell(
@@ -1459,15 +1564,26 @@ class _ReviewDetailModalState extends State<_ReviewDetailModal> {
                           ),
                           child: Center(
                             child: _isPosting
-                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
-                                : const Text(
-                                    'Use & Reply',
-                                    style: TextStyle(
-                                      fontSize: 15.5,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                      letterSpacing: 0.2,
-                                    ),
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                                  )
+                                : const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.send_rounded, size: 16, color: Colors.white),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Use & Reply',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                           ),
                         ),
