@@ -157,6 +157,30 @@ class AdminService:
             "status": "active" if org.is_active else "suspended",
         }
 
+    async def update_organization(self, org_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Super Admin update of organization details (name, slug, is_active)."""
+        result = await self.db.execute(select(Organization).where(Organization.id == org_id))
+        org = result.scalar_one_or_none()
+        if not org:
+            raise ValueError(f"Organization {org_id} not found")
+
+        if "name" in data and data["name"]:
+            org.name = data["name"].strip()
+        if "slug" in data and data["slug"]:
+            org.slug = data["slug"].strip().lower()
+        if "is_active" in data and data["is_active"] is not None:
+            org.is_active = bool(data["is_active"])
+
+        org.updated_at = datetime.utcnow()
+        await self.db.flush()
+        return {
+            "id": org.id,
+            "name": org.name,
+            "slug": org.slug,
+            "is_active": org.is_active,
+            "updated_at": org.updated_at.isoformat(),
+        }
+
     async def get_all_businesses(self, limit: int = 100) -> List[Dict[str, Any]]:
         """Get all registered businesses across all tenants."""
         result = await self.db.execute(
@@ -194,33 +218,116 @@ class AdminService:
         org = org_res.scalar_one_or_none()
 
         # Users in this organization
-        users_res = await self.db.execute(select(User).where(User.organization_id == b.organization_id).order_by(User.created_at.asc()))
+        users_res = await self.db.execute(
+            select(User)
+            .where(User.organization_id == b.organization_id)
+            .order_by(User.created_at.asc())
+        )
         users = users_res.scalars().all()
 
-        # Stats
-        rev_res = await self.db.execute(select(func.count(Review.id), func.avg(Review.rating)).where(Review.business_id == business_id))
-        rev_row = rev_res.one()
-        rev_count = rev_row[0] or 0
-        avg_rating = rev_row[1] or 0.0
+        # Customer Reviews (All DB reviews)
+        from app.models.review import Review
+        reviews_res = await self.db.execute(
+            select(Review)
+            .where(Review.business_id == business_id)
+            .order_by(Review.created_at.desc())
+            .limit(100)
+        )
+        reviews_list = reviews_res.scalars().all()
 
-        from app.models.seo import SEOKeyword
-        kw_res = await self.db.execute(select(func.count(SEOKeyword.id)).where(SEOKeyword.business_id == business_id))
-        kw_count = kw_res.scalar() or 0
+        # SEO Keywords
+        from app.models.seo import SEOKeyword, SEOAudit
+        kw_res = await self.db.execute(
+            select(SEOKeyword)
+            .where(SEOKeyword.business_id == business_id)
+            .order_by(SEOKeyword.created_at.desc())
+        )
+        keywords_list = kw_res.scalars().all()
 
-        kw_top3_res = await self.db.execute(select(func.count(SEOKeyword.id)).where(SEOKeyword.business_id == business_id, SEOKeyword.current_rank <= 3))
-        kw_top3_count = kw_top3_res.scalar() or 0
+        # Latest SEO Audit
+        audit_res = await self.db.execute(
+            select(SEOAudit)
+            .where(SEOAudit.business_id == business_id)
+            .order_by(SEOAudit.created_at.desc())
+            .limit(1)
+        )
+        latest_seo_audit = audit_res.scalar_one_or_none()
 
-        from app.models.recommendation import Recommendation
-        rec_res = await self.db.execute(select(func.count(Recommendation.id)).where(Recommendation.business_id == business_id))
-        rec_count = rec_res.scalar() or 0
-
+        # Website Audit
         from app.models.website_audit import WebsiteAudit
-        web_res = await self.db.execute(select(WebsiteAudit).where(WebsiteAudit.business_id == business_id).order_by(WebsiteAudit.created_at.desc()).limit(1))
-        latest_audit = web_res.scalar_one_or_none()
+        web_res = await self.db.execute(
+            select(WebsiteAudit)
+            .where(WebsiteAudit.business_id == business_id)
+            .order_by(WebsiteAudit.created_at.desc())
+            .limit(1)
+        )
+        latest_web_audit = web_res.scalar_one_or_none()
+
+        # GSC Connection
+        from app.models.gsc import GoogleSearchConsoleConnection
+        gsc_res = await self.db.execute(
+            select(GoogleSearchConsoleConnection)
+            .where(GoogleSearchConsoleConnection.business_id == business_id)
+        )
+        gsc_conn = gsc_res.scalar_one_or_none()
+
+        # Recommendations
+        from app.models.recommendation import Recommendation
+        rec_res = await self.db.execute(
+            select(Recommendation)
+            .where(Recommendation.business_id == business_id)
+            .order_by(Recommendation.created_at.desc())
+            .limit(50)
+        )
+        recs_list = rec_res.scalars().all()
+
+        # Campaigns
+        from app.models.campaign import Campaign
+        camp_res = await self.db.execute(
+            select(Campaign)
+            .where(Campaign.business_id == business_id)
+            .order_by(Campaign.created_at.desc())
+            .limit(50)
+        )
+        campaigns_list = camp_res.scalars().all()
+
+        # Contents
+        from app.models.content import Content
+        content_res = await self.db.execute(
+            select(Content)
+            .where(Content.business_id == business_id)
+            .order_by(Content.created_at.desc())
+            .limit(50)
+        )
+        contents_list = content_res.scalars().all()
+
+        # Competitors
+        from app.models.competitor import Competitor
+        comp_res = await self.db.execute(
+            select(Competitor)
+            .where(Competitor.business_id == business_id)
+            .order_by(Competitor.created_at.desc())
+        )
+        competitors_list = comp_res.scalars().all()
+
+        # Aggregate counts & averages
+        rev_count = len(reviews_list)
+        avg_rating = (
+            sum(r.rating for r in reviews_list) / rev_count if rev_count > 0 else 0.0
+        )
+        kw_top3_count = sum(1 for k in keywords_list if k.current_rank and k.current_rank <= 3)
 
         return {
             "id": b.id,
             "organization_id": b.organization_id,
+            "organization": {
+                "id": org.id if org else b.organization_id,
+                "name": org.name if org else "Unknown",
+                "slug": org.slug if org else "",
+                "is_active": org.is_active if org else True,
+                "created_at": org.created_at.isoformat() if org and org.created_at else None,
+                "updated_at": org.updated_at.isoformat() if org and org.updated_at else None,
+            },
             "organization_name": org.name if org else "Unknown",
             "organization_is_active": org.is_active if org else True,
             "name": b.name,
@@ -246,26 +353,135 @@ class AdminService:
                     "id": u.id,
                     "full_name": u.full_name,
                     "email": u.email,
-                    "role": u.role.value if hasattr(u.role, 'value') else str(u.role),
+                    "role": u.role.value if hasattr(u.role, "value") else str(u.role),
                     "is_active": u.is_active,
                     "created_at": u.created_at.isoformat() if u.created_at else None,
+                    "updated_at": u.updated_at.isoformat() if u.updated_at else None,
                 }
                 for u in users
+            ],
+            "reviews": [
+                {
+                    "id": r.id,
+                    "author_name": r.author_name,
+                    "rating": r.rating,
+                    "review_text": r.review_text,
+                    "response_text": r.response_text,
+                    "sentiment": r.sentiment.value if hasattr(r.sentiment, "value") else str(r.sentiment),
+                    "review_date": r.review_date.isoformat() if r.review_date else None,
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                }
+                for r in reviews_list
+            ],
+            "seo_keywords": [
+                {
+                    "id": kw.id,
+                    "keyword": kw.keyword,
+                    "target_location": kw.target_location,
+                    "current_rank": kw.current_rank,
+                    "previous_rank": kw.previous_rank,
+                    "best_rank": kw.best_rank,
+                    "search_volume": kw.search_volume,
+                    "difficulty": kw.difficulty,
+                    "created_at": kw.created_at.isoformat() if kw.created_at else None,
+                }
+                for kw in keywords_list
+            ],
+            "seo_audit": {
+                "id": latest_seo_audit.id,
+                "overall_seo_score": latest_seo_audit.overall_seo_score,
+                "map_pack_score": latest_seo_audit.map_pack_score,
+                "citation_score": latest_seo_audit.citation_score,
+                "missing_attributes": latest_seo_audit.missing_attributes or [],
+                "actionable_recommendations": latest_seo_audit.actionable_recommendations or [],
+                "competitor_insights": latest_seo_audit.competitor_insights or [],
+                "created_at": latest_seo_audit.created_at.isoformat() if latest_seo_audit.created_at else None,
+            } if latest_seo_audit else None,
+            "website_audit": {
+                "id": latest_web_audit.id,
+                "site_url": latest_web_audit.site_url,
+                "overall_score": latest_web_audit.overall_score,
+                "technical_score": latest_web_audit.technical_score,
+                "content_score": latest_web_audit.content_score,
+                "local_signals_score": latest_web_audit.local_signals_score,
+                "findings": latest_web_audit.findings or [],
+                "actionable_recommendations": latest_web_audit.actionable_recommendations or [],
+                "raw_crawl_meta": latest_web_audit.raw_crawl_meta or {},
+                "created_at": latest_web_audit.created_at.isoformat() if latest_web_audit.created_at else None,
+            } if latest_web_audit else None,
+            "gsc_connection": {
+                "id": gsc_conn.id,
+                "site_url": gsc_conn.site_url,
+                "is_connected": gsc_conn.is_connected,
+                "sync_status": gsc_conn.sync_status,
+                "last_synced_at": gsc_conn.last_synced_at.isoformat() if gsc_conn.last_synced_at else None,
+                "sync_error": gsc_conn.sync_error,
+            } if gsc_conn else None,
+            "campaigns": [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "objective": c.objective,
+                    "audience": c.audience,
+                    "offer": c.offer,
+                    "status": c.status.value if hasattr(c.status, "value") else str(c.status),
+                    "created_at": c.created_at.isoformat() if c.created_at else None,
+                }
+                for c in campaigns_list
+            ],
+            "contents": [
+                {
+                    "id": ct.id,
+                    "content_type": ct.content_type.value if hasattr(ct.content_type, "value") else str(ct.content_type),
+                    "title": ct.title,
+                    "body": ct.body[:200] if ct.body else "",
+                    "status": ct.status.value if hasattr(ct.status, "value") else str(ct.status),
+                    "created_at": ct.created_at.isoformat() if ct.created_at else None,
+                }
+                for ct in contents_list
+            ],
+            "competitors": [
+                {
+                    "id": cp.id,
+                    "name": cp.name,
+                    "category": cp.category,
+                    "location": cp.location,
+                    "rating": cp.rating,
+                    "reviews_count": cp.reviews_count,
+                    "website": cp.website,
+                }
+                for cp in competitors_list
+            ],
+            "recommendations": [
+                {
+                    "id": rec.id,
+                    "title": rec.title,
+                    "description": rec.description,
+                    "priority": rec.priority.value if hasattr(rec.priority, "value") else str(rec.priority),
+                    "category": rec.category,
+                    "status": rec.status.value if hasattr(rec.status, "value") else str(rec.status),
+                    "impact": rec.impact,
+                    "created_at": rec.created_at.isoformat() if rec.created_at else None,
+                }
+                for rec in recs_list
             ],
             "stats": {
                 "reviews_count": rev_count,
                 "average_rating": round(float(avg_rating), 1),
-                "keywords_count": kw_count,
+                "keywords_count": len(keywords_list),
                 "top3_keywords_count": kw_top3_count,
-                "recommendations_count": rec_count,
+                "recommendations_count": len(recs_list),
+                "campaigns_count": len(campaigns_list),
+                "contents_count": len(contents_list),
+                "competitors_count": len(competitors_list),
                 "latest_audit": {
-                    "overall_score": latest_audit.overall_score if latest_audit else None,
-                    "technical_score": latest_audit.technical_score if latest_audit else None,
-                    "content_score": latest_audit.content_score if latest_audit else None,
-                    "local_signals_score": latest_audit.local_signals_score if latest_audit else None,
-                    "findings_count": len(latest_audit.findings) if latest_audit and latest_audit.findings else 0,
-                } if latest_audit else None,
-            }
+                    "overall_score": latest_web_audit.overall_score if latest_web_audit else None,
+                    "technical_score": latest_web_audit.technical_score if latest_web_audit else None,
+                    "content_score": latest_web_audit.content_score if latest_web_audit else None,
+                    "local_signals_score": latest_web_audit.local_signals_score if latest_web_audit else None,
+                    "findings_count": len(latest_web_audit.findings) if latest_web_audit and latest_web_audit.findings else 0,
+                } if latest_web_audit else None,
+            },
         }
 
     async def update_business_full(self, business_id: str, data: Dict[str, Any]) -> Dict[str, Any]:

@@ -62,6 +62,23 @@ async def toggle_organization_status(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+@router.put("/organizations/{org_id}", summary="Update Organization Details")
+async def update_organization_details(
+    org_id: str,
+    body: Dict[str, Any],
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Super Admin edit of organization name, slug, or active status."""
+    service = AdminService(db)
+    try:
+        res = await service.update_organization(org_id, body)
+        await db.commit()
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 @router.get("/businesses", summary="List All Businesses")
 async def list_businesses(
     limit: int = Query(100, ge=1, le=500),

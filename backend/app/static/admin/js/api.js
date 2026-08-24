@@ -75,6 +75,13 @@ class AdminAPI {
     });
   }
 
+  async updateOrganization(orgId, data) {
+    return await this.request(`/admin/organizations/${orgId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   async getBusinesses(limit = 100) {
     return await this.request(`/admin/businesses?limit=${limit}`);
   }

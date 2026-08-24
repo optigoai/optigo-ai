@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/admin-static/css/admin.css?v=4.0">
+  <link rel="stylesheet" href="/admin-static/css/admin.css?v=5.0">
 </head>
 <body>
 
@@ -431,12 +431,16 @@
       <div class="modal-nav-tabs">
         <button class="modal-tab-btn active" data-modaltab="profile" onclick="switchModalTab('profile')">Profile & Storefront</button>
         <button class="modal-tab-btn" data-modaltab="onboarding" onclick="switchModalTab('onboarding')">Onboarding & Strategy</button>
-        <button class="modal-tab-btn" data-modaltab="users" onclick="switchModalTab('users')">Maintained Users & Owner</button>
-        <button class="modal-tab-btn" data-modaltab="stats" onclick="switchModalTab('stats')">Database & Marketing Stats</button>
+        <button class="modal-tab-btn" data-modaltab="organization" onclick="switchModalTab('organization')">Tenant & Org</button>
+        <button class="modal-tab-btn" data-modaltab="users" onclick="switchModalTab('users')">Users & Owners</button>
+        <button class="modal-tab-btn" data-modaltab="reviews" onclick="switchModalTab('reviews')">Reviews in DB</button>
+        <button class="modal-tab-btn" data-modaltab="seo" onclick="switchModalTab('seo')">SEO, Keywords & Crawl</button>
+        <button class="modal-tab-btn" data-modaltab="marketing" onclick="switchModalTab('marketing')">Campaigns & Content</button>
+        <button class="modal-tab-btn" data-modaltab="rawjson" onclick="switchModalTab('rawjson')">Raw JSON</button>
       </div>
 
       <!-- Modal Body Tabs -->
-      <div class="modal-body-content">
+      <div class="modal-body-content" style="max-height: calc(88vh - 180px); overflow-y: auto; padding: 22px 26px;">
         <!-- TAB 1: PROFILE & STOREFRONT -->
         <div class="modal-tab-pane" id="modaltab-profile">
           <form id="biz-edit-form-profile" onsubmit="event.preventDefault();">
@@ -469,12 +473,20 @@
                 </select>
               </div>
               <div class="form-group">
+                <label>Health Score (0 - 100)</label>
+                <input type="number" id="edit-biz-health-score" class="form-input" min="0" max="100" placeholder="e.g. 85">
+              </div>
+              <div class="form-group">
                 <label>Google Business Profile Account ID</label>
                 <input type="text" id="edit-biz-gbp-acc" class="form-input" placeholder="accounts/...">
               </div>
               <div class="form-group">
                 <label>Google Business Profile Location ID</label>
                 <input type="text" id="edit-biz-gbp-loc" class="form-input" placeholder="locations/...">
+              </div>
+              <div class="form-group">
+                <label>Business Database UUID</label>
+                <input type="text" id="edit-biz-uuid-readonly" class="form-input" readonly style="background:#F1F5F9; color:#64748B; cursor:not-allowed;">
               </div>
             </div>
 
@@ -504,12 +516,55 @@
             <input type="text" id="edit-biz-channels" class="form-input" placeholder="e.g. google_maps, instagram, meta_ads">
           </div>
           <div class="form-group" style="margin-top:14px;">
-            <label>AI Synthesized Business Profile (JSON)</label>
+            <label>AI Synthesized Business Profile (JSON Object)</label>
             <textarea id="edit-biz-ai-profile" class="form-textarea" style="font-family:ui-monospace, monospace; font-size:0.8rem;" rows="5" placeholder="{ ... }"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>AI Health Analysis (JSON Object)</label>
+            <textarea id="edit-biz-health-analysis" class="form-textarea" style="font-family:ui-monospace, monospace; font-size:0.8rem;" rows="4" placeholder="{ ... }"></textarea>
           </div>
         </div>
 
-        <!-- TAB 3: MAINTAINED USERS & OWNER -->
+        <!-- TAB 3: TENANT & ORGANIZATION -->
+        <div class="modal-tab-pane" id="modaltab-organization" style="display:none;">
+          <div style="background:#F8FAFC; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px; margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h4 style="font-size:0.95rem; font-weight:800; color:var(--text-primary);">Tenant Organization Parameters</h4>
+              <span id="org-tab-badge" class="badge badge-active">Active</span>
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Organization Name</label>
+                <input type="text" id="edit-org-name" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Organization Slug (URL Key)</label>
+                <input type="text" id="edit-org-slug" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Organization UUID</label>
+                <input type="text" id="edit-org-id" class="form-input" readonly style="background:#F1F5F9; color:#64748B; cursor:not-allowed;">
+              </div>
+              <div class="form-group">
+                <label>Status & Access</label>
+                <select id="edit-org-status" class="form-select">
+                  <option value="true">Active (Normal Access)</option>
+                  <option value="false">Suspended (Access Blocked)</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:0.8rem; color:var(--text-secondary);" id="org-meta-dates">
+                Created: - • Updated: -
+              </div>
+              <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.82rem;" onclick="handleSaveOrganizationModal()">
+                Save Organization Details
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: USERS & OWNERS -->
         <div class="modal-tab-pane" id="modaltab-users" style="display:none;">
           <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:14px;">
             Users and business owners registered under organization <code id="userstab-org-slug">...</code>:
@@ -519,62 +574,163 @@
           </div>
         </div>
 
-        <!-- TAB 4: DATABASE & MARKETING STATS -->
-        <div class="modal-tab-pane" id="modaltab-stats" style="display:none;">
-          <div class="form-grid-2">
-            <!-- Reviews Stats -->
-            <div class="stats-card-mini">
-              <div class="stats-icon-mini stat-icon-amber">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              </div>
-              <div>
-                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Customer Reviews in DB</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--text-primary);" id="stat-biz-reviews">0 (0.0 Avg)</div>
-              </div>
-            </div>
+        <!-- TAB 5: REVIEWS IN DB -->
+        <div class="modal-tab-pane" id="modaltab-reviews" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div style="font-size:0.9rem; font-weight:800; color:var(--text-primary);" id="reviews-tab-title">Customer Reviews (0)</div>
+            <div style="font-size:0.82rem; color:var(--text-secondary);" id="reviews-tab-avg">Average Rating: 0.0</div>
+          </div>
+          <div class="table-container" style="max-height:400px; overflow-y:auto;">
+            <table class="table" style="font-size:0.82rem;">
+              <thead>
+                <tr>
+                  <th>Rating</th>
+                  <th>Author</th>
+                  <th>Review Text</th>
+                  <th>Sentiment</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="modal-reviews-tbody">
+                <!-- Dynamically populated reviews -->
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-            <!-- SEO Keywords Stats -->
+        <!-- TAB 6: SEO, KEYWORDS & CRAWL -->
+        <div class="modal-tab-pane" id="modaltab-seo" style="display:none;">
+          <!-- Sub-metrics Grid -->
+          <div class="form-grid-3" style="margin-bottom:16px;">
             <div class="stats-card-mini">
               <div class="stats-icon-mini stat-icon-blue">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
               </div>
               <div>
-                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Tracked Keywords</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--text-primary);" id="stat-biz-keywords">0 (0 in Top 3)</div>
+                <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">LOCAL VISIBILITY / MAP PACK</div>
+                <div style="font-size:1.15rem; font-weight:800; color:var(--text-primary);" id="seo-tab-map-score">-</div>
               </div>
             </div>
-
-            <!-- Website Crawl Audit -->
             <div class="stats-card-mini">
               <div class="stats-icon-mini stat-icon-emerald">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
               </div>
               <div>
-                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Latest Technical Crawl Score</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--text-primary);" id="stat-biz-crawl">Not Audited</div>
+                <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">WEBSITE CRAWL HEALTH</div>
+                <div style="font-size:1.15rem; font-weight:800; color:var(--text-primary);" id="seo-tab-crawl-score">-</div>
               </div>
             </div>
-
-            <!-- CMO Recommendations -->
             <div class="stats-card-mini">
               <div class="stats-icon-mini stat-icon-violet">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
               </div>
               <div>
-                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Active AI Recommendations</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--text-primary);" id="stat-biz-recs">0 Actions</div>
+                <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">SEARCH CONSOLE STATUS</div>
+                <div style="font-size:1.15rem; font-weight:800; color:var(--text-primary);" id="seo-tab-gsc-status">Disconnected</div>
               </div>
             </div>
           </div>
 
-          <div style="margin-top:20px; background:#F8FAFC; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px;">
-            <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:8px; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.5px;">Database Metadata</h4>
-            <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.7;">
-              • Created At: <span id="meta-biz-created" style="color:var(--text-primary); font-weight:600;">-</span><br>
-              • Last Updated: <span id="meta-biz-updated" style="color:var(--text-primary); font-weight:600;">-</span><br>
-              • Organization ID: <code id="meta-biz-org-id" style="font-family:ui-monospace, monospace;">-</code>
+          <!-- Tracked Keywords Table -->
+          <div style="margin-bottom:16px;">
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Tracked Google Search Keywords</h4>
+            <div class="table-container" style="max-height:220px; overflow-y:auto;">
+              <table class="table" style="font-size:0.8rem;">
+                <thead>
+                  <tr>
+                    <th>Keyword Phrase</th>
+                    <th>Current Rank</th>
+                    <th>Best Rank</th>
+                    <th>Volume</th>
+                    <th>Difficulty</th>
+                    <th>Location</th>
+                  </tr>
+                </thead>
+                <tbody id="modal-keywords-tbody">
+                  <!-- Dynamically populated keywords -->
+                </tbody>
+              </table>
             </div>
           </div>
+
+          <!-- Website Findings List -->
+          <div>
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Latest On-Page Technical Crawl Findings</h4>
+            <div id="modal-crawl-findings-list" style="display:flex; flex-direction:column; gap:8px;">
+              <!-- Dynamically populated crawl findings -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 7: CAMPAIGNS, CONTENT & COMPETITORS -->
+        <div class="modal-tab-pane" id="modaltab-marketing" style="display:none;">
+          <!-- Campaigns Table -->
+          <div style="margin-bottom:16px;">
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Marketing Campaigns</h4>
+            <div class="table-container" style="max-height:180px; overflow-y:auto;">
+              <table class="table" style="font-size:0.8rem;">
+                <thead>
+                  <tr>
+                    <th>Campaign Name</th>
+                    <th>Objective</th>
+                    <th>Audience</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="modal-campaigns-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Contents Table -->
+          <div style="margin-bottom:16px;">
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">AI-Generated Marketing Content</h4>
+            <div class="table-container" style="max-height:180px; overflow-y:auto;">
+              <table class="table" style="font-size:0.8rem;">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Preview</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="modal-contents-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Competitors Table -->
+          <div style="margin-bottom:16px;">
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Tracked Local Competitors</h4>
+            <div class="table-container" style="max-height:180px; overflow-y:auto;">
+              <table class="table" style="font-size:0.8rem;">
+                <thead>
+                  <tr>
+                    <th>Competitor Name</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Rating</th>
+                    <th>Reviews</th>
+                  </tr>
+                </thead>
+                <tbody id="modal-competitors-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 8: RAW JSON DOCUMENT -->
+        <div class="modal-tab-pane" id="modaltab-rawjson" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:0.82rem; color:var(--text-secondary);">Complete 100% database entity dump (all relational tables, timestamps & metadata):</span>
+            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.78rem;" onclick="copyRawBusinessJson()">
+              Copy Complete JSON
+            </button>
+          </div>
+          <pre id="modal-raw-json-viewer" style="background:#0F172A; color:#38BDF8; padding:16px; border-radius:var(--radius-md); font-family:ui-monospace, monospace; font-size:0.78rem; line-height:1.5; max-height:420px; overflow:auto; border:1px solid #1E293B;"></pre>
         </div>
 
       </div>
@@ -623,7 +779,7 @@
     </div>
   </div>
 
-  <script src="/admin-static/js/api.js?v=4.0"></script>
-  <script src="/admin-static/js/app.js?v=4.0"></script>
+  <script src="/admin-static/js/api.js?v=5.0"></script>
+  <script src="/admin-static/js/app.js?v=5.0"></script>
 </body>
 </html>

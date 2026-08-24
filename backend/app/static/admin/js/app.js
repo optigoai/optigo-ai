@@ -380,7 +380,7 @@ async function openBusinessDetail(businessId) {
   modal.style.display = 'flex';
 
   // Set loading state in modal
-  document.getElementById('modal-biz-title').innerText = 'Loading Business Data...';
+  document.getElementById('modal-biz-title').innerText = 'Loading Complete Business Data...';
   document.getElementById('modal-biz-id').innerText = businessId;
   document.getElementById('modal-biz-org-name').innerText = '...';
 
@@ -407,8 +407,10 @@ async function openBusinessDetail(businessId) {
     document.getElementById('edit-biz-website').value = data.website || '';
     document.getElementById('edit-biz-phone').value = data.phone || '';
     document.getElementById('edit-biz-onboard-status').value = data.onboarding_completed ? 'true' : 'false';
+    document.getElementById('edit-biz-health-score').value = data.health_score !== null && data.health_score !== undefined ? data.health_score : '';
     document.getElementById('edit-biz-gbp-acc').value = data.gbp_account_id || '';
     document.getElementById('edit-biz-gbp-loc').value = data.gbp_location_id || '';
+    document.getElementById('edit-biz-uuid-readonly').value = data.id || '';
     document.getElementById('edit-biz-description').value = data.description || '';
 
     // Tab 2: Onboarding & Strategy
@@ -417,25 +419,36 @@ async function openBusinessDetail(businessId) {
     document.getElementById('edit-biz-goals').value = Array.isArray(data.business_goals) ? data.business_goals.join(', ') : (data.business_goals || '');
     document.getElementById('edit-biz-channels').value = Array.isArray(data.marketing_channels) ? data.marketing_channels.join(', ') : (data.marketing_channels || '');
     document.getElementById('edit-biz-ai-profile').value = data.ai_business_profile ? JSON.stringify(data.ai_business_profile, null, 2) : '';
+    document.getElementById('edit-biz-health-analysis').value = data.health_analysis ? JSON.stringify(data.health_analysis, null, 2) : '';
 
-    // Tab 3: Users
+    // Tab 3: Tenant & Organization
+    const org = data.organization || {};
+    document.getElementById('edit-org-name').value = org.name || data.organization_name || '';
+    document.getElementById('edit-org-slug').value = org.slug || '';
+    document.getElementById('edit-org-id').value = org.id || data.organization_id || '';
+    document.getElementById('edit-org-status').value = (org.is_active !== false && data.organization_is_active !== false) ? 'true' : 'false';
+    const orgBadge = document.getElementById('org-tab-badge');
+    if (orgBadge) {
+      const isOrgActive = (org.is_active !== false && data.organization_is_active !== false);
+      orgBadge.className = `badge ${isOrgActive ? 'badge-active' : 'badge-suspended'}`;
+      orgBadge.innerText = isOrgActive ? 'Active Tenant' : 'Suspended Tenant';
+    }
+    document.getElementById('org-meta-dates').innerText = `Created: ${org.created_at ? new Date(org.created_at).toLocaleString() : 'N/A'} • Updated: ${org.updated_at ? new Date(org.updated_at).toLocaleString() : 'N/A'}`;
+
+    // Tab 4: Users
     renderModalUsers(data.users || []);
 
-    // Tab 4: Database & Marketing Stats
-    const stats = data.stats || {};
-    document.getElementById('stat-biz-reviews').innerText = `${stats.reviews_count || 0} (${stats.average_rating || 0.0} Avg Rating)`;
-    document.getElementById('stat-biz-keywords').innerText = `${stats.keywords_count || 0} (${stats.top3_keywords_count || 0} in Top 3)`;
-    
-    if (stats.latest_audit && stats.latest_audit.overall_score) {
-      document.getElementById('stat-biz-crawl').innerText = `${stats.latest_audit.overall_score}% (${stats.latest_audit.findings_count} Findings)`;
-    } else {
-      document.getElementById('stat-biz-crawl').innerText = 'Not Audited Yet';
-    }
-    document.getElementById('stat-biz-recs').innerText = `${stats.recommendations_count || 0} Action Items`;
+    // Tab 5: Reviews
+    renderModalReviews(data.reviews || [], data.stats || {});
 
-    document.getElementById('meta-biz-created').innerText = data.created_at ? new Date(data.created_at).toLocaleString() : 'N/A';
-    document.getElementById('meta-biz-updated').innerText = data.updated_at ? new Date(data.updated_at).toLocaleString() : 'N/A';
-    document.getElementById('meta-biz-org-id').innerText = data.organization_id || 'N/A';
+    // Tab 6: SEO, Keywords & Crawl
+    renderModalSEO(data);
+
+    // Tab 7: Marketing, Campaigns & Competitors
+    renderModalMarketing(data);
+
+    // Tab 8: Raw JSON
+    renderModalRawJson(data);
 
   } catch (err) {
     showToast(`Failed to load business details: ${err.message}`, 'error');
@@ -447,21 +460,23 @@ function renderModalUsers(users) {
   if (!container) return;
 
   if (users.length === 0) {
-    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">No users associated with this organization.</div>`;
+    container.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-muted); background:#F8FAFC; border-radius:var(--radius-md); border:1px dashed var(--border-color);">No users associated with this organization in the database.</div>`;
     return;
   }
 
-  container.innerHTML = users.map(u => `
-    <div class="user-editor-card" id="user-card-${u.id}">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+  container.innerHTML = users.map(u => {
+    const roleVal = (u.role || 'user').toLowerCase();
+    return `
+    <div class="user-editor-card" id="user-card-${u.id}" style="background:#F8FAFC; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px; margin-bottom:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <div>
           <strong style="font-size:0.95rem; color:var(--text-primary);">${escapeHtml(u.full_name || 'Unnamed User')}</strong>
-          <span style="font-size:0.75rem; color:var(--text-muted); margin-left:8px;">ID: <code>${u.id}</code></span>
+          <span style="font-size:0.75rem; color:var(--text-muted); margin-left:8px;">UUID: <code style="font-family:monospace;">${u.id}</code></span>
         </div>
         <span class="badge ${u.is_active ? 'badge-active' : 'badge-suspended'}">${u.is_active ? 'Active User' : 'Suspended'}</span>
       </div>
 
-      <div class="form-grid-3" style="margin-top:8px;">
+      <div class="form-grid-3">
         <div class="form-group">
           <label>Full Name</label>
           <input type="text" id="user-name-${u.id}" class="form-input" value="${escapeHtml(u.full_name || '')}">
@@ -471,26 +486,205 @@ function renderModalUsers(users) {
           <input type="email" id="user-email-${u.id}" class="form-input" value="${escapeHtml(u.email || '')}">
         </div>
         <div class="form-group">
-          <label>Role</label>
+          <label>Role in Organization</label>
           <select id="user-role-${u.id}" class="form-select">
-            <option value="business_owner" ${u.role === 'business_owner' ? 'selected' : ''}>Business Owner</option>
-            <option value="marketing_manager" ${u.role === 'marketing_manager' ? 'selected' : ''}>Marketing Manager</option>
-            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Super Administrator</option>
+            <option value="owner" ${roleVal === 'owner' || roleVal === 'business_owner' ? 'selected' : ''}>Organization Owner</option>
+            <option value="manager" ${roleVal === 'manager' || roleVal === 'marketing_manager' ? 'selected' : ''}>Marketing Manager</option>
+            <option value="user" ${roleVal === 'user' ? 'selected' : ''}>Standard User</option>
+            <option value="admin" ${roleVal === 'admin' ? 'selected' : ''}>Super Administrator</option>
           </select>
         </div>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05);">
-        <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; cursor:pointer;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px solid var(--border-color);">
+        <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; cursor:pointer; color:var(--text-primary); font-weight:600;">
           <input type="checkbox" id="user-active-${u.id}" ${u.is_active ? 'checked' : ''}>
-          <span>Account Active</span>
+          <span>Account Active & Enabled</span>
         </label>
-        <button type="button" class="btn btn-secondary" style="padding:4px 12px; font-size:0.78rem;" onclick="handleSaveUserModal('${u.id}')">
-          Save User
-        </button>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:0.75rem; color:var(--text-muted);">Joined: ${u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A'}</span>
+          <button type="button" class="btn btn-secondary" style="padding:4px 12px; font-size:0.78rem;" onclick="handleSaveUserModal('${u.id}')">
+            Save User
+          </button>
+        </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+}
+
+function renderModalReviews(reviews, stats) {
+  const tbody = document.getElementById('modal-reviews-tbody');
+  const title = document.getElementById('reviews-tab-title');
+  const avgText = document.getElementById('reviews-tab-avg');
+  if (!tbody) return;
+
+  if (title) title.innerText = `Customer Reviews in Database (${reviews.length})`;
+  if (avgText) avgText.innerText = `Average Rating: ${stats.average_rating || 0.0} / 5.0 ⭐`;
+
+  if (reviews.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:24px; color:var(--text-muted);">No customer reviews recorded in the database yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = reviews.map(r => {
+    const stars = '★'.repeat(Math.round(r.rating || 5)) + '☆'.repeat(5 - Math.round(r.rating || 5));
+    const sentiment = (r.sentiment || 'NEUTRAL').toUpperCase();
+    let sentBadge = 'badge-active';
+    if (sentiment === 'NEGATIVE') sentBadge = 'badge-suspended';
+    else if (sentiment === 'NEUTRAL') sentBadge = 'badge-draft';
+
+    return `
+      <tr>
+        <td style="color:#F59E0B; font-weight:800; white-space:nowrap;">${stars} (${r.rating})</td>
+        <td><strong>${escapeHtml(r.author_name || 'Anonymous')}</strong></td>
+        <td style="max-width:300px;">
+          <div>${escapeHtml(r.review_text || '')}</div>
+          ${r.response_text ? `<div style="font-size:0.75rem; color:var(--primary-color); margin-top:4px; background:#EFF6FF; padding:4px 8px; border-radius:6px;"><strong>Owner Reply:</strong> ${escapeHtml(r.response_text)}</div>` : ''}
+        </td>
+        <td><span class="badge ${sentBadge}">${sentiment}</span></td>
+        <td style="white-space:nowrap; color:var(--text-muted); font-size:0.75rem;">${r.review_date ? new Date(r.review_date).toLocaleDateString() : (r.created_at ? new Date(r.created_at).toLocaleDateString() : '-')}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderModalSEO(data) {
+  const audit = data.seo_audit || {};
+  const webAudit = data.website_audit || {};
+  const gsc = data.gsc_connection || {};
+  const keywords = data.seo_keywords || [];
+
+  // Metrics
+  const mapScore = document.getElementById('seo-tab-map-score');
+  if (mapScore) mapScore.innerText = audit.map_pack_score ? `${audit.map_pack_score}% (Visibility)` : 'Not Audited';
+
+  const crawlScore = document.getElementById('seo-tab-crawl-score');
+  if (crawlScore) crawlScore.innerText = webAudit.overall_score ? `${webAudit.overall_score}/100 Score` : 'Not Audited';
+
+  const gscStatus = document.getElementById('seo-tab-gsc-status');
+  if (gscStatus) {
+    gscStatus.innerText = gsc.is_connected ? 'Connected' : 'Disconnected';
+    gscStatus.style.color = gsc.is_connected ? 'var(--emerald-text)' : 'var(--text-muted)';
+  }
+
+  // Keywords Table
+  const kwTbody = document.getElementById('modal-keywords-tbody');
+  if (kwTbody) {
+    if (keywords.length === 0) {
+      kwTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">No keywords tracked in database.</td></tr>`;
+    } else {
+      kwTbody.innerHTML = keywords.map(kw => `
+        <tr>
+          <td><strong>${escapeHtml(kw.keyword)}</strong></td>
+          <td><span class="badge ${kw.current_rank && kw.current_rank <= 3 ? 'badge-active' : 'badge-draft'}">${kw.current_rank ? '#' + kw.current_rank : '—'}</span></td>
+          <td style="color:var(--text-muted);">${kw.best_rank ? '#' + kw.best_rank : '—'}</td>
+          <td>${escapeHtml(kw.search_volume || 'N/A')}</td>
+          <td><span class="badge badge-active">${escapeHtml(kw.difficulty || 'Medium')}</span></td>
+          <td style="color:var(--text-secondary);">${escapeHtml(kw.target_location || 'Global/Local')}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // Crawl Findings
+  const findingsContainer = document.getElementById('modal-crawl-findings-list');
+  if (findingsContainer) {
+    const findings = webAudit.findings || [];
+    if (findings.length === 0) {
+      findingsContainer.innerHTML = `<div style="text-align:center; padding:16px; color:var(--text-muted); background:#F8FAFC; border-radius:var(--radius-md);">No technical crawl findings recorded for this website.</div>`;
+    } else {
+      findingsContainer.innerHTML = findings.map(f => {
+        const isPass = f.status === 'pass';
+        return `
+          <div style="background:${isPass ? '#F0FDF4' : '#FEF2F2'}; border:1px solid ${isPass ? '#BBF7D0' : '#FECACA'}; border-radius:var(--radius-md); padding:10px 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="font-size:0.85rem; color:${isPass ? '#15803D' : '#991B1B'};">${escapeHtml(f.title || '')}</strong>
+              <span class="badge ${isPass ? 'badge-active' : 'badge-suspended'}">${isPass ? 'PASSED' : (f.impact || 'WARNING').toUpperCase()}</span>
+            </div>
+            ${f.fix ? `<div style="font-size:0.78rem; color:#475569; margin-top:4px;"><strong>Fix:</strong> ${escapeHtml(f.fix)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+function renderModalMarketing(data) {
+  const campaigns = data.campaigns || [];
+  const contents = data.contents || [];
+  const competitors = data.competitors || [];
+
+  // Campaigns
+  const campTbody = document.getElementById('modal-campaigns-tbody');
+  if (campTbody) {
+    if (campaigns.length === 0) {
+      campTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">No campaigns in database.</td></tr>`;
+    } else {
+      campTbody.innerHTML = campaigns.map(c => `
+        <tr>
+          <td><strong>${escapeHtml(c.name)}</strong></td>
+          <td style="color:var(--text-secondary);">${escapeHtml(c.objective || '')}</td>
+          <td style="color:var(--text-secondary);">${escapeHtml(c.audience || '')}</td>
+          <td><span class="badge badge-active">${escapeHtml(c.status || 'DRAFT')}</span></td>
+          <td style="color:var(--text-muted); font-size:0.75rem;">${c.created_at ? new Date(c.created_at).toLocaleDateString() : '-'}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // Contents
+  const contentTbody = document.getElementById('modal-contents-tbody');
+  if (contentTbody) {
+    if (contents.length === 0) {
+      contentTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">No generated content in database.</td></tr>`;
+    } else {
+      contentTbody.innerHTML = contents.map(ct => `
+        <tr>
+          <td><span class="badge badge-active">${escapeHtml(ct.content_type || 'POST')}</span></td>
+          <td><strong>${escapeHtml(ct.title || 'Untitled')}</strong></td>
+          <td style="color:var(--text-secondary); font-size:0.75rem; max-width:250px;">${escapeHtml(ct.body || '')}</td>
+          <td><span class="badge badge-draft">${escapeHtml(ct.status || 'DRAFT')}</span></td>
+          <td style="color:var(--text-muted); font-size:0.75rem;">${ct.created_at ? new Date(ct.created_at).toLocaleDateString() : '-'}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // Competitors
+  const compTbody = document.getElementById('modal-competitors-tbody');
+  if (compTbody) {
+    if (competitors.length === 0) {
+      compTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">No tracked competitors in database.</td></tr>`;
+    } else {
+      compTbody.innerHTML = competitors.map(cp => `
+        <tr>
+          <td><strong>${escapeHtml(cp.name)}</strong></td>
+          <td style="color:var(--text-secondary);">${escapeHtml(cp.category || '')}</td>
+          <td style="color:var(--text-secondary);">${escapeHtml(cp.location || '')}</td>
+          <td style="color:#F59E0B; font-weight:700;">★ ${cp.rating || 0.0}</td>
+          <td style="color:var(--text-muted);">${cp.reviews_count || 0} reviews</td>
+        </tr>
+      `).join('');
+    }
+  }
+}
+
+function renderModalRawJson(data) {
+  const viewer = document.getElementById('modal-raw-json-viewer');
+  if (viewer) {
+    viewer.innerText = JSON.stringify(data, null, 2);
+  }
+}
+
+function copyRawBusinessJson() {
+  if (!activeBusinessDetailData) return;
+  const jsonStr = JSON.stringify(activeBusinessDetailData, null, 2);
+  navigator.clipboard.writeText(jsonStr).then(() => {
+    showToast('✨ Complete database document copied to clipboard!', 'success');
+  }).catch(() => {
+    showToast('Failed to copy to clipboard', 'error');
+  });
 }
 
 function closeBusinessDetailModal() {
@@ -507,6 +701,28 @@ function switchModalTab(tabKey) {
   document.querySelectorAll('.modal-tab-pane').forEach(pane => {
     pane.style.display = pane.id === `modaltab-${tabKey}` ? 'block' : 'none';
   });
+}
+
+async function handleSaveOrganizationModal() {
+  if (!activeBusinessDetailData) return;
+  const orgId = activeBusinessDetailData.organization_id || (activeBusinessDetailData.organization && activeBusinessDetailData.organization.id);
+  if (!orgId) {
+    showToast('Organization ID not found', 'error');
+    return;
+  }
+
+  const name = document.getElementById('edit-org-name').value.trim();
+  const slug = document.getElementById('edit-org-slug').value.trim();
+  const isActive = document.getElementById('edit-org-status').value === 'true';
+
+  try {
+    await window.api.updateOrganization(orgId, { name, slug, is_active: isActive });
+    showToast(`Organization '${name}' updated successfully!`, 'success');
+    loadOrganizations();
+    loadBusinesses();
+  } catch (err) {
+    showToast(`Failed to update organization: ${err.message}`, 'error');
+  }
 }
 
 async function handleSaveBusinessModal() {
@@ -541,9 +757,22 @@ async function handleSaveBusinessModal() {
       try {
         aiProfile = JSON.parse(aiProfileRaw);
       } catch (e) {
-        showToast('Warning: Invalid JSON in AI Business Profile. Saving as raw or ignoring parse error.', 'error');
+        showToast('Warning: Invalid JSON in AI Business Profile.', 'error');
       }
     }
+
+    let healthAnalysis = null;
+    const healthAnalysisRaw = document.getElementById('edit-biz-health-analysis').value.trim();
+    if (healthAnalysisRaw) {
+      try {
+        healthAnalysis = JSON.parse(healthAnalysisRaw);
+      } catch (e) {
+        showToast('Warning: Invalid JSON in AI Health Analysis.', 'error');
+      }
+    }
+
+    const healthScoreRaw = document.getElementById('edit-biz-health-score').value.trim();
+    const healthScore = healthScoreRaw ? parseInt(healthScoreRaw, 10) : null;
 
     const payload = {
       name: document.getElementById('edit-biz-name').value.trim(),
@@ -553,6 +782,7 @@ async function handleSaveBusinessModal() {
       phone: document.getElementById('edit-biz-phone').value.trim() || null,
       description: document.getElementById('edit-biz-description').value.trim() || null,
       onboarding_completed: document.getElementById('edit-biz-onboard-status').value === 'true',
+      health_score: healthScore,
       gbp_account_id: document.getElementById('edit-biz-gbp-acc').value.trim() || null,
       gbp_location_id: document.getElementById('edit-biz-gbp-loc').value.trim() || null,
       target_customers: document.getElementById('edit-biz-target-customers').value.trim() || null,
@@ -563,6 +793,9 @@ async function handleSaveBusinessModal() {
 
     if (aiProfile) {
       payload.ai_business_profile = aiProfile;
+    }
+    if (healthAnalysis) {
+      payload.health_analysis = healthAnalysis;
     }
 
     await window.api.updateBusiness(activeBusinessDetailId, payload);
