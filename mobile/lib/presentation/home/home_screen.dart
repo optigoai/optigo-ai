@@ -795,55 +795,45 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ----------------------------------------------------
-  // Slide 3: Visibility by Keyword
-  // ----------------------------------------------------
   Widget _buildSlideKeywordVisibility() {
+    final biz = context.read<AppAuthProvider>().currentBusiness;
+    final cat = (biz?.category != null && biz!.category!.isNotEmpty) ? biz.category! : 'Local Business';
+    final loc = (biz?.location != null && biz!.location!.isNotEmpty) ? biz.location! : 'Local Area';
+    final name = (biz?.name != null && biz!.name.isNotEmpty) ? biz.name : 'Our Brand';
     final keywords = _keywords.isNotEmpty
         ? _keywords.take(4).toList()
         : [
             SeoKeywordModel(
               id: '1',
               businessId: '',
-              keyword: 'oil mill near me',
+              keyword: '$cat near me',
               searchVolume: '1.2k / mo',
               currentRank: 2,
               previousRank: 4,
-              difficulty: 'Medium',
+              difficulty: 'Low',
               intent: 'Local Intent',
               isTracked: true,
             ),
             SeoKeywordModel(
               id: '2',
               businessId: '',
-              keyword: 'fresh cold pressed oil',
+              keyword: 'best $cat in $loc',
               searchVolume: '850 / mo',
               currentRank: 1,
-              previousRank: 5,
+              previousRank: 3,
               difficulty: 'Low',
-              intent: 'Commercial',
+              intent: 'High Local Intent',
               isTracked: true,
             ),
             SeoKeywordModel(
               id: '3',
               businessId: '',
-              keyword: 'wholesale flour mill',
+              keyword: '$name $loc',
               searchVolume: '640 / mo',
-              currentRank: 2,
-              previousRank: 3,
-              difficulty: 'Low',
-              intent: 'B2B Intent',
-              isTracked: true,
-            ),
-            SeoKeywordModel(
-              id: '4',
-              businessId: '',
-              keyword: 'pure coconut oil',
-              searchVolume: '420 / mo',
               currentRank: 3,
-              previousRank: 2,
-              difficulty: 'Medium',
-              intent: 'Product Intent',
+              previousRank: 5,
+              difficulty: 'Low',
+              intent: 'Brand Intent',
               isTracked: true,
             ),
           ];

@@ -39,7 +39,7 @@ class SerpAPIProvider(BaseSEOProvider):
                 "keyword": keyword,
                 "domain": domain,
                 "rank": 2,
-                "url": f"https://{domain}/flour-mill",
+                "url": f"https://{domain}",
                 "search_volume": "950 / mo",
                 "difficulty": "Medium",
                 "provider": "serpapi (mock)",
@@ -99,9 +99,11 @@ class SerpAPIProvider(BaseSEOProvider):
         location: Optional[str] = None,
         limit: int = 5,
     ) -> List[Dict[str, Any]]:
+        clean_kw = keyword.replace("near me", "").strip().title()
         if not self.is_configured():
             return [
-                {"name": "Valley Flour Mills", "rating": 4.6, "reviews_count": 92, "rank": 1, "address": location or "North Street"},
+                {"name": f"Top Rated {clean_kw}", "rating": 4.6, "reviews_count": 92, "rank": 1, "address": location or "Local Street"},
+                {"name": f"Premier {clean_kw} Hub", "rating": 4.5, "reviews_count": 78, "rank": 2, "address": location or "Market Square"},
             ][:limit]
 
         params = {

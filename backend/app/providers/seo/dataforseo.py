@@ -52,7 +52,7 @@ class DataForSEOProvider(BaseSEOProvider):
                 "keyword": keyword,
                 "domain": domain,
                 "rank": 2,
-                "url": f"https://{domain}/products/cold-pressed",
+                "url": f"https://{domain}",
                 "search_volume": "1.2K / mo",
                 "difficulty": "Low",
                 "provider": "dataforseo (mock)",
@@ -147,11 +147,12 @@ class DataForSEOProvider(BaseSEOProvider):
         location: Optional[str] = None,
         limit: int = 5,
     ) -> List[Dict[str, Any]]:
+        clean_kw = keyword.replace("near me", "").strip().title()
         if not self.is_configured():
             return [
-                {"name": "Heritage Grain & Mill", "rating": 4.8, "reviews_count": 142, "rank": 1, "address": location or "Main St"},
-                {"name": "Pure Harvest Organics", "rating": 4.6, "reviews_count": 98, "rank": 2, "address": location or "South Road"},
-                {"name": "Sri Krishna Oil Mills", "rating": 4.5, "reviews_count": 84, "rank": 3, "address": location or "Market Yard"},
+                {"name": f"Premier {clean_kw}", "rating": 4.8, "reviews_count": 142, "rank": 1, "address": location or "Local Area"},
+                {"name": f"Prime {clean_kw} Spot", "rating": 4.6, "reviews_count": 98, "rank": 2, "address": location or "Local Area"},
+                {"name": f"Popular {clean_kw} Center", "rating": 4.5, "reviews_count": 84, "rank": 3, "address": location or "Local Area"},
             ][:limit]
 
         payload = [

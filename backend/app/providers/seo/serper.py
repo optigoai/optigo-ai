@@ -46,7 +46,7 @@ class SerperProvider(BaseSEOProvider):
                 "keyword": keyword,
                 "domain": domain,
                 "rank": 3,
-                "url": f"https://{domain}/organic-products",
+                "url": f"https://{domain}",
                 "search_volume": "1.1K / mo",
                 "difficulty": "Low",
                 "provider": "serper (mock)",
@@ -101,10 +101,11 @@ class SerperProvider(BaseSEOProvider):
         location: Optional[str] = None,
         limit: int = 5,
     ) -> List[Dict[str, Any]]:
+        clean_kw = keyword.replace("near me", "").strip().title()
         if not self.is_configured():
             return [
-                {"name": "Local Grain Store", "rating": 4.7, "reviews_count": 80, "rank": 1, "address": location or "Local Street"},
-                {"name": "Sunrise Organic Mill", "rating": 4.5, "reviews_count": 65, "rank": 2, "address": location or "Market Road"},
+                {"name": f"Top Rated {clean_kw}", "rating": 4.7, "reviews_count": 80, "rank": 1, "address": location or "Local Street"},
+                {"name": f"Premier {clean_kw} Spot", "rating": 4.5, "reviews_count": 65, "rank": 2, "address": location or "Market Road"},
             ][:limit]
 
         payload = {"q": keyword, "num": limit}

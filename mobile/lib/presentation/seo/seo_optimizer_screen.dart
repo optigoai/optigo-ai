@@ -305,7 +305,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             TextField(
               controller: kwController,
               decoration: InputDecoration(
-                hintText: 'e.g. fresh coconut oil near me',
+                hintText: 'e.g. best restaurant near me, cafe near me',
                 filled: true,
                 fillColor: const Color(0xFFF8FAFC),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
