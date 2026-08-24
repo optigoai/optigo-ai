@@ -283,24 +283,31 @@ function renderOrganizations(orgs) {
     return;
   }
 
-  tbody.innerHTML = orgs.map(o => `
-    <tr>
-      <td><strong>${escapeHtml(o.name)}</strong></td>
-      <td><code>${escapeHtml(o.slug)}</code></td>
-      <td><span class="badge badge-pill">${o.businesses_count} Businesses</span></td>
-      <td><span class="badge badge-pill">${o.users_count} Users</span></td>
-      <td>
-        <span class="badge ${o.is_active ? 'badge-active' : 'badge-suspended'}">
-          ${o.is_active ? 'Active' : 'Suspended'}
-        </span>
-      </td>
-      <td>
-        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="handleOrgToggle('${o.id}', ${!o.is_active})">
-          ${o.is_active ? 'Suspend' : 'Activate'}
-        </button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = orgs.map(o => {
+    const firstBiz = o.businesses && o.businesses.length > 0 ? o.businesses[0] : null;
+    return `
+      <tr>
+        <td><strong>${escapeHtml(o.name)}</strong></td>
+        <td><code>${escapeHtml(o.slug)}</code></td>
+        <td>
+          ${firstBiz 
+            ? `<button class="badge badge-pill" style="cursor:pointer; background:rgba(59,130,246,0.18); color:#60A5FA; border:1px solid rgba(59,130,246,0.35); font-weight:700;" onclick="openBusinessDetail('${firstBiz.id}')">${o.businesses_count} Business${o.businesses_count > 1 ? 'es' : ''} (Inspect ↗)</button>` 
+            : `<span class="badge badge-pill">0 Businesses</span>`}
+        </td>
+        <td><span class="badge badge-pill">${o.users_count} Users</span></td>
+        <td>
+          <span class="badge ${o.is_active ? 'badge-active' : 'badge-suspended'}">
+            ${o.is_active ? 'Active' : 'Suspended'}
+          </span>
+        </td>
+        <td>
+          <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="handleOrgToggle('${o.id}', ${!o.is_active})">
+            ${o.is_active ? 'Suspend' : 'Activate'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 async function handleOrgToggle(orgId, newActiveState) {
@@ -332,11 +339,20 @@ function renderBusinesses(businesses) {
   }
 
   tbody.innerHTML = businesses.map(b => `
-    <tr>
-      <td><strong>${escapeHtml(b.name)}</strong></td>
+    <tr class="clickable-row" onclick="openBusinessDetail('${b.id}')" title="Click to view full DB profile and edit details">
+      <td>
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <strong>${escapeHtml(b.name)}</strong>
+          <span style="font-size:0.72rem; color:#60A5FA; background:rgba(59, 130, 246, 0.15); padding:2px 8px; border-radius:6px;">View & Edit ↗</span>
+        </div>
+      </td>
       <td><span class="badge badge-pill">${escapeHtml(b.category || 'General')}</span></td>
       <td>${escapeHtml(b.location || 'Not Specified')}</td>
-      <td><a href="${escapeHtml(b.website || '#')}" target="_blank" style="color:#60A5FA; text-decoration:none;">${escapeHtml(b.website || 'N/A')}</a></td>
+      <td>
+        ${b.website 
+          ? `<a href="${escapeHtml(b.website)}" target="_blank" onclick="event.stopPropagation();" style="color:#60A5FA; text-decoration:none;">${escapeHtml(b.website)}</a>` 
+          : '<span style="color:var(--text-muted);">N/A</span>'}
+      </td>
       <td>
         <span class="badge ${b.onboarding_completed ? 'badge-active' : 'badge-suspended'}">
           ${b.onboarding_completed ? 'Onboarded' : 'Pending'}
@@ -344,6 +360,247 @@ function renderBusinesses(businesses) {
       </td>
     </tr>
   `).join('');
+}
+
+// Global modal state
+let activeBusinessDetailId = null;
+let activeBusinessDetailData = null;
+
+async function openBusinessDetail(businessId) {
+  activeBusinessDetailId = businessId;
+  const modal = document.getElementById('business-detail-modal');
+  if (!modal) return;
+
+  // Reset tab to profile
+  switchModalTab('profile');
+  modal.style.display = 'flex';
+
+  // Set loading state in modal
+  document.getElementById('modal-biz-title').innerText = 'Loading Business Data...';
+  document.getElementById('modal-biz-id').innerText = businessId;
+  document.getElementById('modal-biz-org-name').innerText = '...';
+
+  try {
+    const data = await window.api.getBusinessDetail(businessId);
+    activeBusinessDetailData = data;
+
+    // Header & Meta
+    document.getElementById('modal-biz-title').innerText = data.name || 'Untitled Business';
+    document.getElementById('modal-biz-id').innerText = data.id;
+    document.getElementById('modal-biz-org-name').innerText = data.organization_name || 'N/A';
+    document.getElementById('userstab-org-slug').innerText = data.organization_name || 'N/A';
+
+    const onboardBadge = document.getElementById('modal-biz-onboard-badge');
+    if (onboardBadge) {
+      onboardBadge.className = `badge ${data.onboarding_completed ? 'badge-active' : 'badge-suspended'}`;
+      onboardBadge.innerText = data.onboarding_completed ? 'Onboarded' : 'Onboarding Pending';
+    }
+
+    // Tab 1: Profile & Storefront
+    document.getElementById('edit-biz-name').value = data.name || '';
+    document.getElementById('edit-biz-category').value = data.category || '';
+    document.getElementById('edit-biz-location').value = data.location || '';
+    document.getElementById('edit-biz-website').value = data.website || '';
+    document.getElementById('edit-biz-phone').value = data.phone || '';
+    document.getElementById('edit-biz-onboard-status').value = data.onboarding_completed ? 'true' : 'false';
+    document.getElementById('edit-biz-gbp-acc').value = data.gbp_account_id || '';
+    document.getElementById('edit-biz-gbp-loc').value = data.gbp_location_id || '';
+    document.getElementById('edit-biz-description').value = data.description || '';
+
+    // Tab 2: Onboarding & Strategy
+    document.getElementById('edit-biz-target-customers').value = data.target_customers || '';
+    document.getElementById('edit-biz-services').value = Array.isArray(data.services) ? data.services.join(', ') : (data.services || '');
+    document.getElementById('edit-biz-goals').value = Array.isArray(data.business_goals) ? data.business_goals.join(', ') : (data.business_goals || '');
+    document.getElementById('edit-biz-channels').value = Array.isArray(data.marketing_channels) ? data.marketing_channels.join(', ') : (data.marketing_channels || '');
+    document.getElementById('edit-biz-ai-profile').value = data.ai_business_profile ? JSON.stringify(data.ai_business_profile, null, 2) : '';
+
+    // Tab 3: Users
+    renderModalUsers(data.users || []);
+
+    // Tab 4: Database & Marketing Stats
+    const stats = data.stats || {};
+    document.getElementById('stat-biz-reviews').innerText = `${stats.reviews_count || 0} (${stats.average_rating || 0.0}★ Avg)`;
+    document.getElementById('stat-biz-keywords').innerText = `${stats.keywords_count || 0} (${stats.top3_keywords_count || 0} in Top 3)`;
+    
+    if (stats.latest_audit && stats.latest_audit.overall_score) {
+      document.getElementById('stat-biz-crawl').innerText = `${stats.latest_audit.overall_score}% (${stats.latest_audit.findings_count} Findings)`;
+    } else {
+      document.getElementById('stat-biz-crawl').innerText = 'Not Audited Yet';
+    }
+    document.getElementById('stat-biz-recs').innerText = `${stats.recommendations_count || 0} Action Items`;
+
+    document.getElementById('meta-biz-created').innerText = data.created_at ? new Date(data.created_at).toLocaleString() : 'N/A';
+    document.getElementById('meta-biz-updated').innerText = data.updated_at ? new Date(data.updated_at).toLocaleString() : 'N/A';
+    document.getElementById('meta-biz-org-id').innerText = data.organization_id || 'N/A';
+
+  } catch (err) {
+    showToast(`Failed to load business details: ${err.message}`, 'error');
+  }
+}
+
+function renderModalUsers(users) {
+  const container = document.getElementById('modal-users-list-container');
+  if (!container) return;
+
+  if (users.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">No users associated with this organization.</div>`;
+    return;
+  }
+
+  container.innerHTML = users.map(u => `
+    <div class="user-editor-card" id="user-card-${u.id}">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong style="font-size:0.95rem; color:var(--text-primary);">${escapeHtml(u.full_name || 'Unnamed User')}</strong>
+          <span style="font-size:0.75rem; color:var(--text-muted); margin-left:8px;">ID: <code>${u.id}</code></span>
+        </div>
+        <span class="badge ${u.is_active ? 'badge-active' : 'badge-suspended'}">${u.is_active ? 'Active User' : 'Suspended'}</span>
+      </div>
+
+      <div class="form-grid-3" style="margin-top:8px;">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="user-name-${u.id}" class="form-input" value="${escapeHtml(u.full_name || '')}">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="user-email-${u.id}" class="form-input" value="${escapeHtml(u.email || '')}">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="user-role-${u.id}" class="form-select">
+            <option value="business_owner" ${u.role === 'business_owner' ? 'selected' : ''}>Business Owner</option>
+            <option value="marketing_manager" ${u.role === 'marketing_manager' ? 'selected' : ''}>Marketing Manager</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Super Administrator</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05);">
+        <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; cursor:pointer;">
+          <input type="checkbox" id="user-active-${u.id}" ${u.is_active ? 'checked' : ''}>
+          <span>Account Active</span>
+        </label>
+        <button type="button" class="btn btn-secondary" style="padding:4px 12px; font-size:0.78rem;" onclick="handleSaveUserModal('${u.id}')">
+          Save User
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function closeBusinessDetailModal() {
+  const modal = document.getElementById('business-detail-modal');
+  if (modal) modal.style.display = 'none';
+  activeBusinessDetailId = null;
+  activeBusinessDetailData = null;
+}
+
+function switchModalTab(tabKey) {
+  document.querySelectorAll('.modal-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-modaltab') === tabKey);
+  });
+  document.querySelectorAll('.modal-tab-pane').forEach(pane => {
+    pane.style.display = pane.id === `modaltab-${tabKey}` ? 'block' : 'none';
+  });
+}
+
+async function handleSaveBusinessModal() {
+  if (!activeBusinessDetailId) return;
+
+  const saveBtn = document.getElementById('btn-save-biz-modal');
+  if (saveBtn) {
+    saveBtn.innerText = 'Saving...';
+    saveBtn.disabled = true;
+  }
+
+  try {
+    // Parse fields
+    let services = document.getElementById('edit-biz-services').value.trim();
+    if (services.includes(',')) {
+      services = services.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    let goals = document.getElementById('edit-biz-goals').value.trim();
+    if (goals.includes(',')) {
+      goals = goals.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    let channels = document.getElementById('edit-biz-channels').value.trim();
+    if (channels.includes(',')) {
+      channels = channels.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    let aiProfile = null;
+    const aiProfileRaw = document.getElementById('edit-biz-ai-profile').value.trim();
+    if (aiProfileRaw) {
+      try {
+        aiProfile = JSON.parse(aiProfileRaw);
+      } catch (e) {
+        showToast('Warning: Invalid JSON in AI Business Profile. Saving as raw or ignoring parse error.', 'error');
+      }
+    }
+
+    const payload = {
+      name: document.getElementById('edit-biz-name').value.trim(),
+      category: document.getElementById('edit-biz-category').value.trim(),
+      location: document.getElementById('edit-biz-location').value.trim(),
+      website: document.getElementById('edit-biz-website').value.trim() || null,
+      phone: document.getElementById('edit-biz-phone').value.trim() || null,
+      description: document.getElementById('edit-biz-description').value.trim() || null,
+      onboarding_completed: document.getElementById('edit-biz-onboard-status').value === 'true',
+      gbp_account_id: document.getElementById('edit-biz-gbp-acc').value.trim() || null,
+      gbp_location_id: document.getElementById('edit-biz-gbp-loc').value.trim() || null,
+      target_customers: document.getElementById('edit-biz-target-customers').value.trim() || null,
+      services: services || null,
+      business_goals: goals || null,
+      marketing_channels: channels || null,
+    };
+
+    if (aiProfile) {
+      payload.ai_business_profile = aiProfile;
+    }
+
+    await window.api.updateBusiness(activeBusinessDetailId, payload);
+    showToast(`✓ Business '${payload.name}' updated successfully in the database!`, 'success');
+
+    // Refresh modal header & table
+    document.getElementById('modal-biz-title').innerText = payload.name;
+    const onboardBadge = document.getElementById('modal-biz-onboard-badge');
+    if (onboardBadge) {
+      onboardBadge.className = `badge ${payload.onboarding_completed ? 'badge-active' : 'badge-suspended'}`;
+      onboardBadge.innerText = payload.onboarding_completed ? 'Onboarded' : 'Onboarding Pending';
+    }
+
+    loadBusinesses();
+    loadOrganizations();
+  } catch (err) {
+    showToast(`Failed to update business: ${err.message}`, 'error');
+  } finally {
+    if (saveBtn) {
+      saveBtn.innerText = 'Save Changes';
+      saveBtn.disabled = false;
+    }
+  }
+}
+
+async function handleSaveUserModal(userId) {
+  const name = document.getElementById(`user-name-${userId}`)?.value.trim();
+  const email = document.getElementById(`user-email-${userId}`)?.value.trim();
+  const role = document.getElementById(`user-role-${userId}`)?.value;
+  const isActive = document.getElementById(`user-active-${userId}`)?.checked;
+
+  try {
+    await window.api.updateUser(userId, {
+      full_name: name,
+      email: email,
+      role: role,
+      is_active: isActive,
+    });
+    showToast(`✓ User '${name}' updated successfully!`, 'success');
+  } catch (err) {
+    showToast(`Failed to update user: ${err.message}`, 'error');
+  }
 }
 
 async function loadUsage() {
@@ -369,54 +626,54 @@ function renderUsage(data) {
           <tr>
             <td>
               <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#3B82F6,#6366F1); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.75rem; color:white;">
-                  ${initials}
+                <div class="user-avatar-initials">${initials}</div>
+                <div>
+                  <div style="font-weight:700;">${escapeHtml(u.user_name || 'Unknown')}</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(u.user_email || 'N/A')}</div>
                 </div>
-                <strong>${escapeHtml(u.user_name)}</strong>
               </div>
             </td>
-            <td><code style="color:#94A3B8;">${escapeHtml(u.user_email)}</code></td>
-            <td><span class="badge" style="background:rgba(59,130,246,0.15); color:#60A5FA; border:1px solid rgba(59,130,246,0.3); font-weight:700;">${escapeHtml(u.business_name || 'Direct')}</span></td>
-            <td><span class="badge badge-pill">${escapeHtml(u.organization_name)}</span></td>
-            <td><span class="badge badge-pill" style="font-weight:700;">${u.calls.toLocaleString()} calls</span></td>
-            <td><strong>${u.tokens.toLocaleString()}</strong></td>
-            <td><strong style="color:#34D399;">$${u.cost_usd.toFixed(4)}</strong></td>
-            <td style="font-size:0.78rem; color:var(--text-muted);">${lastActiveFormatted}</td>
+            <td><strong>${escapeHtml(u.business_name || 'N/A')}</strong></td>
+            <td><span class="badge badge-pill">${escapeHtml(u.organization_name || 'N/A')}</span></td>
+            <td><code>${escapeHtml(u.preferred_model || 'gpt-4o-mini')}</code></td>
+            <td><strong>${(u.total_tokens || 0).toLocaleString()}</strong></td>
+            <td>${u.request_count || 0}</td>
+            <td style="color:#10B981; font-weight:700;">$${(u.estimated_cost_usd || 0).toFixed(4)}</td>
+            <td style="font-size:0.75rem; color:var(--text-muted);">${lastActiveFormatted}</td>
           </tr>
         `;
       }).join('');
     }
   }
 
-  // 2. Render Feature Breakdown
+  // 2. Render By-Feature Usage
   const featureTbody = document.getElementById('usage-feature-tbody');
   if (featureTbody && data.by_feature) {
     if (data.by_feature.length === 0) {
-      featureTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No AI invocation logs recorded yet.</td></tr>`;
+      featureTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-muted);">No feature logs available.</td></tr>`;
     } else {
       featureTbody.innerHTML = data.by_feature.map(f => `
         <tr>
-          <td><strong>${escapeHtml(f.feature)}</strong></td>
-          <td>${f.calls.toLocaleString()}</td>
-          <td>${f.tokens.toLocaleString()}</td>
-          <td><strong style="color:#34D399;">$${f.cost_usd.toFixed(4)}</strong></td>
+          <td><span class="badge badge-pill">${escapeHtml(f.feature_name)}</span></td>
+          <td>${(f.total_tokens || 0).toLocaleString()}</td>
+          <td style="color:#10B981; font-weight:700;">$${(f.estimated_cost_usd || 0).toFixed(4)}</td>
         </tr>
       `).join('');
     }
   }
 
-  // 3. Render Model Breakdown
+  // 3. Render By-Model Latency
   const modelTbody = document.getElementById('usage-model-tbody');
   if (modelTbody && data.by_model) {
     if (data.by_model.length === 0) {
-      modelTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No model records yet.</td></tr>`;
+      modelTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No model logs available.</td></tr>`;
     } else {
       modelTbody.innerHTML = data.by_model.map(m => `
         <tr>
-          <td><span class="badge badge-pill">${escapeHtml(m.provider)}</span></td>
-          <td><strong>${escapeHtml(m.model)}</strong></td>
-          <td>${m.calls.toLocaleString()}</td>
-          <td>${m.avg_latency_ms} ms</td>
+          <td>${escapeHtml(m.provider)}</td>
+          <td><code>${escapeHtml(m.model)}</code></td>
+          <td>${m.request_count || 0}</td>
+          <td>${(m.avg_latency_ms || 0).toFixed(0)} ms</td>
         </tr>
       `).join('');
     }
@@ -425,18 +682,10 @@ function renderUsage(data) {
 
 async function loadHealth() {
   try {
-    const health = await window.api.getSystemHealth();
-    renderHealth(health);
+    healthData = await window.api.getSystemHealth();
+    renderHealth(healthData);
   } catch (err) {
-    renderHealth({
-      status: 'healthy',
-      components: {
-        postgresql: { status: 'healthy' },
-        redis: { status: 'healthy' },
-        celery_workers: { status: 'active' },
-        ai_providers: { openai: 'configured', google_gemini: 'configured' },
-      },
-    });
+    renderHealth({ components: { postgres: 'error', redis: 'error', celery: 'error', openai: 'error', gemini: 'error' } });
   }
 }
 
@@ -485,3 +734,8 @@ function escapeHtml(str) {
 window.handleFeatureToggle = handleFeatureToggle;
 window.handleOrgToggle = handleOrgToggle;
 window.handleLogout = handleLogout;
+window.openBusinessDetail = openBusinessDetail;
+window.closeBusinessDetailModal = closeBusinessDetailModal;
+window.switchModalTab = switchModalTab;
+window.handleSaveBusinessModal = handleSaveBusinessModal;
+window.handleSaveUserModal = handleSaveUserModal;

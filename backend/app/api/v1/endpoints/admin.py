@@ -73,6 +73,54 @@ async def list_businesses(
     return await service.get_all_businesses(limit=limit)
 
 
+@router.get("/businesses/{business_id}", summary="Get Complete Business Detail")
+async def get_business_detail(
+    business_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Get 360-degree deep-dive detail of a business including owner, onboarding data, and marketing stats."""
+    service = AdminService(db)
+    try:
+        return await service.get_business_detail(business_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.put("/businesses/{business_id}", summary="Update Business Details")
+async def update_business_detail(
+    business_id: str,
+    body: Dict[str, Any],
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Super Admin full edit of business info, onboarding responses, and settings."""
+    service = AdminService(db)
+    try:
+        res = await service.update_business_full(business_id, body)
+        await db.commit()
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.patch("/users/{user_id}", summary="Update User Details")
+async def update_user_detail(
+    user_id: str,
+    body: Dict[str, Any],
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(require_admin),
+) -> Dict[str, Any]:
+    """Super Admin edit of user full name, email, role, or active status."""
+    service = AdminService(db)
+    try:
+        res = await service.update_user(user_id, body)
+        await db.commit()
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 @router.get("/features", summary="List Feature Toggles")
 async def list_feature_toggles(
     db: AsyncSession = Depends(get_db),

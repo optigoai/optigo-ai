@@ -145,3 +145,48 @@ async def test_admin_portal_workflow(client):
     health_res = await client.get("/api/v1/admin/system-health", headers=admin_headers)
     assert health_res.status_code == 200
     assert "components" in health_res.json()
+
+    # 9. Test Business Deep-Dive Details
+    target_biz = next(b for b in biz_list if b["name"] == "Artisan Bakery")
+    biz_id = target_biz["id"]
+
+    detail_res = await client.get(f"/api/v1/admin/businesses/{biz_id}", headers=admin_headers)
+    assert detail_res.status_code == 200
+    detail_data = detail_res.json()
+    assert detail_data["name"] == "Artisan Bakery"
+    assert detail_data["organization_name"] == "Bakery Group"
+    assert len(detail_data["users"]) >= 1
+    assert "stats" in detail_data
+
+    # 10. Test Admin Update Business & Onboarding Parameters
+    update_res = await client.put(
+        f"/api/v1/admin/businesses/{biz_id}",
+        headers=admin_headers,
+        json={
+            "name": "Artisan Bakery & Cafe",
+            "website": "https://artisanbakery.com",
+            "target_customers": "Local families and dessert lovers",
+            "services": ["Custom Cakes", "Sourdough Bread", "Espresso"],
+            "onboarding_completed": True,
+        },
+    )
+    assert update_res.status_code == 200
+    updated_data = update_res.json()
+    assert updated_data["name"] == "Artisan Bakery & Cafe"
+    assert updated_data["website"] == "https://artisanbakery.com"
+    assert updated_data["target_customers"] == "Local families and dessert lovers"
+    assert updated_data["onboarding_completed"] is True
+
+    # 11. Test Admin Update User
+    target_user = detail_data["users"][0]
+    user_edit_res = await client.patch(
+        f"/api/v1/admin/users/{target_user['id']}",
+        headers=admin_headers,
+        json={
+            "full_name": "Master Baker",
+            "is_active": True,
+        },
+    )
+    assert user_edit_res.status_code == 200
+    assert user_edit_res.json()["full_name"] == "Master Baker"
+

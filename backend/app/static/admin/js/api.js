@@ -79,6 +79,24 @@ class AdminAPI {
     return await this.request(`/admin/businesses?limit=${limit}`);
   }
 
+  async getBusinessDetail(businessId) {
+    return await this.request(`/admin/businesses/${businessId}`);
+  }
+
+  async updateBusiness(businessId, data) {
+    return await this.request(`/admin/businesses/${businessId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateUser(userId, data) {
+    return await this.request(`/admin/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
   async getFeatures() {
     return await this.request('/admin/features');
   }

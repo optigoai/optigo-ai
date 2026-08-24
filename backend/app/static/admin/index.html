@@ -352,6 +352,201 @@
   <!-- Live Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
+  <!-- Business Deep-Dive & Edit Modal -->
+  <div class="modal-overlay" id="business-detail-modal" style="display:none;">
+    <div class="detail-modal-card">
+      <!-- Modal Header -->
+      <div class="modal-header-bar">
+        <div class="modal-header-info">
+          <div class="brand-logo" style="width:42px; height:42px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h2 id="modal-biz-title">Business Profile</h2>
+              <span id="modal-biz-onboard-badge" class="badge badge-active">Onboarded</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">
+              ID: <code id="modal-biz-id">...</code> • Org: <strong id="modal-biz-org-name">...</strong>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button type="button" class="btn btn-primary" id="btn-save-biz-modal" onclick="handleSaveBusinessModal()">
+            Save Changes
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeBusinessDetailModal()" style="padding:8px 12px;">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Nav Tabs -->
+      <div class="modal-nav-tabs">
+        <button class="modal-tab-btn active" data-modaltab="profile" onclick="switchModalTab('profile')">🏢 Profile & Storefront</button>
+        <button class="modal-tab-btn" data-modaltab="onboarding" onclick="switchModalTab('onboarding')">📝 Onboarding & Strategy</button>
+        <button class="modal-tab-btn" data-modaltab="users" onclick="switchModalTab('users')">👥 Maintained Users & Owner</button>
+        <button class="modal-tab-btn" data-modaltab="stats" onclick="switchModalTab('stats')">📊 Database & Marketing Stats</button>
+      </div>
+
+      <!-- Modal Body Tabs -->
+      <div class="modal-body-content">
+        <!-- TAB 1: PROFILE & STOREFRONT -->
+        <div class="modal-tab-pane" id="modaltab-profile">
+          <form id="biz-edit-form-profile" onsubmit="event.preventDefault();">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Business Name</label>
+                <input type="text" id="edit-biz-name" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label>Primary Category</label>
+                <input type="text" id="edit-biz-category" class="form-input" placeholder="e.g. Restaurant / Cafe">
+              </div>
+              <div class="form-group">
+                <label>Location / Address</label>
+                <input type="text" id="edit-biz-location" class="form-input" placeholder="e.g. Ponnani, Kerala, India">
+              </div>
+              <div class="form-group">
+                <label>Official Website URL</label>
+                <input type="url" id="edit-biz-website" class="form-input" placeholder="https://example.com">
+              </div>
+              <div class="form-group">
+                <label>Contact Phone Number</label>
+                <input type="text" id="edit-biz-phone" class="form-input" placeholder="+91 ...">
+              </div>
+              <div class="form-group">
+                <label>Onboarding Completed Status</label>
+                <select id="edit-biz-onboard-status" class="form-select">
+                  <option value="true">Completed (Onboarded)</option>
+                  <option value="false">Pending (Not Completed)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Google Business Profile Account ID</label>
+                <input type="text" id="edit-biz-gbp-acc" class="form-input" placeholder="accounts/...">
+              </div>
+              <div class="form-group">
+                <label>Google Business Profile Location ID</label>
+                <input type="text" id="edit-biz-gbp-loc" class="form-input" placeholder="locations/...">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:16px;">
+              <label>Business Description</label>
+              <textarea id="edit-biz-description" class="form-textarea" rows="3" placeholder="Describe the business offerings..."></textarea>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 2: ONBOARDING & STRATEGY -->
+        <div class="modal-tab-pane" id="modaltab-onboarding" style="display:none;">
+          <div class="form-group">
+            <label>Target Customers & Audience (Provided at Onboarding)</label>
+            <textarea id="edit-biz-target-customers" class="form-textarea" rows="2" placeholder="e.g. Families, travelers, local foodies"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>Services & Special Offerings</label>
+            <textarea id="edit-biz-services" class="form-textarea" rows="2" placeholder="e.g. Dine-in, Catering, Outdoor seating"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>Primary Business Goals</label>
+            <textarea id="edit-biz-goals" class="form-textarea" rows="2" placeholder="e.g. Increase local walk-ins by 30%"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>Marketing Channels (JSON or Comma-separated)</label>
+            <input type="text" id="edit-biz-channels" class="form-input" placeholder="e.g. google_maps, instagram, meta_ads">
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>AI Synthesized Business Profile (JSON)</label>
+            <textarea id="edit-biz-ai-profile" class="form-textarea" style="font-family:monospace; font-size:0.8rem;" rows="5" placeholder="{ ... }"></textarea>
+          </div>
+        </div>
+
+        <!-- TAB 3: MAINTAINED USERS & OWNER -->
+        <div class="modal-tab-pane" id="modaltab-users" style="display:none;">
+          <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:14px;">
+            Users and business owners registered under organization <code id="userstab-org-slug">...</code>:
+          </div>
+          <div id="modal-users-list-container">
+            <!-- Dynamically populated user editor cards -->
+          </div>
+        </div>
+
+        <!-- TAB 4: DATABASE & MARKETING STATS -->
+        <div class="modal-tab-pane" id="modaltab-stats" style="display:none;">
+          <div class="form-grid-2">
+            <!-- Reviews Stats -->
+            <div class="stats-card-mini">
+              <div class="stats-icon-mini" style="background:rgba(245, 158, 11, 0.15); color:#F59E0B;">
+                ⭐
+              </div>
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Customer Reviews in DB</div>
+                <div style="font-size:1.25rem; font-weight:800;" id="stat-biz-reviews">0 (0.0 Avg)</div>
+              </div>
+            </div>
+
+            <!-- SEO Keywords Stats -->
+            <div class="stats-card-mini">
+              <div class="stats-icon-mini" style="background:rgba(59, 130, 246, 0.15); color:#3B82F6;">
+                🔍
+              </div>
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Tracked Keywords</div>
+                <div style="font-size:1.25rem; font-weight:800;" id="stat-biz-keywords">0 (0 in Top 3)</div>
+              </div>
+            </div>
+
+            <!-- Website Crawl Audit -->
+            <div class="stats-card-mini">
+              <div class="stats-icon-mini" style="background:rgba(16, 185, 129, 0.15); color:#10B981;">
+                🌐
+              </div>
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Latest Technical Crawl Score</div>
+                <div style="font-size:1.25rem; font-weight:800;" id="stat-biz-crawl">Not Audited</div>
+              </div>
+            </div>
+
+            <!-- CMO Recommendations -->
+            <div class="stats-card-mini">
+              <div class="stats-icon-mini" style="background:rgba(99, 102, 241, 0.15); color:#6366F1;">
+                🎯
+              </div>
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Active AI Recommendations</div>
+                <div style="font-size:1.25rem; font-weight:800;" id="stat-biz-recs">0 Actions</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:20px; background:rgba(255, 255, 255, 0.02); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px;">
+            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--text-primary);">Database Metadata</h4>
+            <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
+              • Created At: <span id="meta-biz-created" style="color:var(--text-secondary);">-</span><br>
+              • Last Updated: <span id="meta-biz-updated" style="color:var(--text-secondary);">-</span><br>
+              • Organization ID: <span id="meta-biz-org-id" style="color:var(--text-secondary); font-family:monospace;">-</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-bar">
+        <span style="font-size:0.8rem; color:var(--text-muted);">💡 Edits made here take effect immediately in the database and mobile client.</span>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeBusinessDetailModal()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="handleSaveBusinessModal()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Admin Login Modal -->
   <div class="modal-overlay" id="auth-modal" style="display:none;">
     <div class="auth-card">

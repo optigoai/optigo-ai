@@ -182,6 +182,149 @@ class AdminService:
             for b in businesses
         ]
 
+    async def get_business_detail(self, business_id: str) -> Dict[str, Any]:
+        """Get full 360-degree deep-dive detail of a business for Admin inspection and editing."""
+        b_res = await self.db.execute(select(Business).where(Business.id == business_id))
+        b = b_res.scalar_one_or_none()
+        if not b:
+            raise ValueError(f"Business {business_id} not found")
+
+        # Organization
+        org_res = await self.db.execute(select(Organization).where(Organization.id == b.organization_id))
+        org = org_res.scalar_one_or_none()
+
+        # Users in this organization
+        users_res = await self.db.execute(select(User).where(User.organization_id == b.organization_id).order_by(User.created_at.asc()))
+        users = users_res.scalars().all()
+
+        # Stats
+        rev_res = await self.db.execute(select(func.count(Review.id), func.avg(Review.rating)).where(Review.business_id == business_id))
+        rev_row = rev_res.one()
+        rev_count = rev_row[0] or 0
+        avg_rating = rev_row[1] or 0.0
+
+        from app.models.seo import SEOKeyword
+        kw_res = await self.db.execute(select(func.count(SEOKeyword.id)).where(SEOKeyword.business_id == business_id))
+        kw_count = kw_res.scalar() or 0
+
+        kw_top3_res = await self.db.execute(select(func.count(SEOKeyword.id)).where(SEOKeyword.business_id == business_id, SEOKeyword.current_rank <= 3))
+        kw_top3_count = kw_top3_res.scalar() or 0
+
+        from app.models.recommendation import Recommendation
+        rec_res = await self.db.execute(select(func.count(Recommendation.id)).where(Recommendation.business_id == business_id))
+        rec_count = rec_res.scalar() or 0
+
+        from app.models.website_audit import WebsiteAudit
+        web_res = await self.db.execute(select(WebsiteAudit).where(WebsiteAudit.business_id == business_id).order_by(WebsiteAudit.created_at.desc()).limit(1))
+        latest_audit = web_res.scalar_one_or_none()
+
+        return {
+            "id": b.id,
+            "organization_id": b.organization_id,
+            "organization_name": org.name if org else "Unknown",
+            "organization_is_active": org.is_active if org else True,
+            "name": b.name,
+            "category": b.category,
+            "location": b.location,
+            "website": b.website,
+            "phone": b.phone,
+            "description": b.description,
+            "target_customers": b.target_customers,
+            "services": b.services,
+            "business_goals": b.business_goals,
+            "marketing_channels": b.marketing_channels,
+            "ai_business_profile": b.ai_business_profile,
+            "health_score": b.health_score,
+            "health_analysis": b.health_analysis,
+            "gbp_account_id": b.gbp_account_id,
+            "gbp_location_id": b.gbp_location_id,
+            "onboarding_completed": b.onboarding_completed,
+            "created_at": b.created_at.isoformat() if b.created_at else None,
+            "updated_at": b.updated_at.isoformat() if b.updated_at else None,
+            "users": [
+                {
+                    "id": u.id,
+                    "full_name": u.full_name,
+                    "email": u.email,
+                    "role": u.role.value if hasattr(u.role, 'value') else str(u.role),
+                    "is_active": u.is_active,
+                    "created_at": u.created_at.isoformat() if u.created_at else None,
+                }
+                for u in users
+            ],
+            "stats": {
+                "reviews_count": rev_count,
+                "average_rating": round(float(avg_rating), 1),
+                "keywords_count": kw_count,
+                "top3_keywords_count": kw_top3_count,
+                "recommendations_count": rec_count,
+                "latest_audit": {
+                    "overall_score": latest_audit.overall_score if latest_audit else None,
+                    "technical_score": latest_audit.technical_score if latest_audit else None,
+                    "content_score": latest_audit.content_score if latest_audit else None,
+                    "local_signals_score": latest_audit.local_signals_score if latest_audit else None,
+                    "findings_count": len(latest_audit.findings) if latest_audit and latest_audit.findings else 0,
+                } if latest_audit else None,
+            }
+        }
+
+    async def update_business_full(self, business_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Super Admin update of any business fields & onboarding parameters."""
+        res = await self.db.execute(select(Business).where(Business.id == business_id))
+        b = res.scalar_one_or_none()
+        if not b:
+            raise ValueError(f"Business {business_id} not found")
+
+        editable_fields = [
+            "name", "category", "location", "website", "phone", "description",
+            "target_customers", "services", "business_goals", "marketing_channels",
+            "health_score", "onboarding_completed", "gbp_account_id", "gbp_location_id",
+            "ai_business_profile"
+        ]
+
+        string_fields = ["target_customers", "services", "business_goals", "marketing_channels"]
+
+        for field in editable_fields:
+            if field in data:
+                val = data[field]
+                if field in string_fields and isinstance(val, list):
+                    val = ", ".join(str(item) for item in val)
+                setattr(b, field, val)
+
+        b.updated_at = datetime.utcnow()
+        await self.db.flush()
+        return await self.get_business_detail(business_id)
+
+    async def update_user(self, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Super Admin update of user details (name, email, role, is_active)."""
+        from app.models.user import User, UserRole
+        res = await self.db.execute(select(User).where(User.id == user_id))
+        u = res.scalar_one_or_none()
+        if not u:
+            raise ValueError(f"User {user_id} not found")
+
+        if "full_name" in data and data["full_name"]:
+            u.full_name = data["full_name"].strip()
+        if "email" in data and data["email"]:
+            u.email = data["email"].strip()
+        if "role" in data and data["role"]:
+            try:
+                u.role = UserRole(data["role"])
+            except Exception:
+                pass
+        if "is_active" in data and data["is_active"] is not None:
+            u.is_active = bool(data["is_active"])
+
+        u.updated_at = datetime.utcnow()
+        await self.db.flush()
+        return {
+            "id": u.id,
+            "full_name": u.full_name,
+            "email": u.email,
+            "role": u.role.value if hasattr(u.role, 'value') else str(u.role),
+            "is_active": u.is_active,
+        }
+
     async def ensure_default_admin(self) -> None:
         """Ensure the default super admin exists."""
         from app.models.user import User, UserRole
