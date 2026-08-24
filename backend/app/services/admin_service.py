@@ -363,12 +363,15 @@ class AdminService:
             "reviews": [
                 {
                     "id": r.id,
-                    "author_name": r.author_name,
+                    "reviewer_name": r.reviewer_name,
+                    "author_name": r.reviewer_name,
                     "rating": r.rating,
-                    "review_text": r.review_text,
-                    "response_text": r.response_text,
-                    "sentiment": r.sentiment.value if hasattr(r.sentiment, "value") else str(r.sentiment),
-                    "review_date": r.review_date.isoformat() if r.review_date else None,
+                    "review_text": r.text,
+                    "text": r.text,
+                    "response_text": r.reply_text,
+                    "reply_text": r.reply_text,
+                    "sentiment": r.sentiment.value if hasattr(r.sentiment, "value") else (str(r.sentiment) if r.sentiment else "neutral"),
+                    "review_date": str(r.review_date) if r.review_date else None,
                     "created_at": r.created_at.isoformat() if r.created_at else None,
                 }
                 for r in reviews_list
@@ -380,9 +383,10 @@ class AdminService:
                     "target_location": kw.target_location,
                     "current_rank": kw.current_rank,
                     "previous_rank": kw.previous_rank,
-                    "best_rank": kw.best_rank,
                     "search_volume": kw.search_volume,
                     "difficulty": kw.difficulty,
+                    "intent": kw.intent,
+                    "is_tracked": kw.is_tracked,
                     "created_at": kw.created_at.isoformat() if kw.created_at else None,
                 }
                 for kw in keywords_list
@@ -447,7 +451,8 @@ class AdminService:
                     "category": cp.category,
                     "location": cp.location,
                     "rating": cp.rating,
-                    "reviews_count": cp.reviews_count,
+                    "review_count": cp.review_count,
+                    "reviews_count": cp.review_count,
                     "website": cp.website,
                 }
                 for cp in competitors_list
@@ -456,11 +461,11 @@ class AdminService:
                 {
                     "id": rec.id,
                     "title": rec.title,
-                    "description": rec.description,
+                    "explanation": rec.explanation,
+                    "description": rec.explanation,
                     "priority": rec.priority.value if hasattr(rec.priority, "value") else str(rec.priority),
-                    "category": rec.category,
-                    "status": rec.status.value if hasattr(rec.status, "value") else str(rec.status),
                     "impact": rec.impact,
+                    "status": rec.status.value if hasattr(rec.status, "value") else str(rec.status),
                     "created_at": rec.created_at.isoformat() if rec.created_at else None,
                 }
                 for rec in recs_list
