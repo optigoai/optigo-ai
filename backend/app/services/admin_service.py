@@ -657,9 +657,13 @@ class AdminService:
         by_feature = [
             {
                 "feature": row.feature,
+                "feature_name": row.feature,
                 "calls": row.count,
+                "request_count": row.count,
                 "tokens": int(row.tokens or 0),
+                "total_tokens": int(row.tokens or 0),
                 "cost_usd": round(float(row.cost or 0.0), 4),
+                "estimated_cost_usd": round(float(row.cost or 0.0), 4),
             }
             for row in feature_agg
         ]
@@ -679,6 +683,7 @@ class AdminService:
                 "provider": row.provider,
                 "model": row.model,
                 "calls": row.count,
+                "request_count": row.count,
                 "avg_latency_ms": round(float(row.avg_latency or 0), 1),
             }
             for row in model_agg
@@ -721,9 +726,13 @@ class AdminService:
                 "user_email": u.email,
                 "organization_name": org.name if org else "Direct",
                 "business_name": primary_biz,
+                "preferred_model": "gemini-2.0-flash",
                 "calls": stats.calls or 0,
+                "request_count": stats.calls or 0,
                 "tokens": int(stats.tokens or 0),
+                "total_tokens": int(stats.tokens or 0),
                 "cost_usd": round(float(stats.cost or 0.0), 4),
+                "estimated_cost_usd": round(float(stats.cost or 0.0), 4),
                 "last_active": stats.last_active.isoformat() if stats.last_active else None,
             })
 

@@ -365,6 +365,10 @@ function renderUsage(data) {
       usersTbody.innerHTML = data.by_user.map(u => {
         const lastActiveFormatted = u.last_active ? new Date(u.last_active).toLocaleString() : 'Never';
         const initials = (u.user_name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const tokens = u.tokens !== undefined ? u.tokens : (u.total_tokens || 0);
+        const calls = u.calls !== undefined ? u.calls : (u.request_count || 0);
+        const cost = u.cost_usd !== undefined ? u.cost_usd : (u.estimated_cost_usd || 0);
+        const model = u.preferred_model || u.model || 'gemini-2.0-flash';
         return `
           <tr>
             <td>
@@ -378,9 +382,9 @@ function renderUsage(data) {
             <td><code style="color:#94A3B8;">${escapeHtml(u.user_email)}</code></td>
             <td><span class="badge" style="background:rgba(59,130,246,0.15); color:#60A5FA; border:1px solid rgba(59,130,246,0.3); font-weight:700;">${escapeHtml(u.business_name || 'Direct')}</span></td>
             <td><span class="badge badge-pill">${escapeHtml(u.organization_name)}</span></td>
-            <td><span class="badge badge-pill" style="font-weight:700;">${u.calls.toLocaleString()} calls</span></td>
-            <td><strong>${u.tokens.toLocaleString()}</strong></td>
-            <td><strong style="color:#34D399;">$${u.cost_usd.toFixed(4)}</strong></td>
+            <td><span class="badge badge-pill" style="font-weight:700;">${calls.toLocaleString()} calls</span></td>
+            <td><strong>${tokens.toLocaleString()}</strong></td>
+            <td><strong style="color:#34D399;">$${cost.toFixed(4)}</strong></td>
             <td style="font-size:0.78rem; color:var(--text-muted);">${lastActiveFormatted}</td>
           </tr>
         `;
@@ -394,14 +398,20 @@ function renderUsage(data) {
     if (data.by_feature.length === 0) {
       featureTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No AI invocation logs recorded yet.</td></tr>`;
     } else {
-      featureTbody.innerHTML = data.by_feature.map(f => `
-        <tr>
-          <td><strong>${escapeHtml(f.feature)}</strong></td>
-          <td>${f.calls.toLocaleString()}</td>
-          <td>${f.tokens.toLocaleString()}</td>
-          <td><strong style="color:#34D399;">$${f.cost_usd.toFixed(4)}</strong></td>
-        </tr>
-      `).join('');
+      featureTbody.innerHTML = data.by_feature.map(f => {
+        const featureName = f.feature || f.feature_name || 'AI Module';
+        const calls = f.calls !== undefined ? f.calls : (f.request_count || 0);
+        const tokens = f.tokens !== undefined ? f.tokens : (f.total_tokens || 0);
+        const cost = f.cost_usd !== undefined ? f.cost_usd : (f.estimated_cost_usd || 0);
+        return `
+          <tr>
+            <td><strong>${escapeHtml(featureName)}</strong></td>
+            <td>${calls.toLocaleString()}</td>
+            <td>${tokens.toLocaleString()}</td>
+            <td><strong style="color:#34D399;">$${cost.toFixed(4)}</strong></td>
+          </tr>
+        `;
+      }).join('');
     }
   }
 
@@ -411,14 +421,18 @@ function renderUsage(data) {
     if (data.by_model.length === 0) {
       modelTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No model records yet.</td></tr>`;
     } else {
-      modelTbody.innerHTML = data.by_model.map(m => `
-        <tr>
-          <td><span class="badge badge-pill">${escapeHtml(m.provider)}</span></td>
-          <td><strong>${escapeHtml(m.model)}</strong></td>
-          <td>${m.calls.toLocaleString()}</td>
-          <td>${m.avg_latency_ms} ms</td>
-        </tr>
-      `).join('');
+      modelTbody.innerHTML = data.by_model.map(m => {
+        const calls = m.calls !== undefined ? m.calls : (m.request_count || 0);
+        const latency = m.avg_latency_ms !== undefined ? m.avg_latency_ms : 0;
+        return `
+          <tr>
+            <td><span class="badge badge-pill">${escapeHtml(m.provider)}</span></td>
+            <td><strong>${escapeHtml(m.model)}</strong></td>
+            <td>${calls.toLocaleString()}</td>
+            <td>${latency} ms</td>
+          </tr>
+        `;
+      }).join('');
     }
   }
 }

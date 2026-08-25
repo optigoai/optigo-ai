@@ -859,6 +859,10 @@ function renderUsage(data) {
       usersTbody.innerHTML = data.by_user.map(u => {
         const lastActiveFormatted = u.last_active ? new Date(u.last_active).toLocaleString() : 'Never';
         const initials = (u.user_name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const tokens = u.tokens !== undefined ? u.tokens : (u.total_tokens || 0);
+        const calls = u.calls !== undefined ? u.calls : (u.request_count || 0);
+        const cost = u.cost_usd !== undefined ? u.cost_usd : (u.estimated_cost_usd || 0);
+        const model = u.preferred_model || u.model || 'gemini-2.0-flash';
         return `
           <tr>
             <td>
@@ -872,10 +876,10 @@ function renderUsage(data) {
             </td>
             <td><strong>${escapeHtml(u.business_name || 'N/A')}</strong></td>
             <td><span class="badge badge-pill">${escapeHtml(u.organization_name || 'N/A')}</span></td>
-            <td><code>${escapeHtml(u.preferred_model || 'gpt-4o-mini')}</code></td>
-            <td><strong>${(u.total_tokens || 0).toLocaleString()}</strong></td>
-            <td>${u.request_count || 0}</td>
-            <td style="color:#10B981; font-weight:700;">$${(u.estimated_cost_usd || 0).toFixed(4)}</td>
+            <td><code>${escapeHtml(model)}</code></td>
+            <td><strong>${tokens.toLocaleString()}</strong></td>
+            <td>${calls.toLocaleString()}</td>
+            <td style="color:#10B981; font-weight:700;">$${cost.toFixed(4)}</td>
             <td style="font-size:0.75rem; color:var(--text-muted);">${lastActiveFormatted}</td>
           </tr>
         `;
@@ -889,13 +893,18 @@ function renderUsage(data) {
     if (data.by_feature.length === 0) {
       featureTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-muted);">No feature logs available.</td></tr>`;
     } else {
-      featureTbody.innerHTML = data.by_feature.map(f => `
-        <tr>
-          <td><span class="badge badge-pill">${escapeHtml(f.feature_name)}</span></td>
-          <td>${(f.total_tokens || 0).toLocaleString()}</td>
-          <td style="color:#10B981; font-weight:700;">$${(f.estimated_cost_usd || 0).toFixed(4)}</td>
-        </tr>
-      `).join('');
+      featureTbody.innerHTML = data.by_feature.map(f => {
+        const featureName = f.feature || f.feature_name || 'AI Module';
+        const tokens = f.tokens !== undefined ? f.tokens : (f.total_tokens || 0);
+        const cost = f.cost_usd !== undefined ? f.cost_usd : (f.estimated_cost_usd || 0);
+        return `
+          <tr>
+            <td><span class="badge badge-pill">${escapeHtml(featureName)}</span></td>
+            <td>${tokens.toLocaleString()}</td>
+            <td style="color:#10B981; font-weight:700;">$${cost.toFixed(4)}</td>
+          </tr>
+        `;
+      }).join('');
     }
   }
 
@@ -905,14 +914,18 @@ function renderUsage(data) {
     if (data.by_model.length === 0) {
       modelTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No model logs available.</td></tr>`;
     } else {
-      modelTbody.innerHTML = data.by_model.map(m => `
-        <tr>
-          <td>${escapeHtml(m.provider)}</td>
-          <td><code>${escapeHtml(m.model)}</code></td>
-          <td>${m.request_count || 0}</td>
-          <td>${(m.avg_latency_ms || 0).toFixed(0)} ms</td>
-        </tr>
-      `).join('');
+      modelTbody.innerHTML = data.by_model.map(m => {
+        const calls = m.calls !== undefined ? m.calls : (m.request_count || 0);
+        const latency = m.avg_latency_ms !== undefined ? m.avg_latency_ms : 0;
+        return `
+          <tr>
+            <td>${escapeHtml(m.provider)}</td>
+            <td><code>${escapeHtml(m.model)}</code></td>
+            <td>${calls.toLocaleString()}</td>
+            <td>${latency.toFixed(0)} ms</td>
+          </tr>
+        `;
+      }).join('');
     }
   }
 }
