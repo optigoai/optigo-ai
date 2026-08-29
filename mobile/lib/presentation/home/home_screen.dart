@@ -478,19 +478,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: healthScore >= 75
-                            ? const Color(0xFF10B981).withValues(alpha: 0.25)
-                            : const Color(0xFF3B82F6).withValues(alpha: 0.25),
+                        color: (healthScore >= 75
+                                ? const Color(0xFF10B981)
+                                : (healthScore >= 50 ? const Color(0xFF3B82F6) : const Color(0xFFF59E0B)))
+                            .withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        healthScore >= 75 ? 'Optimal' : 'Good',
+                        healthScore >= 75
+                            ? 'Optimal'
+                            : (healthScore >= 50 ? 'Good' : (healthScore >= 35 ? 'Moderate' : 'Needs Boost')),
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
                           color: healthScore >= 75
                               ? const Color(0xFF34D399)
-                              : const Color(0xFF60A5FA),
+                              : (healthScore >= 50 ? const Color(0xFF60A5FA) : const Color(0xFFFBBF24)),
                         ),
                       ),
                     ),
@@ -633,6 +636,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final top3Count = _keywords.where((k) => (k.currentRank ?? 99) <= 3).length;
     final top10Count = _keywords.where((k) => (k.currentRank ?? 99) > 3 && (k.currentRank ?? 99) <= 10).length;
     final top20Count = _keywords.where((k) => (k.currentRank ?? 99) > 10 && (k.currentRank ?? 99) <= 20).length;
+
+    final validRanks = _keywords.map((k) => k.currentRank).whereType<int>().toList();
+    final avgRank = validRanks.isNotEmpty
+        ? (validRanks.reduce((a, b) => a + b) / validRanks.length)
+        : 2.5;
+    final bizName = context.read<AppAuthProvider>().currentBusiness?.name ?? 'Your Business';
 
     final avgRating = _reviews.isNotEmpty
         ? (_reviews.map((r) => r.rating).reduce((a, b) => a + b) / _reviews.length)
@@ -834,7 +843,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              'Rank #1 in Area',
+                              'Rank #${avgRank.toStringAsFixed(0)} in Area',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
@@ -847,15 +856,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: _buildBenchmarkBar('Your Business', 0.88, const Color(0xFF2563EB), '#1'),
+                            child: _buildBenchmarkBar(
+                              bizName.length > 12 ? '${bizName.substring(0, 10)}..' : bizName,
+                              (1.0 - (avgRank / 20.0)).clamp(0.2, 0.95),
+                              const Color(0xFF2563EB),
+                              '#${avgRank.toStringAsFixed(0)}',
+                            ),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
-                            child: _buildBenchmarkBar('Competitor A', 0.65, const Color(0xFF94A3B8), '#2'),
+                            child: _buildBenchmarkBar('Local Competitors', 0.65, const Color(0xFF94A3B8), '#2'),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
-                            child: _buildBenchmarkBar('Competitor B', 0.48, const Color(0xFFCBD5E1), '#3'),
+                            child: _buildBenchmarkBar('Market Avg', 0.48, const Color(0xFFCBD5E1), '#3'),
                           ),
                         ],
                       ),

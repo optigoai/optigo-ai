@@ -233,10 +233,20 @@ class _BespokeInteractiveWaveChartState extends State<BespokeInteractiveWaveChar
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 22,
-                      interval: (spots.length > 7 ? (spots.length / 4).floorToDouble() : 1.0),
+                      interval: 1.0,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
-                        if (idx >= 0 && idx < labels.length) {
+                        if (idx < 0 || idx >= labels.length) return const SizedBox.shrink();
+
+                        // Only show first, middle, and last date labels to prevent overlapping
+                        final total = labels.length;
+                        final isFirst = idx == 0;
+                        final isLast = idx == total - 1;
+                        final isMid1 = total > 10 && idx == (total ~/ 3);
+                        final isMid2 = total > 10 && idx == ((total * 2) ~/ 3);
+                        final isMidSingle = total <= 10 && idx == (total ~/ 2);
+
+                        if (isFirst || isLast || isMid1 || isMid2 || isMidSingle) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
@@ -244,7 +254,7 @@ class _BespokeInteractiveWaveChartState extends State<BespokeInteractiveWaveChar
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 10,
                                 color: const Color(0xFF94A3B8),
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           );

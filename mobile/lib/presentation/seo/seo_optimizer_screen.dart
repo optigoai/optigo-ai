@@ -568,6 +568,15 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     final visibilityScore = _audit?.overallSeoScore ?? 88;
     final displayedKeywords = _filteredKeywords;
 
+    final String scoreTierLabel = visibilityScore >= 75
+        ? 'Optimal'
+        : (visibilityScore >= 50 ? 'Good' : (visibilityScore >= 35 ? 'Moderate' : 'Needs Boost'));
+    final Color scoreTierColor = visibilityScore >= 75
+        ? const Color(0xFF34D399)
+        : (visibilityScore >= 50
+            ? const Color(0xFF60A5FA)
+            : (visibilityScore >= 35 ? const Color(0xFFFBBF24) : const Color(0xFFF87171)));
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
@@ -683,12 +692,16 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981).withValues(alpha: 0.25),
+                                      color: scoreTierColor.withValues(alpha: 0.25),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
-                                      'Optimal',
-                                      style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w800, color: const Color(0xFF34D399)),
+                                      scoreTierLabel,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: scoreTierColor,
+                                      ),
                                     ),
                                   ),
                                 ],
