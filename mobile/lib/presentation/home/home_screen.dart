@@ -661,15 +661,22 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    _buildSegmentTab('Search Visibility', 0),
-                    const SizedBox(width: 8),
-                    _buildSegmentTab('Customer Pulse', 1),
-                    const SizedBox(width: 8),
-                    _buildSegmentTab('Benchmark', 2),
-                  ],
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        _buildSegmentTab('Visibility', 0),
+                        const SizedBox(width: 6),
+                        _buildSegmentTab('Reviews', 1),
+                        const SizedBox(width: 6),
+                        _buildSegmentTab('Benchmark', 2),
+                      ],
+                    ),
+                  ),
                 ),
+                const SizedBox(width: 6),
                 // Indicator dots
                 Row(
                   children: List.generate(3, (index) {

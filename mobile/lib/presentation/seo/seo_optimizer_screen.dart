@@ -8,6 +8,7 @@ import '../../data/repositories/seo_repository.dart';
 import '../../data/repositories/gsc_repository.dart';
 import '../auth/auth_provider.dart';
 import '../shared/optigo_top_bar.dart';
+import '../shared/bespoke_interactive_wave_chart.dart';
 import '../home/widgets/bespoke_circular_score_gauge.dart';
 import '../home/widgets/bespoke_trend_sparkline.dart';
 import '../home/widgets/bespoke_keyword_distribution_bar.dart';
@@ -32,6 +33,8 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
 
   List<SeoKeywordModel> _keywords = [];
   SeoAuditModel? _audit;
+  List<Map<String, dynamic>> _visibilityHistory = [];
+  int _selectedDays = 7;
   bool _isLoading = true;
   bool _isAuditing = false;
   bool _initialized = false;
@@ -60,17 +63,31 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     try {
       final kws = await _seoRepo!.getKeywords(business.id);
       final aud = await _seoRepo!.getOrGenerateAudit(businessId: business.id);
+      final history = await _seoRepo!.getVisibilityHistory(business.id, days: _selectedDays);
 
       if (mounted) {
         setState(() {
           _keywords = kws;
           _audit = aud;
+          _visibilityHistory = history;
           _isLoading = false;
         });
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _handleRangeChanged(int days) async {
+    setState(() => _selectedDays = days);
+    final business = context.read<AppAuthProvider>().currentBusiness;
+    if (business == null || _seoRepo == null) return;
+    try {
+      final history = await _seoRepo!.getVisibilityHistory(business.id, days: days);
+      if (mounted) {
+        setState(() => _visibilityHistory = history);
+      }
+    } catch (_) {}
   }
 
   Future<void> _handleRunFreshAudit() async {
@@ -771,6 +788,15 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                         ),
                       ),
                     ],
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // 3.5 Interactive Historical Visibility Trend Wave Chart (Live Backend Time-Series)
+                  BespokeInteractiveWaveChart(
+                    dataPoints: _visibilityHistory,
+                    selectedDays: _selectedDays,
+                    onRangeChanged: _handleRangeChanged,
                   ),
 
                   const SizedBox(height: 20),
