@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../core/services/feature_flag_service.dart';
 import 'home/home_screen.dart';
 import 'recommendations/recommendations_screen.dart';
@@ -51,16 +52,15 @@ class _MainShellState extends State<MainShell> {
       ),
       RecommendationsScreen(
         onNavigateToReviews: () => _navigateToTab(4),
+        onNavigateToSeo: () => _navigateToTab(3),
+        onNavigateToCreate: () => _navigateToTab(2),
       ),
-      // Tab 2: Phase 6, 8, 9 Content, Campaign & Creative Studio
       ContentStudioScreen(
         onNavigateToRecommendations: () => _navigateToTab(1),
       ),
-      // Tab 3: Phase 7 SEO & Competitor Optimizer
       SeoOptimizerScreen(
         onNavigateToRecommendations: () => _navigateToTab(1),
       ),
-      // Tab 4: Reviews & Google Business
       const ReviewsScreen(),
     ];
 
@@ -82,8 +82,18 @@ class _MainShellState extends State<MainShell> {
               onNavigate: _handleRouteNavigate,
             ),
             child: Container(
-              height: 56,
-              margin: const EdgeInsets.only(bottom: 6, right: 2),
+              height: 58,
+              margin: const EdgeInsets.only(bottom: 4, right: 2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
               child: Image.asset(
                 'assets/images/ask-optigo-btn.png',
                 fit: BoxFit.contain,
@@ -96,11 +106,11 @@ class _MainShellState extends State<MainShell> {
         decoration: BoxDecoration(
           color: Colors.white,
           border: const Border(
-            top: BorderSide(color: Color(0xFFF1F5F9), width: 1.2),
+            top: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: const Color(0xFF0F172A).withValues(alpha: 0.04),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),
@@ -120,15 +130,15 @@ class _MainShellState extends State<MainShell> {
                 ),
                 _buildNavBarItem(
                   index: 1,
-                  activeIcon: Icons.pie_chart_rounded,
-                  inactiveIcon: Icons.pie_chart_outline_rounded,
-                  label: 'Actions',
+                  activeIcon: Icons.auto_awesome_rounded,
+                  inactiveIcon: Icons.auto_awesome_outlined,
+                  label: 'Priorities',
                 ),
                 _buildNavBarItem(
                   index: 2,
-                  activeIcon: Icons.add_circle_rounded,
-                  inactiveIcon: Icons.add_circle_outline_rounded,
-                  label: 'Create',
+                  activeIcon: Icons.campaign_rounded,
+                  inactiveIcon: Icons.campaign_outlined,
+                  label: 'Studio',
                 ),
                 _buildNavBarItem(
                   index: 3,
@@ -138,8 +148,8 @@ class _MainShellState extends State<MainShell> {
                 ),
                 _buildNavBarItem(
                   index: 4,
-                  activeIcon: Icons.chat_bubble_rounded,
-                  inactiveIcon: Icons.chat_bubble_outline_rounded,
+                  activeIcon: Icons.rate_review_rounded,
+                  inactiveIcon: Icons.rate_review_outlined,
                   label: 'Reviews',
                 ),
               ],
@@ -169,37 +179,27 @@ class _MainShellState extends State<MainShell> {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Micro-animation scale for the active icon
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 1.0, end: isSelected ? 1.15 : 1.0),
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutBack,
-                builder: (context, scale, child) {
-                  return Transform.scale(
-                    scale: scale,
-                    child: Icon(
-                      isSelected ? activeIcon : inactiveIcon,
-                      color: isSelected
-                          ? const Color(0xFF2563EB)
-                          : const Color(0xFF94A3B8),
-                      size: 24,
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 4),
-              // Smooth label text animation
-              AnimatedDefaultTextStyle(
+              AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFF64748B),
+                padding: EdgeInsets.symmetric(horizontal: isSelected ? 12 : 0, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(label),
+                child: Icon(
+                  isSelected ? activeIcon : inactiveIcon,
+                  color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10.5,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                ),
               ),
             ],
           ),

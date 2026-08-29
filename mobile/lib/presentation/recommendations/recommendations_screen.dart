@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
 import '../../data/models/recommendation_model.dart';
 import '../../data/repositories/recommendation_repository.dart';
 import '../auth/auth_provider.dart';
 import '../shared/optigo_top_bar.dart';
 import '../shared/cmo_chat_drawer.dart';
 
+/// OptigoAI Daily AI Strategic Priorities & Action Engine (Screen 2)
+/// Visual-first, low-text, high-impact action execution hub.
 class RecommendationsScreen extends StatefulWidget {
   final VoidCallback? onNavigateToReviews;
   final VoidCallback? onNavigateToSeo;
@@ -27,7 +31,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
   List<RecommendationModel> _recommendations = [];
   bool _isLoading = true;
   bool _isGenerating = false;
-  String _selectedFilter = 'all'; // 'all', 'urgent', 'important'
+  String _selectedFilter = 'all'; // 'all', 'urgent', 'growth', 'completed'
   String _sortBy = 'priority'; // 'priority', 'impact', 'effort'
   bool _initialized = false;
 
@@ -80,7 +84,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✨ Action plan refreshed with latest business data!'),
+            content: Text('✨ Strategic action priorities refreshed!'),
             backgroundColor: Color(0xFF10B981),
           ),
         );
@@ -139,17 +143,26 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     } else if (feat.contains('post') || feat.contains('create') || feat.contains('campaign')) {
       widget.onNavigateToCreate?.call();
     } else {
-      CmoChatDrawer.show(context, currentScreen: 'recommendations');
+      CmoChatDrawer.show(
+        context,
+        currentScreen: 'recommendations',
+        initialMessage: 'How do I execute this recommendation: "${rec.title}"?',
+      );
     }
   }
 
   List<RecommendationModel> get _filteredAndSortedList {
-    var list = _recommendations.where((r) => !r.isCompleted).toList();
+    var list = _recommendations.toList();
 
     if (_selectedFilter == 'urgent') {
-      list = list.where((r) => r.isUrgent).toList();
-    } else if (_selectedFilter == 'important') {
-      list = list.where((r) => r.isImportant || r.isOpportunity).toList();
+      list = list.where((r) => r.isUrgent && !r.isCompleted).toList();
+    } else if (_selectedFilter == 'growth') {
+      list = list.where((r) => (r.isImportant || r.isOpportunity) && !r.isCompleted).toList();
+    } else if (_selectedFilter == 'completed') {
+      list = list.where((r) => r.isCompleted).toList();
+    } else {
+      // All active
+      list = list.where((r) => !r.isCompleted).toList();
     }
 
     if (_sortBy == 'priority') {
@@ -161,11 +174,10 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final totalCount = _recommendations.isNotEmpty ? _recommendations.length : 18;
-    final needAttentionCount = _recommendations.where((r) => r.isUrgent && !r.isCompleted).length;
-    final attentionDisplay = needAttentionCount > 0 ? needAttentionCount : 4;
+    final totalCount = _recommendations.isNotEmpty ? _recommendations.length : 12;
+    final urgentCount = _recommendations.where((r) => r.isUrgent && !r.isCompleted).length;
+    final growthCount = _recommendations.where((r) => !r.isUrgent && !r.isCompleted).length;
     final completedCount = _recommendations.where((r) => r.isCompleted).length;
-    final completedDisplay = completedCount > 0 ? completedCount : 14;
 
     final displayedList = _filteredAndSortedList;
 
@@ -195,52 +207,61 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top Bar with Top AI Refresh Action
+                  // 1. Top Navigation Bar
                   OptigoTopBar(
-                    subtitle: 'Daily AI Strategic Priorities',
+                    subtitle: 'AI Growth Priorities',
                     onNotificationTap: widget.onNavigateToReviews,
                     onRefreshTap: _handleGenerateFresh,
                     isRefreshing: _isGenerating,
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
-                  // 1. Today's AI Insight Hero Card (Matching Reference Screen)
-                  _buildHeroInsightCard(
+                  // 2. Proactive AI CMO Strategy Card
+                  _buildStrategicBriefingCard(
                     total: totalCount,
-                    needAttention: attentionDisplay,
-                    completed: completedDisplay,
+                    urgent: urgentCount > 0 ? urgentCount : 2,
+                    growth: growthCount > 0 ? growthCount : 6,
+                    completed: completedCount,
                   ),
 
                   const SizedBox(height: 18),
 
-                  // 2. Filter Pills Row (All, Need Attention, Important)
-                  _buildFilterPills(
-                    total: totalCount,
-                    needAttention: attentionDisplay,
-                    important: _recommendations.where((r) => r.isImportant && !r.isCompleted).length,
+                  // 3. Interactive Category Filter Pills
+                  _buildInteractiveFilterRow(
+                    activeCount: _recommendations.where((r) => !r.isCompleted).length,
+                    urgentCount: urgentCount > 0 ? urgentCount : 2,
+                    growthCount: growthCount > 0 ? growthCount : 6,
+                    completedCount: completedCount,
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
 
-                  // 3. Section Header: Recommended for You + Sort Dropdown
+                  // 4. Section Header with Sort Menu
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Recommended for You',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
+                      Text(
+                        _selectedFilter == 'urgent'
+                            ? 'Urgent Actions'
+                            : (_selectedFilter == 'growth'
+                                ? 'Growth Drivers'
+                                : (_selectedFilter == 'completed'
+                                    ? 'Completed Actions'
+                                    : 'Prioritized Action Plan')),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
                           letterSpacing: -0.4,
                         ),
                       ),
                       PopupMenuButton<String>(
                         initialValue: _sortBy,
                         onSelected: (val) => setState(() => _sortBy = val),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
@@ -251,7 +272,11 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                             children: [
                               Text(
                                 'Sort: ${_sortBy[0].toUpperCase()}${_sortBy.substring(1)}',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF475569),
+                                ),
                               ),
                               const SizedBox(width: 4),
                               const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF64748B)),
@@ -269,33 +294,23 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
                   const SizedBox(height: 14),
 
-                  // 4. Action Cards List
+                  // 5. Action Cards List
                   if (_isLoading)
                     const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
-                        child: CircularProgressIndicator(color: Color(0xFF2563EB)),
-                      ),
+                      padding: EdgeInsets.symmetric(vertical: 48),
+                      child: Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
                     )
                   else if (displayedList.isEmpty)
                     _buildEmptyState()
                   else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: displayedList.length,
-                      itemBuilder: (context, index) {
-                        final rec = displayedList[index];
-                        return _buildActionCard(rec);
-                      },
-                    ),
+                    ...displayedList.map((rec) => _buildStrategicActionCard(rec)),
 
                   const SizedBox(height: 20),
 
-                  // 5. Bottom Ask AI CMO Banner (Matching Reference Screen)
-                  _buildAskCmoBanner(),
+                  // 6. Ask AI CMO Auto-Pilot Banner
+                  _buildAskCmoAutoPilotBanner(),
 
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -305,25 +320,26 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     );
   }
 
-  // ==========================================================
-  // 1. HERO INSIGHT CARD (Matching Reference Top Section)
-  // ==========================================================
-  Widget _buildHeroInsightCard({
+  // ==========================================
+  // 2. Proactive AI CMO Strategy Card
+  // ==========================================
+  Widget _buildStrategicBriefingCard({
     required int total,
-    required int needAttention,
+    required int urgent,
+    required int growth,
     required int completed,
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE0E7FF), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6366F1).withValues(alpha: 0.05),
-            blurRadius: 16,
+            color: const Color(0xFF6366F1).withValues(alpha: 0.06),
+            blurRadius: 18,
             offset: const Offset(0, 4),
           ),
         ],
@@ -331,152 +347,82 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Area: Headline + 3D Bot Blend with Radiant Aura
-          Stack(
-            clipBehavior: Clip.none,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Radiant Background Glow Aura for 3D depth
-              Positioned(
-                right: -10,
-                top: -15,
-                child: Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFF818CF8).withValues(alpha: 0.30),
-                        const Color(0xFFC7D2FE).withValues(alpha: 0.12),
-                        Colors.transparent,
-                      ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'AI STRATEGIC DIRECTIVE',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF4F46E5),
+                          letterSpacing: 0.4,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    RichText(
+                      text: TextSpan(
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF0F172A),
+                          letterSpacing: -0.6,
+                          height: 1.2,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Complete '),
+                          TextSpan(
+                            text: '$urgent urgent actions',
+                            style: const TextStyle(color: Color(0xFF2563EB)),
+                          ),
+                          const TextSpan(text: '\nto boost local customer reach'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-
-              // Sparkle Accent
-              const Positioned(
-                right: 120,
-                top: -4,
-                child: Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-              ),
-
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Today's AI Insight",
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF4F46E5),
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        RichText(
-                          text: TextSpan(
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: -0.5,
-                              height: 1.2,
-                            ),
-                            children: [
-                              const TextSpan(text: 'Focus on '),
-                              TextSpan(
-                                text: '$needAttention actions',
-                                style: const TextStyle(color: Color(0xFF2563EB)),
-                              ),
-                              const TextSpan(text: '\nto get more customers'),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Trend Pill
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF5),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFA7F3D0)),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.trending_up_rounded, size: 14, color: Color(0xFF059669)),
-                              SizedBox(width: 5),
-                              Text(
-                                'Your business is trending up!',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF059669),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Large 3D AI Mascot Graphic blending seamlessly
-                  SizedBox(
-                    width: 125,
-                    height: 125,
-                    child: Image.asset(
-                      'assets/images/optigo-bot.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ],
+              // AI Mascot Hologram
+              SizedBox(
+                width: 90,
+                height: 90,
+                child: Image.asset(
+                  'assets/images/optigo-bot.png',
+                  fit: BoxFit.contain,
+                ),
               ),
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          // Metrics Stats Row (Fixed overflow with compact flexible padding)
+          // High-Impact KPI Counter Pills
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetricItem(
-                  icon: Icons.assignment_outlined,
-                  iconColor: const Color(0xFF4F46E5),
-                  iconBg: const Color(0xFFEEF2FF),
-                  value: '$total',
-                  label: 'Total Actions',
-                ),
-                Container(width: 1, height: 26, color: const Color(0xFFE2E8F0)),
-                _buildMetricItem(
-                  icon: Icons.error_outline_rounded,
-                  iconColor: const Color(0xFFEF4444),
-                  iconBg: const Color(0xFFFEF2F2),
-                  value: '$needAttention',
-                  label: 'Need Attention',
-                ),
-                Container(width: 1, height: 26, color: const Color(0xFFE2E8F0)),
-                _buildMetricItem(
-                  icon: Icons.check_circle_outline_rounded,
-                  iconColor: const Color(0xFF10B981),
-                  iconBg: const Color(0xFFECFDF5),
-                  value: '$completed',
-                  label: 'Completed',
-                ),
+                _buildKpiMetric('Urgent', '$urgent', const Color(0xFFEF4444), const Color(0xFFFEE2E2)),
+                Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
+                _buildKpiMetric('Growth', '$growth', const Color(0xFF10B981), const Color(0xFFECFDF5)),
+                Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
+                _buildKpiMetric('Done', '$completed', const Color(0xFF2563EB), const Color(0xFFEFF6FF)),
               ],
             ),
           ),
@@ -485,129 +431,93 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     );
   }
 
-  Widget _buildMetricItem({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required String value,
-    required String label,
-  }) {
-    return Expanded(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: iconBg,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: iconColor, size: 14),
+  Widget _buildKpiMetric(String label, String value, Color textColor, Color bgColor) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(6),
           ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
-                    height: 1.1,
-                  ),
-                ),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-              ],
+          child: Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: textColor,
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF64748B),
+          ),
+        ),
+      ],
     );
   }
 
-  // ==========================================================
-  // 2. FILTER PILLS (Matching Reference Screen)
-  // ==========================================================
-  Widget _buildFilterPills({
-    required int total,
-    required int needAttention,
-    required int important,
+  // ==========================================
+  // 3. Interactive Category Filter Row
+  // ==========================================
+  Widget _buildInteractiveFilterRow({
+    required int activeCount,
+    required int urgentCount,
+    required int growthCount,
+    required int completedCount,
   }) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
       child: Row(
         children: [
-          _buildFilterPill(
-            id: 'all',
-            label: 'All Actions ($total)',
-            icon: Icons.grid_view_rounded,
-          ),
+          _buildFilterChip('all', 'All ($activeCount)', Icons.grid_view_rounded),
           const SizedBox(width: 8),
-          _buildFilterPill(
-            id: 'urgent',
-            label: 'Need Attention ($needAttention)',
-            icon: Icons.warning_amber_rounded,
-          ),
+          _buildFilterChip('urgent', 'Urgent ($urgentCount)', Icons.warning_amber_rounded, color: const Color(0xFFEF4444)),
           const SizedBox(width: 8),
-          _buildFilterPill(
-            id: 'important',
-            label: 'Important ($important)',
-            icon: Icons.star_rounded,
-          ),
+          _buildFilterChip('growth', 'Growth ($growthCount)', Icons.trending_up_rounded, color: const Color(0xFF10B981)),
+          const SizedBox(width: 8),
+          _buildFilterChip('completed', 'Done ($completedCount)', Icons.check_circle_outline_rounded, color: const Color(0xFF2563EB)),
         ],
       ),
     );
   }
 
-  Widget _buildFilterPill({
-    required String id,
-    required String label,
-    required IconData icon,
-  }) {
+  Widget _buildFilterChip(String id, String label, IconData icon, {Color? color}) {
     final isSelected = _selectedFilter == id;
+    final activeColor = color ?? const Color(0xFF2563EB);
 
     return InkWell(
       onTap: () => setState(() => _selectedFilter = id),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? activeColor.withValues(alpha: 0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0),
+            color: isSelected ? activeColor : const Color(0xFFE2E8F0),
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 14,
-              color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
-            ),
+            Icon(icon, size: 14, color: isSelected ? activeColor : const Color(0xFF64748B)),
             const SizedBox(width: 6),
             Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF475569),
+                color: isSelected ? activeColor : const Color(0xFF475569),
               ),
             ),
           ],
@@ -616,72 +526,52 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     );
   }
 
-  // ==========================================================
-  // 3. ACTION CARDS (Matching Reference Layout)
-  // ==========================================================
-  Widget _buildActionCard(RecommendationModel rec) {
+  // ==========================================
+  // 5. Strategic Action Card
+  // ==========================================
+  Widget _buildStrategicActionCard(RecommendationModel rec) {
     final feat = (rec.relatedFeature ?? '').toLowerCase();
+    final isUrgent = rec.isUrgent;
 
-    // Determine visual style based on category
-    Color iconBg;
     Color iconColor;
+    Color iconBg;
     IconData iconData;
-    String tagLabel;
-    Color tagBg;
-    Color tagColor;
-    String impactLabel;
-    Color impactBg;
-    Color impactColor;
-    String actionBtnLabel;
+    String categoryTag;
+    String actionLabel;
 
-    if (feat.contains('review')) {
-      iconBg = const Color(0xFFFEF2F2);
+    if (feat.contains('review') || feat.contains('reputation')) {
       iconColor = const Color(0xFFEF4444);
-      iconData = Icons.chat_bubble_outline_rounded;
-      tagLabel = '⚠️ NEEDS ATTENTION';
-      tagBg = const Color(0xFFFEF2F2);
-      tagColor = const Color(0xFFEF4444);
-      impactLabel = '🔥 High Priority';
-      impactBg = const Color(0xFFFEF2F2);
-      impactColor = const Color(0xFFDC2626);
-      actionBtnLabel = 'Open Reviews';
-    } else if (feat.contains('seo') || feat.contains('local') || feat.contains('rank')) {
+      iconBg = const Color(0xFFFEE2E2);
+      iconData = Icons.rate_review_rounded;
+      categoryTag = 'CUSTOMER REPUTATION';
+      actionLabel = 'Reply to Review';
+    } else if (feat.contains('seo') || feat.contains('rank') || feat.contains('local')) {
+      iconColor = const Color(0xFF10B981);
       iconBg = const Color(0xFFECFDF5);
-      iconColor = const Color(0xFF059669);
       iconData = Icons.travel_explore_rounded;
-      tagLabel = '📈 HIGH IMPACT';
-      tagBg = const Color(0xFFECFDF5);
-      tagColor = const Color(0xFF059669);
-      impactLabel = '📈 +15% Visibility';
-      impactBg = const Color(0xFFECFDF5);
-      impactColor = const Color(0xFF059669);
-      actionBtnLabel = 'Take Action';
+      categoryTag = 'GOOGLE MAPS SEO';
+      actionLabel = 'Optimize Local SEO';
     } else {
-      iconBg = const Color(0xFFEFF6FF);
       iconColor = const Color(0xFF2563EB);
-      iconData = Icons.campaign_outlined;
-      tagLabel = '⭐ IMPORTANT';
-      tagBg = const Color(0xFFEFF6FF);
-      tagColor = const Color(0xFF2563EB);
-      impactLabel = '📈 +20% Reach';
-      impactBg = const Color(0xFFEFF6FF);
-      impactColor = const Color(0xFF2563EB);
-      actionBtnLabel = 'Create Post';
+      iconBg = const Color(0xFFEFF6FF);
+      iconData = Icons.campaign_rounded;
+      categoryTag = 'PROMOTIONAL POST';
+      actionLabel = 'Create AI Campaign';
     }
 
-    final duration = rec.effort.isNotEmpty ? rec.effort : '15 mins';
+    final duration = rec.effort.isNotEmpty ? rec.effort : '2 mins';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: isUrgent ? const Color(0xFFFECACA) : const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
+            color: const Color(0xFF0F172A).withValues(alpha: 0.02),
+            blurRadius: 12,
             offset: const Offset(0, 3),
           ),
         ],
@@ -689,150 +579,137 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Icon + Badges + Title
+          // Header Row: Category Badge + Time required
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Icon Circle
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(iconData, color: iconColor, size: 22),
-              ),
-              const SizedBox(width: 14),
-
-              // Title & Badges
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Badges Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: tagBg,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            tagLabel,
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w900,
-                              color: tagColor,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: impactBg,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            impactLabel,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: impactColor,
-                            ),
-                          ),
-                        ),
-                      ],
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: iconBg,
+                      borderRadius: BorderRadius.circular(7),
                     ),
-                    const SizedBox(height: 8),
-
-                    // Card Title
-                    Text(
-                      rec.title,
-                      style: const TextStyle(
-                        fontSize: 15.5,
+                    child: Text(
+                      categoryTag,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 9.5,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F172A),
-                        letterSpacing: -0.2,
+                        color: iconColor,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                  if (isUrgent) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'URGENT',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
-                ),
+                ],
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.timer_outlined, size: 12, color: Color(0xFF94A3B8)),
+                  const SizedBox(width: 3),
+                  Text(
+                    duration,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
 
           const SizedBox(height: 10),
 
-          // Subtitle Explanation
+          // Title
           Text(
-            rec.explanation.isNotEmpty ? rec.explanation : rec.reason,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF475569),
-              height: 1.45,
-              fontWeight: FontWeight.w500,
+            rec.title,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14.5,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+              height: 1.25,
+              letterSpacing: -0.3,
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
 
-          // Footer Action Row (Duration, Dismiss, Primary Action Button)
+          // Explanation (Concise)
+          Text(
+            rec.explanation,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12.5,
+              color: const Color(0xFF475569),
+              height: 1.4,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+
+          const SizedBox(height: 14),
+
+          // Action Trigger Button & Mark Done
           Row(
             children: [
-              const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF94A3B8)),
-              const SizedBox(width: 4),
-              Text(
-                duration,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)),
-              ),
-              const Spacer(),
-
-              // Dismiss Text Button
-              InkWell(
-                onTap: () => _handleUpdateStatus(rec, 'dismissed'),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: Text(
-                    'Dismiss',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF94A3B8),
-                    ),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _handleActionTap(rec),
+                  icon: Icon(iconData, size: 15, color: Colors.white),
+                  label: Text(
+                    actionLabel,
+                    style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w800),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
-
               const SizedBox(width: 8),
-
-              // Primary Action Button (Matching Reference)
               InkWell(
-                onTap: () => _handleActionTap(rec),
+                onTap: () => _handleUpdateStatus(rec, 'completed'),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB),
+                    color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF2563EB).withValues(alpha: 0.25),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_rounded, size: 16, color: Color(0xFF10B981)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Done',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF334155),
+                        ),
                       ),
                     ],
-                  ),
-                  child: Text(
-                    actionBtnLabel,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
                   ),
                 ),
               ),
@@ -843,85 +720,67 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     );
   }
 
-  // ==========================================================
-  // 4. BOTTOM "ASK AI CMO" BANNER (Matching Reference Screen)
-  // ==========================================================
-  Widget _buildAskCmoBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F3FF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFDDD6FE)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEDE9FE),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFC4B5FD)),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Padding(
-                padding: const EdgeInsets.all(3),
-                child: Image.asset('assets/images/optigo-bot.png', fit: BoxFit.contain),
-              ),
-            ),
+  // ==========================================
+  // 6. Ask AI CMO Auto-Pilot Banner
+  // ==========================================
+  Widget _buildAskCmoAutoPilotBanner() {
+    return InkWell(
+      onTap: () => CmoChatDrawer.show(context, currentScreen: 'recommendations'),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Ask Optigo ✨',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF5B21B6),
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Ask anything about your marketing.',
-                  style: TextStyle(fontSize: 11.5, color: Color(0xFF7C3AED), fontWeight: FontWeight.w500),
-                ),
-              ],
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.2),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
             ),
-          ),
-          InkWell(
-            onTap: () => CmoChatDrawer.show(context, currentScreen: 'recommendations'),
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFC4B5FD)),
+                color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
+              child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF60A5FA), size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Ask Now',
-                    style: TextStyle(
-                      fontSize: 12,
+                    'Need Autonomous AI Execution?',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF6D28D9),
+                      color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_rounded, size: 13, color: Color(0xFF6D28D9)),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Tap to command your AI CMO to draft replies or launch ads.',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+          ],
+        ),
       ),
     );
   }
@@ -933,34 +792,30 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Center(
-        child: Column(
-          children: [
-            const Icon(Icons.check_circle_outline_rounded, size: 40, color: Color(0xFF10B981)),
-            const SizedBox(height: 12),
-            const Text(
-              'All Caught Up!',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+      child: Column(
+        children: [
+          const Icon(Icons.celebration_rounded, size: 40, color: Color(0xFF10B981)),
+          const SizedBox(height: 12),
+          Text(
+            'All Caught Up!',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'No pending actions in this category.',
-              style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'No pending actions in this category. Your marketing engine is operating at peak performance.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12.5,
+              color: const Color(0xFF64748B),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _handleGenerateFresh,
-              icon: const Icon(Icons.auto_awesome, size: 14, color: Colors.white),
-              label: const Text('Generate Fresh Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2563EB),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
