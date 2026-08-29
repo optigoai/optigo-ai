@@ -42,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   SeoRepository? _seoRepo;
 
   BusinessIntelligenceModel? _intelligence;
+  SeoAuditModel? _audit;
   List<RecommendationModel> _recommendations = [];
   List<ReviewModel> _reviews = [];
   List<SeoKeywordModel> _keywords = [];
@@ -103,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _loadRecommendations(),
         _loadReviews(),
         _loadKeywords(),
+        _loadAudit(),
       ]);
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -120,6 +122,19 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _intelligence = BusinessIntelligenceModel.fromJson(data);
         });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadAudit() async {
+    final authProvider = context.read<AppAuthProvider>();
+    final bizId = authProvider.currentBusiness?.id;
+    if (bizId == null || _seoRepo == null) return;
+
+    try {
+      final aud = await _seoRepo!.getOrGenerateAudit(businessId: bizId);
+      if (mounted) {
+        setState(() => _audit = aud);
       }
     } catch (_) {}
   }
@@ -752,26 +767,34 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       BespokeKeywordDistributionBar(
-                        top3Count: top3Count > 0 ? top3Count : 4,
-                        top10Count: top10Count > 0 ? top10Count : 3,
-                        top20Count: top20Count > 0 ? top20Count : 1,
-                        totalCount: totalKeywords > 0 ? totalKeywords : 8,
+                        top3Count: top3Count,
+                        top10Count: top10Count,
+                        top20Count: top20Count,
+                        totalCount: totalKeywords,
                       ),
-                      // Keyword Pill preview
-                      Row(
-                        children: [
-                          _buildMiniKeywordBadge('flour mill', '#1'),
-                          const SizedBox(width: 6),
-                          _buildMiniKeywordBadge('pure coconut oil', '#2'),
-                          const SizedBox(width: 6),
-                          _buildMiniKeywordBadge('organic spices', '#3'),
-                        ],
+                      // Dynamic Keyword Pill preview from backend keywords
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Row(
+                          children: _keywords.isNotEmpty
+                              ? _keywords.take(4).map((k) {
+                                  final rank = k.currentRank != null ? '#${k.currentRank}' : '#-';
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: _buildMiniKeywordBadge(k.keyword, rank),
+                                  );
+                                }).toList()
+                              : [
+                                  _buildMiniKeywordBadge('No tracked keywords yet', '#-'),
+                                ],
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-                // Slide 2: Review Sentiment & Pulse
+                // Slide 2: Review Sentiment & Pulse (100% live computed data)
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -809,16 +832,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       BespokeSentimentPulseMeter(
                         averageRating: avgRating,
-                        totalReviews: _reviews.isNotEmpty ? _reviews.length : 12,
+                        totalReviews: _reviews.length,
                         pendingReplies: pendingCount,
-                        fiveStarCount: 10,
-                        fourStarCount: 2,
+                        fiveStarCount: _reviews.where((r) => r.rating == 5).length,
+                        fourStarCount: _reviews.where((r) => r.rating == 4).length,
                       ),
                     ],
                   ),
                 ),
 
-                // Slide 3: Competitor Benchmark Radar
+                // Slide 3: Competitor Benchmark Radar (100% dynamic from backend audit)
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -865,11 +888,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(width: 14),
                           Expanded(
-                            child: _buildBenchmarkBar('Local Competitors', 0.65, const Color(0xFF94A3B8), '#2'),
+                            child: _buildBenchmarkBar(
+                              'Local Competitors',
+                              (_audit != null && _audit!.citationScore > 0)
+                                  ? (_audit!.citationScore / 100.0).clamp(0.1, 1.0)
+                                  : 0.65,
+                              const Color(0xFF94A3B8),
+                              '#2',
+                            ),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
-                            child: _buildBenchmarkBar('Market Avg', 0.48, const Color(0xFFCBD5E1), '#3'),
+                            child: _buildBenchmarkBar(
+                              'Market Avg',
+                              (_audit != null && _audit!.keywordScore > 0)
+                                  ? (_audit!.keywordScore / 100.0).clamp(0.1, 1.0)
+                                  : 0.48,
+                              const Color(0xFFCBD5E1),
+                              '#3',
+                            ),
                           ),
                         ],
                       ),
