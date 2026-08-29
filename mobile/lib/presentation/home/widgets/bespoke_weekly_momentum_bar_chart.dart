@@ -11,15 +11,17 @@ class BespokeWeeklyMomentumBarChart extends StatefulWidget {
   final int completedActions;
   final int totalReviews;
   final int positiveReviews;
+  final int reachRate;
 
   const BespokeWeeklyMomentumBarChart({
     super.key,
     required this.weeklyValues,
     required this.totalWeeklyEngagements,
-    this.weeklyGrowthPercent = 14.5,
-    this.completedActions = 16,
-    this.totalReviews = 8,
-    this.positiveReviews = 6,
+    required this.weeklyGrowthPercent,
+    required this.completedActions,
+    required this.totalReviews,
+    required this.positiveReviews,
+    required this.reachRate,
   });
 
   @override
@@ -293,7 +295,7 @@ class _BespokeWeeklyMomentumBarChartState extends State<BespokeWeeklyMomentumBar
                 Container(height: 20, width: 1, color: const Color(0xFFE2E8F0)),
                 _buildMiniStat('5★ Reviews', '${widget.positiveReviews}/${widget.totalReviews}', const Color(0xFF059669)),
                 Container(height: 20, width: 1, color: const Color(0xFFE2E8F0)),
-                _buildMiniStat('Reach Rate', '94% Optimal', const Color(0xFF7C3AED)),
+                _buildMiniStat('Reach Rate', '${widget.reachRate}% ${widget.reachRate >= 75 ? 'Optimal' : (widget.reachRate >= 50 ? 'Good' : 'Needs Boost')}', const Color(0xFF7C3AED)),
               ],
             ),
           ),

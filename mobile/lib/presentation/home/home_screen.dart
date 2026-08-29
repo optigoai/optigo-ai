@@ -670,14 +670,16 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     final totalEngagements = weeklyValues.reduce((a, b) => a + b).round();
+    final reachRate = _intelligence?.visibilityScore ?? healthScore;
 
     return BespokeWeeklyMomentumBarChart(
       weeklyValues: weeklyValues,
       totalWeeklyEngagements: totalEngagements,
       weeklyGrowthPercent: 18.5,
-      completedActions: completedActions > 0 ? completedActions : 16,
-      totalReviews: totalReviews > 0 ? totalReviews : 8,
-      positiveReviews: positiveReviews > 0 ? positiveReviews : 6,
+      completedActions: completedActions,
+      totalReviews: totalReviews,
+      positiveReviews: positiveReviews,
+      reachRate: reachRate,
     );
   }
 
