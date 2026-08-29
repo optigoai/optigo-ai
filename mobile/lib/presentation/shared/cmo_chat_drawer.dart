@@ -11,21 +11,29 @@ import '../auth/auth_provider.dart';
 
 class CmoChatDrawer extends StatefulWidget {
   final String currentScreen;
+  final String? initialMessage;
   final Function(String route)? onNavigate;
 
   const CmoChatDrawer({
     super.key,
     this.currentScreen = 'home',
+    this.initialMessage,
     this.onNavigate,
   });
 
-  static void show(BuildContext context, {String currentScreen = 'home', Function(String route)? onNavigate}) {
+  static void show(
+    BuildContext context, {
+    String currentScreen = 'home',
+    String? initialMessage,
+    Function(String route)? onNavigate,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => CmoChatDrawer(
         currentScreen: currentScreen,
+        initialMessage: initialMessage,
         onNavigate: onNavigate,
       ),
     );
@@ -45,6 +53,11 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
   void initState() {
     super.initState();
     _seedWelcomeMessage();
+    if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleSendMessage(widget.initialMessage!);
+      });
+    }
   }
 
   void _seedWelcomeMessage() {

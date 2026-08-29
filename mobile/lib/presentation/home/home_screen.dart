@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/intelligence_model.dart';
@@ -14,6 +14,10 @@ import '../../data/repositories/seo_repository.dart';
 import '../auth/auth_provider.dart';
 import '../shared/optigo_top_bar.dart';
 import '../shared/cmo_chat_drawer.dart';
+import 'widgets/bespoke_circular_score_gauge.dart';
+import 'widgets/bespoke_trend_sparkline.dart';
+import 'widgets/bespoke_keyword_distribution_bar.dart';
+import 'widgets/bespoke_sentiment_pulse_meter.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onNavigateToRecommendations;
@@ -45,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _initialized = false;
   bool _isLoading = false;
 
-  // Insight Carousel PageView Controller & One-Time Auto-Scroll Timer (4s)
+  // Insight Carousel PageView Controller
   final PageController _insightCarouselController = PageController();
   int _currentInsightIndex = 0;
   Timer? _oneTimeScrollTimer;
@@ -65,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _startOneTimeScroll() {
     _oneTimeScrollTimer?.cancel();
-    _oneTimeScrollTimer = Timer(const Duration(seconds: 4), () {
+    _oneTimeScrollTimer = Timer(const Duration(seconds: 5), () {
       if (_insightCarouselController.hasClients &&
           _currentInsightIndex == 0 &&
           mounted) {
@@ -173,8 +177,17 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AppAuthProvider>();
+    final bizName = authProvider.currentBusiness?.name ?? 'Your Business';
     final healthScore = _intelligence?.healthScore ?? 78;
 
     return Scaffold(
@@ -203,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Top Profile Pill + AI Refresh + Notification Circle
+                  // 1. Top Bar (Profile Avatar, Switcher, Live Sync, Notification)
                   OptigoTopBar(
                     onNotificationTap: widget.onNavigateToRecommendations,
                     onRefreshTap: _loadData,
@@ -211,95 +224,39 @@ class _HomeScreenState extends State<HomeScreen> {
                     isRefreshing: _isLoading,
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
-                  // 2. Large Editorial Headline (Inspired by reference)
-                  const Text(
-                    'How is your business\nperforming today?',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF0F172A),
-                      height: 1.15,
-                      letterSpacing: -0.8,
-                    ),
-                  ),
+                  // 2. Editorial Greeting & Headline
+                  _buildEditorialHeadline(bizName),
 
                   const SizedBox(height: 16),
 
-                  // 3. Search / AI Prompt Pill Bar
-                  InkWell(
-                    onTap:
-                        () => CmoChatDrawer.show(context, currentScreen: 'home'),
-                    borderRadius: BorderRadius.circular(24),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 13,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFFF1F5F9)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.search_rounded,
-                            size: 20,
-                            color: Color(0xFF94A3B8),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Search actions, keywords, reviews...',
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                color: Color(0xFF94A3B8),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // 3. Smart Search & AI Prompt Bar with Action Chips
+                  _buildSmartCommandBar(),
 
                   const SizedBox(height: 20),
 
-                  // 4. Hero Bento Grid Metrics (Dark Contrast Card + Clean White Card)
+                  // 4. Hero Bento Grid (Health Radial Gauge + Google Maps Momentum)
                   _buildHeroBentoRow(healthScore),
 
                   const SizedBox(height: 18),
 
-                  // 5. Multi-Card Insight Visualizer Carousel (Horizontal Scroll with Segmented Tabs)
+                  // 5. Visual Multi-Card Pulse Carousel (Keywords, Reviews, Competitors)
                   _buildInsightCarousel(),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
 
-                  // 6. AI CMO Strategic Briefing Card
-                  _buildAiBriefingCard(),
+                  // 6. AI CMO Strategic Action Center (Single High-Impact Priority)
+                  _buildTopPriorityActionCard(),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 22),
 
-                  // 7. Top Priority Action Card
-                  _buildTopPrioritySection(),
-
-                  const SizedBox(height: 24),
-
-                  // 8. Quick Actions Section
-                  _buildQuickActionsSection(),
+                  // 7. Quick Action Power Dock (4 Interactive Visual Tiles)
+                  _buildQuickActionDock(),
 
                   const SizedBox(height: 24),
 
-                  // 9. Growth Opportunities & Recent Activity Section
+                  // 8. Growth Opportunities & Recent Activity Stream
                   _buildGrowthOpportunitiesSection(),
 
                   const SizedBox(height: 80),
@@ -313,48 +270,195 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 4. Hero Bento Grid Row (Dark Contrast Card + Pure White Card)
+  // 2. Editorial Headline
+  // ==========================================
+  Widget _buildEditorialHeadline(String bizName) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: Color(0xFF10B981),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${_getGreeting()}, $bizName',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF64748B),
+                letterSpacing: 0.1,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'How is your business\nperforming today?',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 27,
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF0F172A),
+            height: 1.15,
+            letterSpacing: -0.9,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // 3. Smart Command Bar with Quick Chips
+  // ==========================================
+  Widget _buildSmartCommandBar() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: () => CmoChatDrawer.show(context, currentScreen: 'home'),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 16,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Ask AI CMO to reply, write posts, or audit...',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      color: const Color(0xFF94A3B8),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 13,
+                  color: Color(0xFFCBD5E1),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Quick Action Shortcut Chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              _buildPromptChip('💬 Draft reply', 'Draft a response for my latest review'),
+              const SizedBox(width: 8),
+              _buildPromptChip('✨ Create post', 'Write a high-converting promotional post'),
+              const SizedBox(width: 8),
+              _buildPromptChip('🚀 Boost SEO', 'How can I rank #1 on Google Maps in my area?'),
+              const SizedBox(width: 8),
+              _buildPromptChip('🎯 Competitors', 'Analyze my top local competitors'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPromptChip(String label, String prompt) {
+    return InkWell(
+      onTap: () => CmoChatDrawer.show(
+        context,
+        currentScreen: 'home',
+        initialMessage: prompt,
+      ),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF475569),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // 4. Hero Bento Grid Row (Health Score + Map Visibility)
   // ==========================================
   Widget _buildHeroBentoRow(int healthScore) {
     final validRanks = _keywords.map((k) => k.currentRank).whereType<int>().toList();
     final avgRank = validRanks.isNotEmpty
         ? (validRanks.reduce((a, b) => a + b) / validRanks.length)
         : 2.5;
-    final rankBadgeText = avgRank <= 3.0 ? 'Top 5%' : (avgRank <= 7.0 ? 'Top 15%' : 'Tracking');
-    final healthLabel = healthScore >= 75 ? 'Optimal' : (healthScore >= 50 ? 'Good' : 'Needs Attention');
-    final healthBadgeBg = healthScore >= 75
-        ? const Color(0xFF10B981).withValues(alpha: 0.25)
-        : (healthScore >= 50
-            ? const Color(0xFF3B82F6).withValues(alpha: 0.25)
-            : const Color(0xFFEF4444).withValues(alpha: 0.25));
-    final healthBadgeColor = healthScore >= 75
-        ? const Color(0xFF34D399)
-        : (healthScore >= 50 ? const Color(0xFF60A5FA) : const Color(0xFFF87171));
+    final top3Count = _keywords.where((k) => (k.currentRank ?? 99) <= 3).length;
+    final top3Percent = _keywords.isNotEmpty
+        ? ((top3Count / _keywords.length) * 100).round()
+        : 67;
 
     return Row(
       children: [
-        // Left Card: Navy-to-Slate Gradient Hero Card
+        // Left Card: Deep Midnight & Neon Azure Card
         Expanded(
           child: Container(
-            padding: const EdgeInsets.all(18),
+            height: 195,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                colors: [Color(0xFF0B132B), Color(0xFF1C2541), Color(0xFF1E293B)],
+                stops: [0.0, 0.55, 1.0],
               ),
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(color: const Color(0xFF334155), width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+                  color: const Color(0xFF0B132B).withValues(alpha: 0.25),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -368,65 +472,66 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: const Icon(
                         Icons.bolt_rounded,
                         color: Color(0xFF60A5FA),
-                        size: 18,
+                        size: 16,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: healthBadgeBg,
-                        borderRadius: BorderRadius.circular(12),
+                        color: healthScore >= 75
+                            ? const Color(0xFF10B981).withValues(alpha: 0.25)
+                            : const Color(0xFF3B82F6).withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        healthLabel,
-                        style: TextStyle(
+                        healthScore >= 75 ? 'Optimal' : 'Good',
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
-                          color: healthBadgeColor,
+                          color: healthScore >= 75
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFF60A5FA),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Business Health',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF94A3B8),
-                    fontWeight: FontWeight.w600,
+                Center(
+                  child: BespokeCircularScoreGauge(
+                    score: healthScore,
+                    size: 96,
+                    isDarkCard: true,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
-                  '$healthScore/100',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
+                  'Top 10% in your category',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF94A3B8),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
         ),
+
         const SizedBox(width: 14),
 
-        // Right Card: Clean Pure White Card (#FFFFFF)
+        // Right Card: Pure White Glass Card for Map Visibility
         Expanded(
           child: Container(
-            padding: const EdgeInsets.all(18),
+            height: 195,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(color: const Color(0xFFE2E8F0)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.03),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -434,6 +539,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -445,49 +551,69 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
-                        Icons.travel_explore_rounded,
+                        Icons.pin_drop_rounded,
                         color: Color(0xFF2563EB),
-                        size: 18,
+                        size: 16,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
-                        borderRadius: BorderRadius.circular(12),
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFDBEAFE)),
                       ),
                       child: Text(
-                        rankBadgeText,
-                        style: const TextStyle(
+                        '$top3Percent% in Top 3',
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF059669),
+                          color: const Color(0xFF2563EB),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Avg Google Rank',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w600,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Avg. Google Rank',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '#${avgRank.toStringAsFixed(1)}',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 27,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF0F172A),
+                            letterSpacing: -0.8,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.trending_up_rounded,
+                          color: Color(0xFF10B981),
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '#${avgRank.toStringAsFixed(1)} Rank',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
-                    letterSpacing: -0.5,
-                  ),
+                // Micro Sparkline
+                const BespokeTrendSparkline(
+                  dataPoints: [4.2, 3.8, 3.1, 2.9, 2.7, 2.5],
+                  height: 28,
+                  lineColor: Color(0xFF2563EB),
                 ),
               ],
             ),
@@ -498,620 +624,237 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 5. Multi-Card Insight Visualizer Carousel (Horizontal Scroll with Segmented Tabs)
+  // 5. Visual Multi-Card Pulse Carousel
   // ==========================================
   Widget _buildInsightCarousel() {
-    final tabLabels = ['Views', 'Reviews', 'Keywords', 'Competitors'];
-    final tabIcons = [
-      Icons.bar_chart_rounded,
-      Icons.star_rounded,
-      Icons.travel_explore_rounded,
-      Icons.emoji_events_rounded,
-    ];
+    final totalKeywords = _keywords.length;
+    final top3Count = _keywords.where((k) => (k.currentRank ?? 99) <= 3).length;
+    final top10Count = _keywords.where((k) => (k.currentRank ?? 99) > 3 && (k.currentRank ?? 99) <= 10).length;
+    final top20Count = _keywords.where((k) => (k.currentRank ?? 99) > 10 && (k.currentRank ?? 99) <= 20).length;
 
-    return Column(
-      children: [
-        // Modern Segmented Tab Selector Pills
-        Container(
-          height: 42,
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(3.5),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: List.generate(4, (index) {
-              final isSelected = _currentInsightIndex == index;
-              return Expanded(
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _currentInsightIndex = index;
-                    });
-                    _insightCarouselController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(11),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeInOutCubic,
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.white : Colors.transparent,
-                      borderRadius: BorderRadius.circular(11),
-                      border: isSelected ? Border.all(color: const Color(0xFFE2E8F0)) : null,
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.06),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            tabIcons[index],
-                            size: 13.5,
-                            color: isSelected
-                                ? const Color(0xFF2563EB)
-                                : const Color(0xFF64748B),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            tabLabels[index],
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                              color: isSelected
-                                  ? const Color(0xFF0F172A)
-                                  : const Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
+    final avgRating = _reviews.isNotEmpty
+        ? (_reviews.map((r) => r.rating).reduce((a, b) => a + b) / _reviews.length)
+        : 4.9;
+    final pendingCount = _reviews.where((r) => !r.isReplied).length;
 
-        // Carousel Slider
-        SizedBox(
-          height: 250,
-          child: PageView(
-            controller: _insightCarouselController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentInsightIndex = index;
-              });
-            },
-            children: [
-              _buildSlideCustomerViews(),
-              _buildSlideReviewsTrend(),
-              _buildSlideKeywordVisibility(),
-              _buildSlideCompetitorComparison(),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        _buildCarouselDots(),
-      ],
-    );
-  }
-
-  // ----------------------------------------------------
-  // Slide 1: Customer Views & Weekly Activity Pill Chart
-  // ----------------------------------------------------
-  Widget _buildSlideCustomerViews() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.bar_chart_rounded,
-                      color: Color(0xFF2563EB),
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Total Customer Views',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      Text(
-                        'Google Search & Maps interactions',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  '+24% vs last wk',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF059669),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-
-          // Custom Pill Bar Chart Painter
-          const Expanded(
-            child: SizedBox(
-              width: double.infinity,
-              child: CustomPaint(painter: _PillBarChartPainter()),
-            ),
-          ),
-          const SizedBox(height: 6),
-        ],
-      ),
-    );
-  }
-
-  // ----------------------------------------------------
-  // Slide 2: Customer Reviews Trend & 1-5 Star Distribution
-  // ----------------------------------------------------
-  Widget _buildSlideReviewsTrend() {
-    int totalReviews = 124;
-    double avgRating = 4.8;
-    int star5 = 78;
-    int star4 = 14;
-    int star3 = 5;
-    int star2 = 2;
-    int star1 = 1;
-
-    if (_reviews.isNotEmpty) {
-      totalReviews = _reviews.length;
-      avgRating =
-          _reviews.fold<double>(0, (sum, r) => sum + r.rating) / totalReviews;
-      star5 =
-          ((_reviews.where((r) => r.rating >= 4.5).length / totalReviews) * 100)
-              .round();
-      star4 =
-          ((_reviews.where((r) => r.rating >= 3.5 && r.rating < 4.5).length /
-                      totalReviews) *
-                  100)
-              .round();
-      star3 =
-          ((_reviews.where((r) => r.rating >= 2.5 && r.rating < 3.5).length /
-                      totalReviews) *
-                  100)
-              .round();
-      star2 =
-          ((_reviews.where((r) => r.rating >= 1.5 && r.rating < 2.5).length /
-                      totalReviews) *
-                  100)
-              .round();
-      star1 =
-          ((_reviews.where((r) => r.rating < 1.5).length / totalReviews) * 100)
-              .round();
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF3C7),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.star_rounded,
-                      color: Color(0xFFD97706),
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Customer Reviews Trend',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      Text(
-                        'Reviews received over time',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          // Segmented Navigation Header Tabs
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
                   children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      size: 13,
-                      color: Color(0xFFD97706),
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      '${avgRating.toStringAsFixed(1)} ($totalReviews)',
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFFB45309),
-                      ),
-                    ),
+                    _buildSegmentTab('Search Visibility', 0),
+                    const SizedBox(width: 8),
+                    _buildSegmentTab('Customer Pulse', 1),
+                    const SizedBox(width: 8),
+                    _buildSegmentTab('Benchmark', 2),
                   ],
                 ),
-              ),
-            ],
+                // Indicator dots
+                Row(
+                  children: List.generate(3, (index) {
+                    final isActive = _currentInsightIndex == index;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      margin: const EdgeInsets.only(left: 4),
+                      width: isActive ? 16 : 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: isActive ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: Row(
+
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+
+          // Swiper Carousel Body
+          SizedBox(
+            height: 140,
+            child: PageView(
+              controller: _insightCarouselController,
+              onPageChanged: (idx) => setState(() => _currentInsightIndex = idx),
               children: [
-                // Left: Big Rating + Sparkline
-                Expanded(
-                  flex: 5,
+                // Slide 1: Keywords & Distribution
+                Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            avgRating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: -1,
+                            'Google Maps Keyword Distribution',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.star_rounded,
-                            color: Color(0xFFF59E0B),
-                            size: 20,
+                          InkWell(
+                            onTap: () => widget.onNavigateToTab?.call(3), // SEO Tab
+                            child: Row(
+                              children: [
+                                Text(
+                                  'SEO Optimizer',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF2563EB),
+                                  ),
+                                ),
+                                const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF2563EB)),
+                              ],
+                            ),
                           ),
-                          const Spacer(),
+                        ],
+                      ),
+                      BespokeKeywordDistributionBar(
+                        top3Count: top3Count > 0 ? top3Count : 4,
+                        top10Count: top10Count > 0 ? top10Count : 3,
+                        top20Count: top20Count > 0 ? top20Count : 1,
+                        totalCount: totalKeywords > 0 ? totalKeywords : 8,
+                      ),
+                      // Keyword Pill preview
+                      Row(
+                        children: [
+                          _buildMiniKeywordBadge('flour mill', '#1'),
+                          const SizedBox(width: 6),
+                          _buildMiniKeywordBadge('pure coconut oil', '#2'),
+                          const SizedBox(width: 6),
+                          _buildMiniKeywordBadge('organic spices', '#3'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Slide 2: Review Sentiment & Pulse
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Customer Reputation & Sentiment',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => widget.onNavigateToTab?.call(4), // Reviews Tab
+                            child: Row(
+                              children: [
+                                Text(
+                                  'View Reviews',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF2563EB),
+                                  ),
+                                ),
+                                const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF2563EB)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      BespokeSentimentPulseMeter(
+                        averageRating: avgRating,
+                        totalReviews: _reviews.isNotEmpty ? _reviews.length : 12,
+                        pendingReplies: pendingCount,
+                        fiveStarCount: 10,
+                        fourStarCount: 2,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Slide 3: Competitor Benchmark Radar
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Market Share & Category Leaderboard',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFECFDF5),
-                              borderRadius: BorderRadius.circular(8),
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Text(
-                              '+18 this mo',
-                              style: TextStyle(
-                                fontSize: 9.5,
+                            child: Text(
+                              'Rank #1 in Area',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF059669),
+                                color: const Color(0xFF2563EB),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Weekly Inflow Trend',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Sparkline line chart
-                      const SizedBox(
-                        height: 38,
-                        width: double.infinity,
-                        child: CustomPaint(
-                          painter: _SparklinePainter(
-                            values: [14, 22, 31, 54],
-                            lineColor: Color(0xFF2563EB),
-                            fillColor: Color(0xFFEFF6FF),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildBenchmarkBar('Your Business', 0.88, const Color(0xFF2563EB), '#1'),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 14),
-                // Vertical divider
-                Container(width: 1, height: 90, color: const Color(0xFFF1F5F9)),
-                const SizedBox(width: 14),
-                // Right: Rating Distribution ⭐1-5 Bars
-                Expanded(
-                  flex: 6,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildStarDistributionRow(5, star5),
-                      const SizedBox(height: 3),
-                      _buildStarDistributionRow(4, star4),
-                      const SizedBox(height: 3),
-                      _buildStarDistributionRow(3, star3),
-                      const SizedBox(height: 3),
-                      _buildStarDistributionRow(2, star2),
-                      const SizedBox(height: 3),
-                      _buildStarDistributionRow(1, star1),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildIconMetricChip(
-                Icons.thumb_up_alt_rounded,
-                '94% Positive Sentiment',
-                const Color(0xFFF0FDF4),
-                const Color(0xFF16A34A),
-              ),
-              _buildIconMetricChip(
-                Icons.check_circle_rounded,
-                '100% Google Replied',
-                const Color(0xFFEFF6FF),
-                const Color(0xFF2563EB),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSlideKeywordVisibility() {
-    final biz = context.read<AppAuthProvider>().currentBusiness;
-    final cat =
-        (biz?.category != null && biz!.category!.isNotEmpty)
-            ? biz.category!
-            : 'Local Business';
-    final loc =
-        (biz?.location != null && biz!.location!.isNotEmpty)
-            ? biz.location!
-            : 'Local Area';
-    final name =
-        (biz?.name != null && biz!.name.isNotEmpty) ? biz.name : 'Our Brand';
-    final keywords =
-        _keywords.isNotEmpty
-            ? _keywords.take(4).toList()
-            : [
-              SeoKeywordModel(
-                id: '1',
-                businessId: '',
-                keyword: '$cat near me',
-                searchVolume: '1.2k / mo',
-                currentRank: 2,
-                previousRank: 4,
-                difficulty: 'Low',
-                intent: 'Local Intent',
-                isTracked: true,
-              ),
-              SeoKeywordModel(
-                id: '2',
-                businessId: '',
-                keyword: 'best $cat in $loc',
-                searchVolume: '850 / mo',
-                currentRank: 1,
-                previousRank: 3,
-                difficulty: 'Low',
-                intent: 'High Local Intent',
-                isTracked: true,
-              ),
-              SeoKeywordModel(
-                id: '3',
-                businessId: '',
-                keyword: '$name $loc',
-                searchVolume: '640 / mo',
-                currentRank: 3,
-                previousRank: 5,
-                difficulty: 'Low',
-                intent: 'Brand Intent',
-                isTracked: true,
-              ),
-            ];
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEEF2FF),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.travel_explore_rounded,
-                      color: Color(0xFF4F46E5),
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Visibility by Keyword',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: _buildBenchmarkBar('Competitor A', 0.65, const Color(0xFF94A3B8), '#2'),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: _buildBenchmarkBar('Competitor B', 0.48, const Color(0xFFCBD5E1), '#3'),
+                          ),
+                        ],
                       ),
                       Text(
-                        'Google Maps & Local Pack tracking',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: Color(0xFF64748B),
-                        ),
+                        'Based on Google Maps signals, review velocity, and citations.',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF94A3B8)),
                       ),
                     ],
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  'Avg #1.9 Rank',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF2563EB),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: keywords.map((k) => _buildKeywordRankRow(k)).toList(),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.check_circle_rounded,
-                  size: 13,
-                  color: Color(0xFF059669),
-                ),
-                SizedBox(width: 5),
-                Text(
-                  '4 of 5 keywords in Top 3 Google Map Pack',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF334155),
                   ),
                 ),
               ],
@@ -1122,400 +865,60 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ----------------------------------------------------
-  // Slide 4: Competitor Visibility Comparison
-  // ----------------------------------------------------
-  Widget _buildSlideCompetitorComparison() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF3C7),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.emoji_events_rounded,
-                      color: Color(0xFFD97706),
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Competitor Comparison',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      Text(
-                        'Your business vs local competitors',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.military_tech_rounded,
-                      size: 13,
-                      color: Color(0xFF059669),
-                    ),
-                    SizedBox(width: 3),
-                    Text(
-                      'You Rank #1',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF059669),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                final validRanks = _keywords.map((k) => k.currentRank).whereType<int>().toList();
-                final avgRank = validRanks.isNotEmpty
-                    ? (validRanks.reduce((a, b) => a + b) / validRanks.length)
-                    : 2.5;
-                final totalRevs = _reviews.length;
-                final avgRating = totalRevs > 0
-                    ? (_reviews.map((r) => r.rating).reduce((a, b) => a + b) / totalRevs)
-                    : 4.8;
-                final coverage = (_keywords.length * 15).clamp(40, 95);
-
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildCompetitorRowHeader(),
-                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    _buildCompetitorMetricRow(
-                      'Avg Google Rank',
-                      '#${avgRank.toStringAsFixed(1)}',
-                      '#${(avgRank + 1.5).toStringAsFixed(1)}',
-                      '#${(avgRank + 3.4).toStringAsFixed(1)}',
-                      isRank: true,
-                    ),
-                    _buildCompetitorMetricRow(
-                      'Keyword Coverage',
-                      '$coverage%',
-                      '${(coverage * 0.72).round()}%',
-                      '${(coverage * 0.48).round()}%',
-                    ),
-                    _buildCompetitorMetricRow(
-                      'Reviews & Rating',
-                      '${avgRating.toStringAsFixed(1)} ($totalRevs)',
-                      '4.4 (85)',
-                      '4.1 (62)',
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 6),
-          // Market Share Segmented Bar
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Visibility Share',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF475569),
-                    ),
-                  ),
-                  Text(
-                    '44% Lead Share',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: SizedBox(
-                  height: 6,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 44,
-                        child: Container(color: const Color(0xFF2563EB)),
-                      ),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        flex: 32,
-                        child: Container(color: const Color(0xFF8B5CF6)),
-                      ),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        flex: 24,
-                        child: Container(color: const Color(0xFFCBD5E1)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ----------------------------------------------------
-  // Carousel Dots Indicator (Interactive)
-  // ----------------------------------------------------
-  Widget _buildCarouselDots() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(4, (index) {
-        final isSelected = _currentInsightIndex == index;
-        return GestureDetector(
-          onTap: () {
-            _insightCarouselController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeInOut,
-            );
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            width: isSelected ? 22 : 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color:
-                  isSelected
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFFCBD5E1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
+  Widget _buildSegmentTab(String label, int index) {
+    final isSelected = _currentInsightIndex == index;
+    return InkWell(
+      onTap: () {
+        _insightCarouselController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
         );
-      }),
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+          ),
+        ),
+      ),
     );
   }
 
-  // ----------------------------------------------------
-  // Sub-widgets & helper rows
-  // ----------------------------------------------------
-  Widget _buildIconMetricChip(
-    IconData icon,
-    String text,
-    Color bg,
-    Color textCol,
-  ) {
+  Widget _buildMiniKeywordBadge(String keyword, String rank) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: bg,
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: textCol),
+          Text(
+            keyword,
+            style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+          ),
           const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: textCol,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStarDistributionRow(int stars, int percentage) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 14,
-          child: Text(
-            '$stars',
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF64748B),
-            ),
-          ),
-        ),
-        const Icon(Icons.star_rounded, size: 10, color: Color(0xFF94A3B8)),
-        const SizedBox(width: 4),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: percentage / 100.0,
-              backgroundColor: const Color(0xFFF1F5F9),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                stars >= 4 ? const Color(0xFFF59E0B) : const Color(0xFF94A3B8),
-              ),
-              minHeight: 5,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 26,
-          child: Text(
-            '$percentage%',
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF0F172A),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildKeywordRankRow(SeoKeywordModel keyword) {
-    final curr = keyword.currentRank ?? 1;
-    final prev = keyword.previousRank ?? 1;
-    final isGain =
-        prev > curr; // lower rank number is better (e.g. 4 -> 2 is gain)
-    final delta = (prev - curr).abs();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    keyword.keyword,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 1.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    keyword.searchVolume,
-                    style: const TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '#$prev → #$curr',
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF475569),
-            ),
-          ),
-          const SizedBox(width: 6),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
-              color: isGain ? const Color(0xFFECFDF5) : const Color(0xFFFFF1F2),
-              borderRadius: BorderRadius.circular(8),
+              color: const Color(0xFF10B981),
+              borderRadius: BorderRadius.circular(4),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isGain
-                      ? Icons.arrow_upward_rounded
-                      : Icons.arrow_downward_rounded,
-                  size: 10,
-                  color:
-                      isGain
-                          ? const Color(0xFF059669)
-                          : const Color(0xFFE11D48),
-                ),
-                const SizedBox(width: 1),
-                Text(
-                  '$delta',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color:
-                        isGain
-                            ? const Color(0xFF059669)
-                            : const Color(0xFFE11D48),
-                  ),
-                ),
-              ],
+            child: Text(
+              rank,
+              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white),
             ),
           ),
         ],
@@ -1523,1210 +926,450 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCompetitorRowHeader() {
-    return const Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: Text(
-            'METRIC',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF94A3B8),
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            'YOU',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF2563EB),
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            'CITY HUB',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF64748B),
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            'NATL MART',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF64748B),
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCompetitorMetricRow(
-    String metric,
-    String you,
-    String comp1,
-    String comp2, {
-    bool isRank = false,
-  }) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: Text(
-            metric,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF334155),
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            you,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              color: isRank ? const Color(0xFF059669) : const Color(0xFF2563EB),
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            comp1,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            comp2,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ==========================================
-  // 6. AI CMO Strategic Briefing Card
-  // ==========================================
-  Widget _buildAiBriefingCard() {
-    final biz = context.read<AppAuthProvider>().currentBusiness;
-    final summary = _intelligence?.aiProfile?['business_summary'] as String?;
-    final healthSummary = _intelligence?.healthSummary;
-    final strategicAdvice = _intelligence?.strategicAdvice;
-    
-    final briefingText = (strategicAdvice != null && strategicAdvice.isNotEmpty)
-        ? strategicAdvice
-        : ((healthSummary != null && healthSummary.isNotEmpty)
-            ? healthSummary
-            : ((summary != null && summary.isNotEmpty)
-                ? summary
-                : 'Focusing on timely Google review responses and local search keywords will solidify your #1 ranking in ${biz?.location ?? "your local area"}.'));
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 18,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'AI CMO Daily Briefing',
-                    style: TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  'Today',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF475569),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            briefingText,
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF334155),
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-          InkWell(
-            onTap: () => CmoChatDrawer.show(context, currentScreen: 'home'),
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Discuss Strategy with AI CMO',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ),
-                  SizedBox(width: 6),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 15,
-                    color: Color(0xFF2563EB),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================
-  // 7. Top Priority Action Card
-  // ==========================================
-  Widget _buildTopPrioritySection() {
-    final pendingRecs = _recommendations.where((r) => r.isPending).toList();
-    RecommendationModel? topRec;
-    if (pendingRecs.isNotEmpty) {
-      topRec = pendingRecs.firstWhere(
-        (r) => r.isUrgent,
-        orElse: () => pendingRecs.first,
-      );
-    }
-
-    final title = topRec?.title ?? 'Review & optimize business visibility';
-    final desc =
-        topRec?.explanation ??
-        'Address pending customer feedback and optimize local keywords to maintain strong search rankings.';
-    final pendingCount = pendingRecs.isNotEmpty ? pendingRecs.length : 1;
-    final impactText = topRec?.impact != null ? 'IMPACT: ${topRec!.impact.toUpperCase()}' : 'PRIORITY ACTION';
-
+  Widget _buildBenchmarkBar(String label, double val, Color color, String rank) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Top Priority Action',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
-                letterSpacing: -0.3,
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w700, color: const Color(0xFF475569)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            InkWell(
-              onTap: widget.onNavigateToRecommendations,
-              borderRadius: BorderRadius.circular(8),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                child: Row(
-                  children: [
-                    Text(
-                      'View all',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF2563EB),
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 16,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ],
-                ),
-              ),
+            Text(
+              rank,
+              style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w800, color: color),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFFEE2E2), width: 1.2),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFEF4444).withValues(alpha: 0.04),
-                blurRadius: 14,
-                offset: const Offset(0, 4),
-              ),
-            ],
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: val,
+            minHeight: 5,
+            backgroundColor: const Color(0xFFF1F5F9),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
-          child: Column(
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // 6. AI CMO Priority Action Center
+  // ==========================================
+  Widget _buildTopPriorityActionCard() {
+    final topRec = _recommendations.isNotEmpty ? _recommendations.first : null;
+    final title = topRec?.title ?? 'Respond to 2 new reviews to maintain 4.9★ rating';
+    final isUrgent = topRec?.isUrgent ?? true;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFEFF6FF), Color(0xFFF8FAFC)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFBFDBFE), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2563EB).withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Red Rounded Box with Message Icon and Dynamic Badge Count
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFEF2F2),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.bolt_rounded,
-                            color: Color(0xFFEF4444),
-                            size: 26,
-                          ),
-                        ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isUrgent ? const Color(0xFFFEE2E2) : const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      isUrgent ? 'URGENT ACTION' : 'HIGH IMPACT',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: isUrgent ? const Color(0xFFDC2626) : const Color(0xFFD97706),
+                        letterSpacing: 0.3,
                       ),
-                      Positioned(
-                        top: -3,
-                        right: -3,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFDC2626),
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 17,
-                            minHeight: 17,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '$pendingCount',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(width: 12),
-
-                  // Title, Impact badge & explanation
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEE2E2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            impactText,
-                            style: const TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFFDC2626),
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
+                        const Icon(Icons.timer_outlined, size: 12, color: Color(0xFF64748B)),
+                        const SizedBox(width: 3),
                         Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF0F172A),
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          desc,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF64748B),
-                            height: 1.35,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          '2 min',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF64748B)),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 16),
-
-              // Action Buttons Row (Execute Action + Mark Done)
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (topRec?.relatedFeature == 'reviews' &&
-                            widget.onNavigateToReviews != null) {
-                          widget.onNavigateToReviews!();
-                        } else if (topRec?.relatedFeature == 'posts' &&
-                            widget.onNavigateToTab != null) {
-                          widget.onNavigateToTab!(2);
-                        } else if (topRec?.relatedFeature == 'seo' &&
-                            widget.onNavigateToTab != null) {
-                          widget.onNavigateToTab!(3);
-                        } else if (widget.onNavigateToReviews != null) {
-                          widget.onNavigateToReviews!();
-                        } else if (widget.onNavigateToRecommendations != null) {
-                          widget.onNavigateToRecommendations!();
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF4444),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Take Action',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed:
-                          topRec != null
-                              ? () => _handleUpdateStatus(topRec!, 'completed')
-                              : () {},
-                      icon: const Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: 16,
-                        color: Color(0xFF475569),
-                      ),
-                      label: const Text(
-                        'Mark Done',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF475569),
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              const Icon(Icons.auto_awesome_rounded, color: Color(0xFF2563EB), size: 18),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  // ==========================================
-  // 6. Quick Actions Section
-  // ==========================================
-  Widget _buildQuickActionsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF0F172A),
-            letterSpacing: -0.3,
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+              height: 1.25,
+              letterSpacing: -0.3,
+            ),
           ),
-        ),
-        const SizedBox(height: 14),
-
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
+          const SizedBox(height: 14),
+          Row(
             children: [
-              _buildQuickActionItem(
-                icon: Icons.auto_awesome,
-                iconColor: const Color(0xFF2563EB),
-                bgColor: const Color(0xFFEFF6FF),
-                label: 'Today\'s\nActions',
-                onTap: () {
-                  if (widget.onNavigateToRecommendations != null) {
-                    widget.onNavigateToRecommendations!();
-                  }
-                },
-              ),
-              const SizedBox(width: 12),
-              _buildQuickActionItem(
-                icon: Icons.edit_note_rounded,
-                iconColor: const Color(0xFF8B5CF6),
-                bgColor: const Color(0xFFF5F3FF),
-                label: 'Create\nContent',
-                onTap: () {
-                  if (widget.onNavigateToTab != null) {
-                    widget.onNavigateToTab!(2);
-                  }
-                },
-              ),
-              const SizedBox(width: 12),
-              _buildQuickActionItem(
-                icon: Icons.travel_explore_rounded,
-                iconColor: const Color(0xFF10B981),
-                bgColor: const Color(0xFFECFDF5),
-                label: 'Optimize\nSEO',
-                onTap: () {
-                  if (widget.onNavigateToTab != null) {
-                    widget.onNavigateToTab!(3);
-                  }
-                },
-              ),
-              const SizedBox(width: 12),
-              _buildQuickActionItem(
-                icon: Icons.chat_bubble_outline_rounded,
-                iconColor: const Color(0xFF0EA5E9),
-                bgColor: const Color(0xFFE0F2FE),
-                label: 'Manage\nReviews',
-                onTap: () {
-                  if (widget.onNavigateToReviews != null) {
-                    widget.onNavigateToReviews!();
-                  }
-                },
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    if (widget.onNavigateToRecommendations != null) {
+                      widget.onNavigateToRecommendations!();
+                    } else {
+                      widget.onNavigateToTab?.call(1);
+                    }
+                  },
+                  icon: const Icon(Icons.bolt_rounded, size: 16, color: Colors.white),
+                  label: Text(
+                    'Execute with AI CMO',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13.5),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
               ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActionItem({
-    required IconData icon,
-    required Color iconColor,
-    required Color bgColor,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 90,
-        height: 96,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(child: Icon(icon, size: 22, color: iconColor)),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1E293B),
-                height: 1.15,
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
   // ==========================================
-  // 7. Growth Opportunities Section
+  // 7. Quick Action Power Dock (4 Visual Tiles)
   // ==========================================
-  Widget _buildGrowthOpportunitiesSection() {
+  Widget _buildQuickActionDock() {
+    final pendingCount = _reviews.where((r) => !r.isReplied).length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          'Quick Growth Tools',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF0F172A),
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(height: 12),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Growth Opportunities',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
-                letterSpacing: -0.3,
+            Expanded(
+              child: _buildActionTile(
+                icon: Icons.rate_review_rounded,
+                iconColor: const Color(0xFF2563EB),
+                iconBg: const Color(0xFFEFF6FF),
+                title: 'Review Reply',
+                badgeText: pendingCount > 0 ? '$pendingCount pending' : null,
+                badgeColor: const Color(0xFFEF4444),
+                onTap: () => widget.onNavigateToTab?.call(4),
               ),
             ),
-            InkWell(
-              onTap: widget.onNavigateToRecommendations,
-              borderRadius: BorderRadius.circular(8),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                child: Row(
-                  children: [
-                    Text(
-                      'View all',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF2563EB),
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ],
-                ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionTile(
+                icon: Icons.edit_note_rounded,
+                iconColor: const Color(0xFF6366F1),
+                iconBg: const Color(0xFFEEF2FF),
+                title: 'Create Post',
+                badgeText: 'AI Studio',
+                badgeColor: const Color(0xFF6366F1),
+                onTap: () => widget.onNavigateToTab?.call(2),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 14),
-
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _buildGrowthCard(
-                icon: Icons.bolt_rounded,
-                iconColor: const Color(0xFFD97706),
-                iconBg: const Color(0xFFFEF3C7),
-                title: 'Improve Local SEO',
-                impactTag: 'Medium Impact',
-                impactColor: const Color(0xFFD97706),
-                impactBg: const Color(0xFFFEF3C7),
-                highlight: 'Boost visibility',
-                subtitle: 'Rank higher on Maps',
-                onTap: () {
-                  if (widget.onNavigateToTab != null) {
-                    widget.onNavigateToTab!(3);
-                  }
-                },
-              ),
-              const SizedBox(width: 14),
-              _buildGrowthCard(
-                icon: Icons.article_outlined,
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionTile(
+                icon: Icons.travel_explore_rounded,
                 iconColor: const Color(0xFF10B981),
                 iconBg: const Color(0xFFECFDF5),
-                title: 'Post Regular Updates',
-                impactTag: 'Low Effort',
-                impactColor: const Color(0xFF10B981),
-                impactBg: const Color(0xFFECFDF5),
-                highlight: 'Stay active',
-                subtitle: 'Engage customers',
-                onTap: () {
-                  if (widget.onNavigateToTab != null) {
-                    widget.onNavigateToTab!(2);
-                  }
+                title: 'Boost SEO',
+                badgeText: 'Audit live',
+                badgeColor: const Color(0xFF10B981),
+                onTap: () => widget.onNavigateToTab?.call(3),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionTile(
+                icon: Icons.sync_rounded,
+                iconColor: const Color(0xFF0EA5E9),
+                iconBg: const Color(0xFFE0F2FE),
+                title: 'Live Sync GBP',
+                badgeText: 'Google Maps',
+                badgeColor: const Color(0xFF0EA5E9),
+                onTap: () async {
+                  final auth = context.read<AppAuthProvider>();
+                  auth.syncGbp();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Google Business Profile data synchronized!')),
+                  );
                 },
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // Recent Activity Stream (Dynamic live events)
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Builder(
-            builder: (context) {
-              final biz = context.read<AppAuthProvider>().currentBusiness;
-              final latestReview = _reviews.isNotEmpty ? _reviews.first : null;
-              final topKeyword = _keywords.isNotEmpty ? _keywords.first : null;
-              final topRec = _recommendations.isNotEmpty ? _recommendations.first : null;
-
-              // Row 1: Review Activity
-              final reviewTitle = latestReview != null
-                  ? 'New ${latestReview.rating}-Star Google Review'
-                  : 'Google Business Profile Connected';
-              final reviewSubtitle = latestReview != null
-                  ? '${latestReview.reviewerName} • Recent'
-                  : '${biz?.name ?? 'Storefront'} is actively synced';
-              final isReplied = latestReview?.isReplied ?? true;
-              final reviewBadge = isReplied ? 'Replied' : 'Pending';
-              final reviewBadgeColor = !isReplied ? const Color(0xFFD97706) : const Color(0xFF10B981);
-              final reviewBadgeBg = !isReplied ? const Color(0xFFFEF3C7) : const Color(0xFFECFDF5);
-
-              // Row 2: Keyword Activity
-              final cat = (biz?.category != null && biz!.category!.isNotEmpty) ? biz.category! : 'Business';
-              final kwTitle = topKeyword != null
-                  ? '"${topKeyword.keyword}"'
-                  : '"$cat near me"';
-              final kwRank = topKeyword?.currentRank ?? 1;
-              final kwPrev = topKeyword?.previousRank ?? kwRank;
-              final kwSubtitle = 'Ranked #$kwRank on Google Maps';
-              final kwGain = kwPrev - kwRank;
-              final kwBadge = kwGain > 0 ? '+$kwGain Ranks' : '#$kwRank Rank';
-
-              // Row 3: Actionable CMO / Recommendation
-              final recTitle = topRec != null ? topRec.title : 'AI CMO Strategy Active';
-              final recSubtitle = topRec != null ? '${topRec.impact} • Priority Action' : 'Weekly marketing strategy generated';
-              final recBadge = topRec != null ? (topRec.isUrgent ? 'Urgent' : 'Action') : 'Optimized';
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Recent Activity & Updates',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildActivityRow(
-                    icon: Icons.star_rounded,
-                    iconColor: const Color(0xFFF59E0B),
-                    iconBg: const Color(0xFFFEF3C7),
-                    title: reviewTitle,
-                    subtitle: reviewSubtitle,
-                    badgeText: reviewBadge,
-                    badgeColor: reviewBadgeColor,
-                    badgeBg: reviewBadgeBg,
-                    onTap: () {
-                      if (widget.onNavigateToReviews != null) {
-                        widget.onNavigateToReviews!();
-                      } else if (widget.onNavigateToTab != null) {
-                        widget.onNavigateToTab!(4);
-                      }
-                    },
-                  ),
-                  const Divider(height: 16, color: Color(0xFFF1F5F9)),
-                  _buildActivityRow(
-                    icon: Icons.search_rounded,
-                    iconColor: const Color(0xFF2563EB),
-                    iconBg: const Color(0xFFEFF6FF),
-                    title: kwTitle,
-                    subtitle: kwSubtitle,
-                    badgeText: kwBadge,
-                    badgeColor: const Color(0xFF2563EB),
-                    badgeBg: const Color(0xFFEFF6FF),
-                    onTap: () {
-                      if (widget.onNavigateToTab != null) {
-                        widget.onNavigateToTab!(3);
-                      }
-                    },
-                  ),
-                  const Divider(height: 16, color: Color(0xFFF1F5F9)),
-                  _buildActivityRow(
-                    icon: Icons.edit_note_rounded,
-                    iconColor: const Color(0xFF8B5CF6),
-                    iconBg: const Color(0xFFF5F3FF),
-                    title: recTitle,
-                    subtitle: recSubtitle,
-                    badgeText: recBadge,
-                    badgeColor: const Color(0xFF8B5CF6),
-                    badgeBg: const Color(0xFFF5F3FF),
-                    onTap: () {
-                      if (widget.onNavigateToRecommendations != null) {
-                        widget.onNavigateToRecommendations!();
-                      } else if (widget.onNavigateToTab != null) {
-                        widget.onNavigateToTab!(1);
-                      }
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildActivityRow({
+  Widget _buildActionTile({
     required IconData icon,
     required Color iconColor,
     required Color iconBg,
     required String title,
-    required String subtitle,
-    required String badgeText,
-    required Color badgeColor,
-    required Color badgeBg,
-    VoidCallback? onTap,
+    String? badgeText,
+    Color? badgeColor,
+    required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-              child: Center(child: Icon(icon, size: 18, color: iconColor)),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+                      color: const Color(0xFF0F172A),
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF64748B),
-                      fontWeight: FontWeight.w500,
+                  if (badgeText != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      badgeText,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: badgeColor ?? const Color(0xFF64748B),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: badgeBg,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                badgeText,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: badgeColor,
-                ),
-              ),
-            ),
-            if (onTap != null) ...[
-              const SizedBox(width: 6),
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 16,
-                color: Color(0xFF94A3B8),
-              ),
-            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildGrowthCard({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required String title,
-    required String impactTag,
-    required Color impactColor,
-    required Color impactBg,
-    required String highlight,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 160,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+  // ==========================================
+  // 8. Growth Opportunities & Stream
+  // ==========================================
+  Widget _buildGrowthOpportunitiesSection() {
+    final pendingRecs = _recommendations.where((r) => !r.isCompleted).take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Strategic Recommendations',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+                letterSpacing: -0.3,
+              ),
+            ),
+            InkWell(
+              onTap: () {
+                if (widget.onNavigateToRecommendations != null) {
+                  widget.onNavigateToRecommendations!();
+                } else {
+                  widget.onNavigateToTab?.call(1);
+                }
+              },
+              child: Text(
+                'View All (${_recommendations.length})',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF2563EB),
+                ),
+              ),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(child: Icon(icon, size: 18, color: iconColor)),
+        const SizedBox(height: 12),
+        if (pendingRecs.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Center(
+              child: Text(
+                'All growth recommendations completed! You are fully optimized.',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          )
+        else
+          ...pendingRecs.map((rec) => _buildOpportunityItem(rec)),
+      ],
+    );
+  }
+
+  Widget _buildOpportunityItem(RecommendationModel rec) {
+    final isUrgent = rec.isUrgent;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isUrgent ? const Color(0xFFFEE2E2) : const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isUrgent ? Icons.warning_amber_rounded : Icons.trending_up_rounded,
+              color: isUrgent ? const Color(0xFFDC2626) : const Color(0xFF2563EB),
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  rec.title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
                   ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  rec.explanation,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: const Color(0xFF64748B),
+                    height: 1.35,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: impactBg,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                impactTag,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: impactColor,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Text(
-              highlight,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: impactColor,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF64748B),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () => _handleUpdateStatus(rec, 'completed'),
+            icon: const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF94A3B8), size: 22),
+            tooltip: 'Mark Complete',
+          ),
+        ],
       ),
     );
   }
-}
-
-// ==========================================
-// PILL BAR CHART PAINTER (Reference Inspired)
-// ==========================================
-class _PillBarChartPainter extends CustomPainter {
-  const _PillBarChartPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const values = [0.35, 0.50, 0.40, 0.65, 0.95, 0.45, 0.30];
-    const activeIndex = 4; // Friday highlighted
-
-    final barWidth = (size.width / 7) - 18;
-    final maxBarHeight = size.height - 24;
-
-    for (int i = 0; i < 7; i++) {
-      final xCenter = (size.width / 7) * i + (size.width / 14);
-      final left = xCenter - (barWidth / 2);
-      final top = 0.0;
-      final height = maxBarHeight;
-
-      final isSelected = i == activeIndex;
-
-      // 1. Soft Track Pillar
-      final trackPaint =
-          Paint()
-            ..color =
-                isSelected ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC)
-            ..style = PaintingStyle.fill;
-      final trackRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(left, top, barWidth, height),
-        Radius.circular(barWidth / 2),
-      );
-      canvas.drawRRect(trackRect, trackPaint);
-
-      // 2. Active Filled Pill Value
-      final filledHeight = height * values[i];
-      final filledTop = top + (height - filledHeight);
-
-      final fillPaint =
-          Paint()
-            ..color =
-                isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0)
-            ..style = PaintingStyle.fill;
-
-      final fillRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(left, filledTop, barWidth, filledHeight),
-        Radius.circular(barWidth / 2),
-      );
-      canvas.drawRRect(fillRect, fillPaint);
-
-      // 3. Day Label
-      final daySpan = TextSpan(
-        text: days[i],
-        style: TextStyle(
-          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
-          fontSize: 10.5,
-          fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-          fontFamily: 'Inter',
-        ),
-      );
-      final dayPainter = TextPainter(
-        text: daySpan,
-        textDirection: TextDirection.ltr,
-      )..layout();
-      dayPainter.paint(
-        canvas,
-        Offset(xCenter - (dayPainter.width / 2), top + height + 6),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-
-// ==========================================
-// SPARKLINE LINE CHART PAINTER (Mini Reviews Growth)
-// ==========================================
-class _SparklinePainter extends CustomPainter {
-  final List<double> values;
-  final Color lineColor;
-  final Color fillColor;
-
-  const _SparklinePainter({
-    required this.values,
-    required this.lineColor,
-    required this.fillColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (values.length < 2) return;
-
-    final maxVal = values.reduce(max);
-    final minVal = values.reduce(min);
-    final range = maxVal - minVal > 0 ? maxVal - minVal : 1.0;
-
-    final points = <Offset>[];
-    final stepX = size.width / (values.length - 1);
-
-    for (int i = 0; i < values.length; i++) {
-      final x = i * stepX;
-      // Invert Y because canvas origin (0,0) is top-left
-      final normY = (values[i] - minVal) / range;
-      final y = size.height - (normY * (size.height - 8)) - 4;
-      points.add(Offset(x, y));
-    }
-
-    // 1. Draw smooth gradient/fill under the line
-    final fillPath = Path();
-    fillPath.moveTo(points.first.dx, size.height);
-    fillPath.lineTo(points.first.dx, points.first.dy);
-
-    for (int i = 1; i < points.length; i++) {
-      final p0 = points[i - 1];
-      final p1 = points[i];
-      final cx = (p0.dx + p1.dx) / 2;
-      fillPath.cubicTo(cx, p0.dy, cx, p1.dy, p1.dx, p1.dy);
-    }
-
-    fillPath.lineTo(points.last.dx, size.height);
-    fillPath.close();
-
-    final fillPaint =
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              lineColor.withValues(alpha: 0.25),
-              fillColor.withValues(alpha: 0.02),
-            ],
-          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-          ..style = PaintingStyle.fill;
-
-    canvas.drawPath(fillPath, fillPaint);
-
-    // 2. Draw smooth stroke line
-    final linePath = Path();
-    linePath.moveTo(points.first.dx, points.first.dy);
-
-    for (int i = 1; i < points.length; i++) {
-      final p0 = points[i - 1];
-      final p1 = points[i];
-      final cx = (p0.dx + p1.dx) / 2;
-      linePath.cubicTo(cx, p0.dy, cx, p1.dy, p1.dx, p1.dy);
-    }
-
-    final strokePaint =
-        Paint()
-          ..color = lineColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.5
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round;
-
-    canvas.drawPath(linePath, strokePaint);
-
-    // 3. Draw endpoint indicator dot
-    final lastPoint = points.last;
-    final dotPaint =
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.fill;
-
-    final dotBorderPaint =
-        Paint()
-          ..color = lineColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.5;
-
-    canvas.drawCircle(lastPoint, 4, dotPaint);
-    canvas.drawCircle(lastPoint, 4, dotBorderPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SparklinePainter oldDelegate) => true;
 }

@@ -25,8 +25,8 @@ void main() {
     // Initial pump
     await tester.pump();
 
-    // Verify Welcome to OptigoAI or Sign In appears
-    expect(find.text('Welcome to OptigoAI'), findsOneWidget);
-    expect(find.text('Sign In'), findsOneWidget);
+    // Verify Splash Story appears with 'Get Started' and 'AI CMO'
+    expect(find.text('Get Started'), findsOneWidget);
+    expect(find.text('AI CMO'), findsOneWidget);
   });
 }
