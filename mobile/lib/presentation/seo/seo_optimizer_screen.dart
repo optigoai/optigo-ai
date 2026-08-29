@@ -957,57 +957,68 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: rankColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    '#$rank',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w900,
-                      color: rankColor,
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: rankColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '#$rank',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w900,
+                        color: rankColor,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    kw.keyword,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.location_on_rounded, size: 11, color: Color(0xFF94A3B8)),
-                      const SizedBox(width: 3),
                       Text(
-                        kw.targetLocation ?? 'Local area',
+                        kw.keyword,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          color: const Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0F172A),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_rounded, size: 11, color: Color(0xFF94A3B8)),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              kw.targetLocation ?? 'Local area',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
+          const SizedBox(width: 8),
           IconButton(
             onPressed: () => _handleDeleteKeyword(kw.id),
             icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFCBD5E1), size: 18),
@@ -1035,23 +1046,30 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(10),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.code_rounded, color: Color(0xFF60A5FA), size: 18),
                     ),
-                    child: const Icon(Icons.code_rounded, color: Color(0xFF60A5FA), size: 18),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Technical SEO & Schema',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Technical SEO & Schema',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w800, color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: _showJsonLdSchemaModal,
                 child: Container(

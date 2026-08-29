@@ -527,6 +527,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                     Text(
                       author,
                       style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Row(
                       children: List.generate(5, (index) {
