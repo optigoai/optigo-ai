@@ -81,9 +81,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   List<ReviewModel> get _filteredReviews {
     switch (_selectedFilter) {
       case 'positive':
-        return _allReviews.where((r) => r.rating >= 4 || r.sentiment == 'positive').toList();
+        return _allReviews.where((r) => r.rating >= 4 || (r.sentiment?.toLowerCase() == 'positive')).toList();
       case 'negative':
-        return _allReviews.where((r) => r.rating <= 2 || r.sentiment == 'negative').toList();
+        return _allReviews.where((r) => r.rating <= 2 || (r.sentiment?.toLowerCase() == 'negative')).toList();
       case 'pending':
         return _allReviews.where((r) => !r.isReplied).toList();
       case 'all':
@@ -93,9 +93,41 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   }
 
   double get _averageRating {
-    if (_allReviews.isEmpty) return 4.9;
+    if (_allReviews.isEmpty) return 0.0;
     final sum = _allReviews.fold<int>(0, (prev, r) => prev + r.rating);
     return double.parse((sum / _allReviews.length).toStringAsFixed(1));
+  }
+
+  int get _positiveSentimentPercentage {
+    if (_allReviews.isEmpty) return 100;
+    final positiveCount = _allReviews.where((r) => r.rating >= 4 || (r.sentiment?.toLowerCase() == 'positive')).length;
+    return ((positiveCount / _allReviews.length) * 100).round();
+  }
+
+  String get _ratingTierLabel {
+    final rating = _averageRating;
+    if (rating >= 4.5) return 'Excellent';
+    if (rating >= 4.0) return 'Great';
+    if (rating >= 3.0) return 'Good';
+    if (rating > 0.0) return 'Needs Work';
+    return 'No Ratings';
+  }
+
+  Color get _ratingTierColor {
+    final rating = _averageRating;
+    if (rating >= 4.5) return const Color(0xFF34D399);
+    if (rating >= 4.0) return const Color(0xFF60A5FA);
+    if (rating >= 3.0) return const Color(0xFFFBBF24);
+    return const Color(0xFFF87171);
+  }
+
+  String get _ratingBenchmarkText {
+    final rating = _averageRating;
+    if (rating >= 4.5) return 'Top 5% rated in your area';
+    if (rating >= 4.0) return 'Top 15% rated in your area';
+    if (rating >= 3.0) return 'Above local market average';
+    if (rating > 0.0) return 'Reputation growth opportunity';
+    return 'Waiting for first reviews';
   }
 
   void _openReviewReplyModal(ReviewModel review) {
@@ -120,7 +152,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   @override
   Widget build(BuildContext context) {
     final pendingCount = _allReviews.where((r) => !r.isReplied).length;
+    final positiveCount = _allReviews.where((r) => r.rating >= 4 || (r.sentiment?.toLowerCase() == 'positive')).length;
+    final negativeCount = _allReviews.where((r) => r.rating <= 2 || (r.sentiment?.toLowerCase() == 'negative')).length;
     final displayedReviews = _filteredReviews;
+    final sentimentPct = _positiveSentimentPercentage;
+    final sentimentRatio = (sentimentPct / 100.0).clamp(0.0, 1.0);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -162,28 +198,31 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Customer Reviews',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF0F172A),
-                              letterSpacing: -0.6,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Customer Reviews',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF0F172A),
+                                letterSpacing: -0.6,
+                              ),
                             ),
-                          ),
-                          Text(
-                            'Google Maps ratings & AI auto-reply responses',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12.5,
-                              color: const Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
+                            Text(
+                              'Google Maps ratings & AI auto-reply responses',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12.5,
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       InkWell(
                         onTap: _isSyncing ? null : _handleSyncGbp,
                         borderRadius: BorderRadius.circular(12),
@@ -223,7 +262,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
                   const SizedBox(height: 18),
 
-                  // 3. Hero Reviews Bento Grid
+                  // 3. Hero Reviews Bento Grid (100% Dynamic Calculated from Backend)
                   Row(
                     children: [
                       // Left Card: Deep Midnight Rating Score
@@ -266,12 +305,16 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981).withValues(alpha: 0.25),
+                                      color: _ratingTierColor.withValues(alpha: 0.25),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
-                                      'Excellent',
-                                      style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w800, color: const Color(0xFF34D399)),
+                                      _ratingTierLabel,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: _ratingTierColor,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -303,8 +346,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                 ],
                               ),
                               Text(
-                                'Top 5% rated in your area',
+                                _ratingBenchmarkText,
                                 style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF60A5FA), fontWeight: FontWeight.w700),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -313,7 +358,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
                       const SizedBox(width: 14),
 
-                      // Right Card: Pure White Sentiment & Pending Card
+                      // Right Card: Pure White Sentiment & Pending Card (100% Dynamic Calculated from Backend)
                       Expanded(
                         child: Container(
                           height: 185,
@@ -372,7 +417,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '96%',
+                                    '$sentimentPct%',
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 28,
                                       fontWeight: FontWeight.w900,
@@ -384,11 +429,15 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                               ),
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(6),
-                                child: const LinearProgressIndicator(
-                                  value: 0.96,
+                                child: LinearProgressIndicator(
+                                  value: sentimentRatio,
                                   minHeight: 6,
-                                  backgroundColor: Color(0xFFF1F5F9),
-                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                  backgroundColor: const Color(0xFFF1F5F9),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    sentimentPct >= 75
+                                        ? const Color(0xFF10B981)
+                                        : (sentimentPct >= 50 ? const Color(0xFF2563EB) : const Color(0xFFEF4444)),
+                                  ),
                                 ),
                               ),
                             ],
@@ -410,9 +459,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                         const SizedBox(width: 8),
                         _buildFilterPill('pending', 'Pending ($pendingCount)', color: const Color(0xFFEF4444)),
                         const SizedBox(width: 8),
-                        _buildFilterPill('positive', 'Positive 5★', color: const Color(0xFF10B981)),
+                        _buildFilterPill('positive', 'Positive ($positiveCount)', color: const Color(0xFF10B981)),
                         const SizedBox(width: 8),
-                        _buildFilterPill('negative', 'Critical', color: const Color(0xFFF59E0B)),
+                        _buildFilterPill('negative', 'Critical ($negativeCount)', color: const Color(0xFFF59E0B)),
                       ],
                     ),
                   ),
@@ -542,6 +591,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   ],
                 ),
               ),
+              const SizedBox(width: 6),
               if (hasReply)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

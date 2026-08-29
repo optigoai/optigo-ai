@@ -759,10 +759,12 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                                   ),
                                 ],
                               ),
-                              const BespokeTrendSparkline(
-                                dataPoints: [4.8, 4.2, 3.5, 2.9, 2.7, 2.5],
+                              BespokeTrendSparkline(
+                                dataPoints: _keywords.isNotEmpty
+                                    ? _keywords.take(6).map((k) => (k.currentRank ?? 5).toDouble()).toList()
+                                    : const [3.0, 2.5, 2.0],
                                 height: 28,
-                                lineColor: Color(0xFF2563EB),
+                                lineColor: const Color(0xFF2563EB),
                               ),
                             ],
                           ),
@@ -1018,11 +1020,14 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: () => _handleDeleteKeyword(kw.id),
-            icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFCBD5E1), size: 18),
-            tooltip: 'Remove',
+          const SizedBox(width: 6),
+          InkWell(
+            onTap: () => _handleDeleteKeyword(kw.id),
+            borderRadius: BorderRadius.circular(8),
+            child: const Padding(
+              padding: EdgeInsets.all(4),
+              child: Icon(Icons.delete_outline_rounded, color: Color(0xFFCBD5E1), size: 18),
+            ),
           ),
         ],
       ),

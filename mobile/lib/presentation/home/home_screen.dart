@@ -610,10 +610,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 // Micro Sparkline
-                const BespokeTrendSparkline(
-                  dataPoints: [4.2, 3.8, 3.1, 2.9, 2.7, 2.5],
+                BespokeTrendSparkline(
+                  dataPoints: _keywords.isNotEmpty
+                      ? _keywords.take(6).map((k) => (k.currentRank ?? 5).toDouble()).toList()
+                      : const [3.0, 2.5, 2.0],
                   height: 28,
-                  lineColor: Color(0xFF2563EB),
+                  lineColor: const Color(0xFF2563EB),
                 ),
               ],
             ),
@@ -634,7 +636,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final avgRating = _reviews.isNotEmpty
         ? (_reviews.map((r) => r.rating).reduce((a, b) => a + b) / _reviews.length)
-        : 4.9;
+        : 0.0;
     final pendingCount = _reviews.where((r) => !r.isReplied).length;
 
     return Container(
