@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
 import '../../data/models/content_model.dart';
 import '../../data/repositories/content_repository.dart';
 import '../auth/auth_provider.dart';
 import '../shared/optigo_top_bar.dart';
 
+/// OptigoAI Next-Gen AI Content & Campaign Studio (Screen 3)
+/// Visual generator for promotional banners, social media posts, and multi-channel campaigns.
 class ContentStudioScreen extends StatefulWidget {
   final VoidCallback? onNavigateToRecommendations;
 
@@ -19,7 +23,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
   ContentRepository? _contentRepo;
   bool _initialized = false;
 
-  // Flow State: 0 = Intent Selector, 1 = Campaign Builder, 2 = Creative Studio
+  // Flow State: 0 = Format Selector, 1 = Campaign Builder, 2 = Creative Canvas Studio
   int _currentStep = 0;
 
   // Step 1: Selected Content Type
@@ -37,10 +41,10 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
   bool _isGenerating = false;
   ContentGenerateResponseModel? _generatedPostResult;
   String _selectedChannelTab = 'instagram';
-  Color _creativeBgColor = const Color(0xFF1E293B);
+  Color _creativeBgColor = const Color(0xFF0F172A);
   String _creativeHeadline = 'WEEKEND SPECIAL';
-  String _creativeSubtext = '20% OFF on all products';
-  final String _creativeBadge = 'LIMITED OFFER';
+  String _creativeSubtext = 'Flat 20% OFF on all products';
+  final String _creativeBadge = 'EXCLUSIVE PROMO';
   bool _isPublishing = false;
 
   @override
@@ -76,7 +80,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
 
     setState(() {
       _isGenerating = true;
-      _currentStep = 2; // Jump to Creative Studio view with loading skeleton
+      _currentStep = 2; // Jump to Creative Studio view
     });
 
     final topic = _themeController.text.trim().isNotEmpty ? _themeController.text.trim() : 'Weekend Special';
@@ -102,14 +106,13 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          // Fallback response items so UI never hangs
           _generatedPostResult = ContentGenerateResponseModel(
             businessId: businessId,
             campaignTheme: topic,
             posts: [
               GeneratedPostItemModel(
                 channel: 'instagram',
-                title: '🎉 $topic is here!',
+                title: '🎉 $topic is live!',
                 body: 'Get ready for exclusive savings with $offer at $bizName. Quality guaranteed!',
                 hashtags: '#WeekendSpecial #ShopLocal #FreshQuality #SpecialOffer',
                 callToAction: 'Visit us today!',
@@ -202,7 +205,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Top Profile / Notifications Bar
+              // Top Profile Bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: OptigoTopBar(
@@ -220,7 +223,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                       opacity: animation,
                       child: SlideTransition(
                         position: Tween<Offset>(
-                          begin: const Offset(0.05, 0),
+                          begin: const Offset(0.04, 0),
                           end: Offset.zero,
                         ).animate(animation),
                         child: child,
@@ -249,163 +252,161 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
     }
   }
 
-  // ==========================================================
-  // STEP 1: "What do you want to create?" (Intent Selector)
-  // Matching Reference Screen 1
-  // ==========================================================
+  // ==========================================
+  // STEP 1: Format Selector
+  // ==========================================
   Widget _buildStep1IntentSelector() {
     return SingleChildScrollView(
       key: const ValueKey('step_1'),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'What do you want to create?',
-            style: TextStyle(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 26,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0F172A),
-              letterSpacing: -0.6,
+              color: const Color(0xFF0F172A),
+              letterSpacing: -0.7,
             ),
           ),
-          const SizedBox(height: 6),
-          const Text(
-            'Select a creation format to craft high-impact marketing.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+          const SizedBox(height: 4),
+          Text(
+            'Choose a high-converting marketing format tailored for local customers.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          // 4 Intent Format Cards
+          _buildIntentCard(
+            id: 'offer',
+            title: 'Promotional Offer & Discount',
+            subtitle: 'Weekend specials, festive sales, and coupon announcements',
+            icon: Icons.local_offer_rounded,
+            iconColor: const Color(0xFF2563EB),
+            iconBg: const Color(0xFFEFF6FF),
+            defaultTheme: 'Weekend Special',
+            defaultOffer: 'Flat 20% OFF on all items',
+          ),
+          const SizedBox(height: 10),
+
+          _buildIntentCard(
+            id: 'social_post',
+            title: 'Social Media Announcement',
+            subtitle: 'Instagram reels, Facebook updates, and Google Maps posts',
+            icon: Icons.photo_camera_back_rounded,
+            iconColor: const Color(0xFFE1306C),
+            iconBg: const Color(0xFFFDF2F8),
+            defaultTheme: 'Fresh Products Arrival',
+            defaultOffer: 'Premium quality guaranteed',
+          ),
+          const SizedBox(height: 10),
+
+          _buildIntentCard(
+            id: 'blog',
+            title: 'SEO Article & Local Story',
+            subtitle: 'Educational guides, product benefits, and local SEO stories',
+            icon: Icons.article_rounded,
+            iconColor: const Color(0xFF8B5CF6),
+            iconBg: const Color(0xFFF5F3FF),
+            defaultTheme: 'Health Benefits of Pure Cold-Pressed Oils',
+            defaultOffer: 'Explore our pure organic range',
+          ),
+          const SizedBox(height: 10),
+
+          _buildIntentCard(
+            id: 'event',
+            title: 'Store Event & Festival',
+            subtitle: 'Festival celebrations, anniversary sales, and community invites',
+            icon: Icons.celebration_rounded,
+            iconColor: const Color(0xFFF59E0B),
+            iconBg: const Color(0xFFFEF3C7),
+            defaultTheme: 'Festival Celebration Sale',
+            defaultOffer: 'Special gifts with every purchase',
           ),
 
           const SizedBox(height: 20),
 
-          // 4 Intent Cards (Matching Reference Layout)
-          _buildIntentCard(
-            id: 'social_post',
-            title: 'Social Media Post',
-            subtitle: 'Instagram, Facebook & Google updates',
-            icon: Icons.photo_library_outlined,
-            iconColor: const Color(0xFFEF4444),
-            defaultTheme: 'Fresh Products Arrival',
-            defaultOffer: 'Best quality in town',
-          ),
-          const SizedBox(height: 12),
-
-          _buildIntentCard(
-            id: 'offer',
-            title: 'Offer / Promotion',
-            subtitle: 'Discounts, weekend specials & coupons',
-            icon: Icons.local_offer_outlined,
-            iconColor: const Color(0xFF2563EB),
-            defaultTheme: 'Weekend Special',
-            defaultOffer: 'Flat 20% OFF on all products',
-          ),
-          const SizedBox(height: 12),
-
-          _buildIntentCard(
-            id: 'blog',
-            title: 'Blog / Article',
-            subtitle: 'SEO articles, product benefits & guides',
-            icon: Icons.article_outlined,
-            iconColor: const Color(0xFF8B5CF6),
-            defaultTheme: 'Health Benefits of Pure Cold-Pressed Oils',
-            defaultOffer: 'Read our latest guide',
-          ),
-          const SizedBox(height: 12),
-
-          _buildIntentCard(
-            id: 'event',
-            title: 'Event Announcement',
-            subtitle: 'Store festival, milestone & launch',
-            icon: Icons.campaign_outlined,
-            iconColor: const Color(0xFFEC4899),
-            defaultTheme: 'Festival Celebration Sale',
-            defaultOffer: 'Special gifts on every purchase',
-          ),
-
-          const SizedBox(height: 24),
-
-          // Context Input Box
+          // Campaign Topic & Offer Details Card
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Campaign Theme & Offer',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                Text(
+                  'Campaign Theme & Offer Details',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 TextField(
                   controller: _themeController,
-                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
+                  ),
                   decoration: InputDecoration(
-                    labelText: 'Topic / Theme',
-                    labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                    labelText: 'Topic / Campaign Theme',
+                    labelStyle: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF94A3B8)),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                   ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: _offerDetailsController,
-                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
+                  ),
                   decoration: InputDecoration(
-                    labelText: 'Offer / Call-to-action',
-                    labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                    labelText: 'Offer / Main Value Proposition',
+                    labelStyle: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF94A3B8)),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
-          // Primary Button: Continue to Campaign Builder
-          InkWell(
-            onTap: () => setState(() => _currentStep = 1),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2563EB),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.28),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.auto_awesome, color: Colors.white, size: 16),
-                  SizedBox(width: 8),
-                  Text(
-                    'Generate with AI',
-                    style: TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ],
-              ),
+          // Primary Continue Button
+          ElevatedButton.icon(
+            onPressed: () => setState(() => _currentStep = 1),
+            icon: const Icon(Icons.auto_awesome_rounded, size: 16, color: Colors.white),
+            label: Text(
+              'Continue to Campaign Setup',
+              style: GoogleFonts.plusJakartaSans(fontSize: 14.5, fontWeight: FontWeight.w800),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
           ),
 
@@ -421,6 +422,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
     required String subtitle,
     required IconData icon,
     required Color iconColor,
+    required Color iconBg,
     required String defaultTheme,
     required String defaultOffer,
   }) {
@@ -431,17 +433,19 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFF1F5F9),
-            width: isSelected ? 1.8 : 1.0,
+            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+            width: isSelected ? 2.0 : 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected ? const Color(0xFF2563EB).withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.02),
+              color: isSelected
+                  ? const Color(0xFF2563EB).withValues(alpha: 0.08)
+                  : const Color(0xFF0F172A).withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -453,8 +457,8 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: iconBg,
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(icon, color: iconColor, size: 22),
             ),
@@ -465,8 +469,8 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 15,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14.5,
                       fontWeight: FontWeight.w800,
                       color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF0F172A),
                     ),
@@ -474,7 +478,11 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -490,18 +498,16 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
     );
   }
 
-  // ==========================================================
-  // STEP 2: "Campaign Builder" (Schedule, Goals, Channels)
-  // Matching Reference Screen 2
-  // ==========================================================
+  // ==========================================
+  // STEP 2: Campaign Setup & Multi-Channel
+  // ==========================================
   Widget _buildStep2CampaignBuilder() {
     return SingleChildScrollView(
       key: const ValueKey('step_2'),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with Back Button
           Row(
             children: [
               IconButton(
@@ -511,71 +517,74 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Campaign Builder',
-                style: TextStyle(
-                  fontSize: 26,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 24,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
+                  color: const Color(0xFF0F172A),
                   letterSpacing: -0.6,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          const Text(
-            'Configure your campaign objectives and target channels.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Campaign Name Pill Box (Matching Reference Screen 2)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _themeController.text.isNotEmpty ? _themeController.text : 'Weekend Special',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                ),
-                const Icon(Icons.edit_note_rounded, size: 20, color: Color(0xFF2563EB)),
-              ],
+          const SizedBox(height: 4),
+          Text(
+            'Target your local marketing channels and set campaign objectives.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
-          // Campaign Goal Selector
-          const Text(
+          // Campaign Objective Header
+          Text(
             'Campaign Goal',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+            ),
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              _buildGoalChip(id: 'foot_traffic', label: '🚶 Store Visits'),
+              _buildGoalChip(id: 'foot_traffic', label: '🚶 Store Foot Traffic'),
               const SizedBox(width: 8),
-              _buildGoalChip(id: 'online_orders', label: '🛍️ Inquiries'),
+              _buildGoalChip(id: 'online_orders', label: '💬 Inquiries'),
               const SizedBox(width: 8),
-              _buildGoalChip(id: 'brand_awareness', label: '📢 Visibility'),
+              _buildGoalChip(id: 'brand_awareness', label: '📢 Brand Reach'),
             ],
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          // Schedule Section (Matching Reference Screen 2)
+          // Publishing Channels
+          Text(
+            'Publishing Channels',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildChannelCard(id: 'google_post', name: 'Google', icon: Icons.travel_explore_rounded, color: const Color(0xFFEA4335)),
+              _buildChannelCard(id: 'instagram', name: 'Instagram', icon: Icons.camera_alt_rounded, color: const Color(0xFFE1306C)),
+              _buildChannelCard(id: 'facebook', name: 'Facebook', icon: Icons.facebook_rounded, color: const Color(0xFF1877F2)),
+              _buildChannelCard(id: 'whatsapp', name: 'WhatsApp', icon: Icons.chat_bubble_rounded, color: const Color(0xFF25D366)),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Schedule Card
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -586,18 +595,22 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Campaign Schedule',
-                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                Text(
+                  'Campaign Schedule Duration',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Start Date', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
+                          Text('Start Date', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
                           const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -608,7 +621,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                             ),
                             child: Text(
                               '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}-${_startDate.day.toString().padLeft(2, '0')}',
-                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                              style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
                             ),
                           ),
                         ],
@@ -619,7 +632,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('End Date', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
+                          Text('End Date', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
                           const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -630,7 +643,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                             ),
                             child: Text(
                               '${_endDate.year}-${_endDate.month.toString().padLeft(2, '0')}-${_endDate.day.toString().padLeft(2, '0')}',
-                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                              style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
                             ),
                           ),
                         ],
@@ -642,80 +655,20 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
 
-          // Publishing Channels (Matching Reference Screen 2: Google, Instagram, Facebook, WhatsApp)
-          const Text(
-            'Channels',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildChannelCard(
-                id: 'google_post',
-                name: 'Google',
-                icon: Icons.travel_explore_rounded,
-                color: const Color(0xFFEA4335),
-              ),
-              _buildChannelCard(
-                id: 'instagram',
-                name: 'Instagram',
-                icon: Icons.camera_alt_rounded,
-                color: const Color(0xFFE1306C),
-              ),
-              _buildChannelCard(
-                id: 'facebook',
-                name: 'Facebook',
-                icon: Icons.facebook_rounded,
-                color: const Color(0xFF1877F2),
-              ),
-              _buildChannelCard(
-                id: 'whatsapp',
-                name: 'WhatsApp',
-                icon: Icons.chat_bubble_rounded,
-                color: const Color(0xFF25D366),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 32),
-
-          // Primary Button: Review & Launch (Trigger Generation)
-          InkWell(
-            onTap: _handleGenerateAI,
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2563EB),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.28),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.auto_awesome, color: Colors.white, size: 17),
-                  SizedBox(width: 8),
-                  Text(
-                    'Review & Launch',
-                    style: TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ],
-              ),
+          // Primary Launch Button
+          ElevatedButton.icon(
+            onPressed: _handleGenerateAI,
+            icon: const Icon(Icons.auto_awesome_rounded, size: 16, color: Colors.white),
+            label: Text(
+              'Generate Multi-Channel Creative',
+              style: GoogleFonts.plusJakartaSans(fontSize: 14.5, fontWeight: FontWeight.w800),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
           ),
 
@@ -745,8 +698,8 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
             child: Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 10.5,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF475569),
               ),
@@ -778,7 +731,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         width: 76,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -808,7 +761,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
             const SizedBox(height: 8),
             Text(
               name,
-              style: TextStyle(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF64748B),
@@ -826,20 +779,18 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
     );
   }
 
-  // ==========================================================
-  // STEP 3: "Creative Studio" (Creative Canvas Preview & Actions)
-  // Matching Reference Screen 3
-  // ==========================================================
+  // ==========================================
+  // STEP 3: Creative Canvas & Studio
+  // ==========================================
   Widget _buildStep3CreativeStudio() {
     final bizName = context.read<AppAuthProvider>().currentBusiness?.name ?? 'My Business';
 
     return SingleChildScrollView(
       key: const ValueKey('step_3'),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with Back Button
           Row(
             children: [
               IconButton(
@@ -849,12 +800,12 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Creative Studio',
-                style: TextStyle(
-                  fontSize: 26,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 24,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
+                  color: const Color(0xFF0F172A),
                   letterSpacing: -0.6,
                 ),
               ),
@@ -868,27 +819,31 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                     color: const Color(0xFFEFF6FF),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add_rounded, size: 14, color: Color(0xFF2563EB)),
-                      SizedBox(width: 4),
-                      Text('New', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+                      const Icon(Icons.add_rounded, size: 14, color: Color(0xFF2563EB)),
+                      const SizedBox(width: 4),
+                      Text('New', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF2563EB))),
                     ],
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          const Text(
+          const SizedBox(height: 4),
+          Text(
             'AI-generated promotional banner and multi-channel copy.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
+            ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
-          // 1. Marketing Banner Graphic Preview (Matching Reference Screen 3)
+          // 1. Marketing Graphic Canvas
           if (_isGenerating)
             Container(
               height: 280,
@@ -898,15 +853,15 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(color: Color(0xFF2563EB)),
-                    SizedBox(height: 16),
+                    const CircularProgressIndicator(color: Color(0xFF2563EB)),
+                    const SizedBox(height: 16),
                     Text(
                       'AI is designing your marketing creative...',
-                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: const Color(0xFF2563EB)),
                     ),
                   ],
                 ),
@@ -915,7 +870,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
           else
             _buildCreativeGraphicCanvas(bizName: bizName),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
           // 2. Multi-Channel Copy Section
           Container(
@@ -931,9 +886,13 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Generated Copy',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                    Text(
+                      'Multi-Channel Copy',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                      ),
                     ),
                     InkWell(
                       onTap: () {
@@ -943,11 +902,11 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                           const SnackBar(content: Text('Copied caption to clipboard!')),
                         );
                       },
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.copy_rounded, size: 14, color: Color(0xFF2563EB)),
-                          SizedBox(width: 4),
-                          Text('Copy', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+                          const Icon(Icons.copy_rounded, size: 14, color: Color(0xFF2563EB)),
+                          const SizedBox(width: 4),
+                          Text('Copy', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF2563EB))),
                         ],
                       ),
                     ),
@@ -980,10 +939,10 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                   ),
                   child: Text(
                     _getPostForChannel(_selectedChannelTab, bizName),
-                    style: const TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       height: 1.45,
-                      color: Color(0xFF334155),
+                      color: const Color(0xFF334155),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -992,66 +951,48 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          // 3. Action Buttons (Matching Reference Screen 3: Edit Design & Download / Publish)
+          // 3. Action Buttons (Edit Design & Download / Publish)
           Row(
             children: [
               Expanded(
-                child: InkWell(
-                  onTap: _showEditDesignSheet,
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
+                child: OutlinedButton(
+                  onPressed: _showEditDesignSheet,
+                  style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF2563EB), width: 1.5),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Edit Design',
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF2563EB),
-                        ),
-                      ),
+                    side: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: Text(
+                    'Edit Design',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF2563EB),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
-                child: InkWell(
-                  onTap: _isPublishing ? null : _handlePublish,
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
+                child: ElevatedButton(
+                  onPressed: _isPublishing ? null : _handlePublish,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.28),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: _isPublishing
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text(
-                              'Download',
-                              style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
+                  child: _isPublishing
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : Text(
+                          'Publish / Save',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -1078,7 +1019,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
           child: Center(
             child: Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 10.5,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected ? Colors.white : const Color(0xFF64748B),
@@ -1090,21 +1031,21 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
     );
   }
 
-  // ==========================================================
-  // MARKETING BANNER CANVAS (Reference Screen 3 Banner)
-  // ==========================================================
+  // ==========================================
+  // MARKETING BANNER CANVAS
+  // ==========================================
   Widget _buildCreativeGraphicCanvas({required String bizName}) {
     return Container(
       width: double.infinity,
-      height: 300,
+      height: 290,
       decoration: BoxDecoration(
         color: _creativeBgColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -1127,7 +1068,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
 
           // Banner Content
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1140,11 +1081,11 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         bizName.toUpperCase(),
-                        style: const TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -1153,15 +1094,15 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF59E0B),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         _creativeBadge,
-                        style: const TextStyle(
-                          fontSize: 10,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w900,
                           color: Colors.black,
                           letterSpacing: 0.5,
@@ -1177,8 +1118,8 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                   children: [
                     Text(
                       _creativeHeadline,
-                      style: const TextStyle(
-                        fontSize: 28,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 27,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
                         letterSpacing: -0.5,
@@ -1194,8 +1135,8 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                       ),
                       child: Text(
                         _creativeSubtext,
-                        style: const TextStyle(
-                          fontSize: 15,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                         ),
@@ -1208,9 +1149,13 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       '✨ Verified Quality • Direct Mill Prices',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: const Color(0xFF94A3B8),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     Container(
                       padding: const EdgeInsets.all(6),
@@ -1242,16 +1187,16 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Customize Design Theme',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A)),
               ),
               const SizedBox(height: 16),
-              const Text('Background Palette', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+              Text('Background Palette', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  _buildColorOption(const Color(0xFF1E293B)),
+                  _buildColorOption(const Color(0xFF0F172A)),
                   const SizedBox(width: 12),
                   _buildColorOption(const Color(0xFF1E3A8A)),
                   const SizedBox(width: 12),
@@ -1271,7 +1216,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                     backgroundColor: const Color(0xFF2563EB),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text('Apply Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+                  child: Text('Apply Changes', style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w800)),
                 ),
               ),
             ],
