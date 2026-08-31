@@ -3,7 +3,8 @@
 # ==================================================
 """
 Generates structured, high-converting, SEO-optimized business website content
-from existing Optigo profile data, verified customer reviews, and local keywords.
+strictly using verified data from the database (business profile, verified reviews,
+tracked SEO keywords, and AI attributes).
 """
 
 import re
@@ -51,154 +52,209 @@ class WebsiteGeneratorService:
             slug = f"{base_slug}-{counter}"
 
     async def generate_website_data(self, business: Business) -> Dict[str, Any]:
-        """Synthesize all business data into a rich structured website content payload."""
-        # 1. Fetch real customer reviews from database
+        """
+        Synthesize website content strictly from the database:
+        - Business profile attributes (name, category, location, phone, website, description)
+        - Onboarding answers (services, target_customers, business_goals, marketing_channels)
+        - AI profile attributes (ai_business_profile JSON)
+        - Real verified customer reviews from PostgreSQL
+        - Tracked SEO keywords from PostgreSQL
+        """
+        # 1. Fetch real customer reviews from database for this business
         reviews_query = (
             select(Review)
             .where(Review.business_id == business.id)
             .order_by(Review.rating.desc(), Review.created_at.desc())
-            .limit(6)
+            .limit(10)
         )
         reviews_res = await self.db.execute(reviews_query)
         db_reviews = reviews_res.scalars().all()
 
-        # 2. Fetch tracked SEO keywords from database
+        # 2. Fetch real tracked SEO keywords from database for this business
         keywords_query = (
             select(SEOKeyword)
             .where(SEOKeyword.business_id == business.id)
-            .limit(5)
+            .limit(8)
         )
         keywords_res = await self.db.execute(keywords_query)
         db_keywords = keywords_res.scalars().all()
-        keyword_names = [k.keyword for k in db_keywords] or ["local business", business.category or "services"]
+        keyword_names = [k.keyword for k in db_keywords if k.keyword]
 
-        # Parse basic fields
-        name = business.name or "Our Business"
-        category = business.category or "Local Business"
-        location = business.location or "Local Community"
-        phone = business.phone or "+91 98460 12345"
-        description = business.description or f"Welcome to {name}, your premier {category.lower()} in {location}."
-        services_raw = business.services or "Signature Services, Consultations, Custom Orders, Customer Support"
-        target_audience = business.target_customers or "Local families, professionals, and valued clients"
+        # Extract business fields from DB
+        name = business.name.strip() if business.name else "Business Profile"
+        category = business.category.strip() if business.category else "Local Business"
+        location = business.location.strip() if business.location else ""
+        phone = business.phone.strip() if business.phone else None
+        website = business.website.strip() if business.website else None
+        description = business.description.strip() if business.description else ""
+        services_raw = business.services.strip() if business.services else ""
+        target_customers = business.target_customers.strip() if business.target_customers else ""
+        business_goals = business.business_goals.strip() if business.business_goals else ""
+        ai_profile = business.ai_business_profile or {}
 
-        # Split services
-        service_items_list = [s.strip() for s in services_raw.replace(";", ",").split(",") if s.strip()]
+        # Parse services list strictly from DB
+        service_items_list: List[str] = []
+        if services_raw:
+            service_items_list = [s.strip() for s in services_raw.replace(";", ",").split(",") if s.strip()]
+        elif ai_profile.get("services") and isinstance(ai_profile["services"], list):
+            service_items_list = [str(s).strip() for s in ai_profile["services"] if str(s).strip()]
+        elif ai_profile.get("offerings") and isinstance(ai_profile["offerings"], list):
+            service_items_list = [str(s).strip() for s in ai_profile["offerings"] if str(s).strip()]
+
         if not service_items_list:
-            service_items_list = ["Premium Offerings", "Specialized Services", "Dedicated Customer Care"]
+            service_items_list = [f"{category} Services", "Customer Inquiries & Consultations", "Quality Assured Offerings"]
 
         # Build structured service catalog
         services_structured = []
-        icons = ["Sparkles", "Star", "Heart", "Award", "CheckCircle", "Shield"]
-        badges = ["Popular", "Signature", "Recommended", "Top Rated"]
-
-        for idx, svc in enumerate(service_items_list[:6]):
+        icons = ["Sparkles", "Star", "Heart", "Award", "CheckCircle", "ShieldCheck"]
+        for idx, svc in enumerate(service_items_list):
             services_structured.append({
                 "name": svc,
-                "description": f"High-quality {svc.lower()} tailored for our customers in {location}.",
-                "price_range": "Available on Request" if idx % 2 == 0 else "Best Value",
-                "badge": badges[idx % len(badges)] if idx < 3 else None,
+                "description": f"Dedicated {svc.lower()} tailored for our clients" + (f" in {location}" if location else "") + ".",
+                "price_range": "Inquire for Details",
+                "badge": "Specialty" if idx == 0 else None,
                 "icon": icons[idx % len(icons)],
             })
 
-        # Build real customer testimonials
+        # Calculate actual review ratings strictly from DB reviews
         featured_reviews_list = []
         for r in db_reviews:
-            featured_reviews_list.append({
-                "author_name": r.reviewer_name or "Verified Customer",
-                "rating": r.rating or 5,
-                "text": r.text or "Exceptional service and friendly staff. Highly recommended!",
-                "review_date": r.review_date or "Recent visit",
-            })
-
-        if not featured_reviews_list:
-            featured_reviews_list = [
-                {
-                    "author_name": "Satisfied Customer",
-                    "rating": 5,
-                    "text": f"Wonderful experience at {name}. Professional, attentive, and great quality in {location}.",
-                    "review_date": "Verified Google Review",
-                },
-                {
-                    "author_name": "Local Client",
-                    "rating": 5,
-                    "text": f"The team at {name} always delivers top-notch service. Will definitely be coming back!",
-                    "review_date": "Verified Google Review",
-                },
-            ]
+            if r.text:
+                featured_reviews_list.append({
+                    "author_name": r.reviewer_name or "Verified Customer",
+                    "rating": r.rating or 5,
+                    "text": r.text,
+                    "review_date": r.review_date or "Verified Customer Review",
+                })
 
         avg_rating = (
             round(sum(r.rating for r in db_reviews) / len(db_reviews), 1)
             if db_reviews
-            else 4.9
+            else 0.0
         )
-        total_rev_count = len(db_reviews) if db_reviews else 24
+        total_rev_count = len(db_reviews)
 
-        # Hero Headline and Subtitle
-        headline = f"Discover Quality & Excellence at {name}"
-        if "restaurant" in category.lower() or "cafe" in category.lower() or "dining" in category.lower():
-            headline = f"Handcrafted Flavors & Memorable Dining at {name}"
-        elif "hotel" in category.lower() or "resort" in category.lower() or "stay" in category.lower():
-            headline = f"Comfort, Hospitality & Luxury Stays at {name}"
-        elif "mill" in category.lower() or "manufacturing" in category.lower():
-            headline = f"Trusted Manufacturing & Premium Processing at {name}"
+        # Dynamic Hero Headline
+        if description and len(description) > 10:
+            headline = f"Welcome to {name}"
+            subheadline = description
+        else:
+            headline = f"Premier {category} in {location}" if location else f"Quality & Excellence at {name}"
+            subheadline = f"Offering verified {category.lower()} solutions with dedicated customer service."
 
-        subheadline = f"Serving {location} with trusted {category.lower()} services. Verified {avg_rating}★ rating on Google."
+        # Highlights strictly from DB data
+        highlights = []
+        if location:
+            highlights.append(f"Conveniently located in {location}")
+        if total_rev_count > 0:
+            highlights.append(f"{total_rev_count} Verified Customer Reviews ({avg_rating}★ Rating)")
+        if service_items_list:
+            highlights.append(f"Specialized in {service_items_list[0]}")
+        if target_customers:
+            highlights.append(f"Serving {target_customers}")
+        if not highlights:
+            highlights.append(f"Official {category} Business Listing")
 
-        # Why Choose Us Pillars
-        why_choose_us = [
-            {
-                "title": "Verified Local Excellence",
-                "description": f"Consistently rated {avg_rating}★ by our community with transparent and dependable service.",
+        # Why Choose Us Pillars from DB Goals & Target Audience
+        why_choose_us = []
+        if total_rev_count > 0:
+            why_choose_us.append({
+                "title": "Verified Community Trust",
+                "description": f"Backed by {total_rev_count} genuine customer reviews with an average {avg_rating}★ rating.",
                 "icon": "Award",
-            },
-            {
-                "title": "Customer-First Dedication",
-                "description": f"Tailored offerings crafted specifically for {target_audience.lower()}.",
+            })
+        else:
+            why_choose_us.append({
+                "title": "Dedicated Professionalism",
+                "description": f"Committed to providing reliable {category.lower()} excellence and customer satisfaction.",
+                "icon": "Award",
+            })
+
+        if target_customers:
+            why_choose_us.append({
+                "title": "Customer-Focused Experience",
+                "description": f"Tailored specifically for {target_customers}.",
                 "icon": "Heart",
-            },
-            {
-                "title": "Convenient Location & Access",
-                "description": f"Easily accessible in {location} with convenient parking and prompt customer assistance.",
+            })
+
+        if location:
+            why_choose_us.append({
+                "title": "Prime Accessibility",
+                "description": f"Easily accessible location in {location} with direct turn-by-turn navigation.",
                 "icon": "MapPin",
-            },
-            {
-                "title": "Uncompromising Quality",
-                "description": "We uphold the highest standards of craft, hygiene, and premium ingredients/materials.",
+            })
+
+        if business_goals:
+            why_choose_us.append({
+                "title": "Quality Commitment",
+                "description": business_goals,
                 "icon": "ShieldCheck",
-            },
-        ]
+            })
+        else:
+            why_choose_us.append({
+                "title": "Quality Assurance",
+                "description": f"Upholding high standards across all {category.lower()} offerings and interactions.",
+                "icon": "ShieldCheck",
+            })
 
-        # FAQs
-        faqs = [
-            {
-                "question": f"Where is {name} located and how can I visit?",
-                "answer": f"{name} is located at {location}. You can use our interactive Google Maps directions button above for turn-by-turn navigation.",
-            },
-            {
-                "question": f"What are the main services and specialties offered by {name}?",
-                "answer": f"We specialize in {', '.join(service_items_list[:4])}, with options tailored to your preferences.",
-            },
-            {
-                "question": f"How can I get in touch or place an inquiry?",
-                "answer": f"You can reach our team directly at {phone} or visit us during operating hours.",
-            },
-            {
-                "question": f"Do you accommodate special requests or group bookings?",
-                "answer": "Yes, we welcome special requests, advance inquiries, and group arrangements. Please contact us directly.",
-            },
-        ]
+        # Dynamic FAQs referencing DB fields
+        faqs = []
+        if location:
+            faqs.append({
+                "question": f"Where is {name} located?",
+                "answer": f"{name} is located at {location}. You can use our Google Maps directions button for direct navigation.",
+            })
 
-        # Opening Hours
-        opening_hours = [
-            "Monday – Friday: 9:00 AM – 10:00 PM",
-            "Saturday: 9:00 AM – 11:00 PM",
-            "Sunday: 10:00 AM – 10:00 PM",
-        ]
+        if service_items_list:
+            faqs.append({
+                "question": f"What services or specialties does {name} offer?",
+                "answer": f"We specialize in {', '.join(service_items_list[:5])}.",
+            })
 
-        # SEO Metadata
-        primary_kw = keyword_names[0] if keyword_names else category
-        seo_title = f"{name} — Premier {category} in {location}"
-        seo_description = f"Visit {name} in {location}. {avg_rating}★ Google Rating with {total_rev_count}+ reviews. Explore our {', '.join(service_items_list[:3])} and get directions today."
+        if phone:
+            faqs.append({
+                "question": f"How can I contact {name} directly?",
+                "answer": f"You can reach us by phone at {phone} during regular business hours.",
+            })
+
+        if target_customers:
+            faqs.append({
+                "question": f"Who does {name} cater to?",
+                "answer": f"We primarily cater to {target_customers}.",
+            })
+
+        # Operating hours strictly from ai_profile if present, or generic schedule
+        opening_hours = []
+        if ai_profile.get("opening_hours") and isinstance(ai_profile["opening_hours"], list):
+            opening_hours = [str(h) for h in ai_profile["opening_hours"]]
+        elif ai_profile.get("hours") and isinstance(ai_profile["hours"], list):
+            opening_hours = [str(h) for h in ai_profile["hours"]]
+        else:
+            opening_hours = [
+                "Monday – Saturday: Regular Operating Hours",
+                "Sunday: Open / Inquire Directly",
+            ]
+
+        # Gallery images strictly from business profile if provided
+        gallery_images = []
+        if ai_profile.get("photos") and isinstance(ai_profile["photos"], list):
+            gallery_images = [str(p) for p in ai_profile["photos"] if str(p).startswith("http")]
+        elif ai_profile.get("gallery") and isinstance(ai_profile["gallery"], list):
+            gallery_images = [str(p) for p in ai_profile["gallery"] if str(p).startswith("http")]
+
+        hero_img = ai_profile.get("cover_photo") or ai_profile.get("image_url") or None
+        about_img = ai_profile.get("about_photo") or None
+
+        # SEO Metadata based strictly on DB fields
+        kw_str = f" ({', '.join(keyword_names[:3])})" if keyword_names else ""
+        seo_title = f"{name} — {category}" + (f" in {location}" if location else "")
+        if len(seo_title) > 60:
+            seo_title = seo_title[:57] + "..."
+
+        if total_rev_count > 0:
+            seo_description = f"Official page of {name} in {location}. {avg_rating}★ Google rating with {total_rev_count} reviews. Explore our {', '.join(service_items_list[:3])}."
+        else:
+            seo_description = f"Official page of {name} in {location}. Discover our {category.lower()} offerings, contact details, and location directions."
 
         content_json = {
             "theme_config": {
@@ -210,49 +266,40 @@ class WebsiteGeneratorService:
                 "headline": headline,
                 "subheadline": subheadline,
                 "badge": f"Verified {category}",
-                "primary_cta_text": "Get Driving Directions",
+                "primary_cta_text": "Get Directions",
                 "primary_cta_action": "directions",
-                "secondary_cta_text": "Call Business",
-                "secondary_cta_action": "call",
-                "hero_image_url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&auto=format&fit=crop&q=80",
+                "secondary_cta_text": "Call Business" if phone else "Visit Us",
+                "secondary_cta_action": "call" if phone else "directions",
+                "hero_image_url": hero_img,
             },
             "about": {
                 "title": f"About {name}",
-                "story": description,
-                "highlights": [
-                    f"Top-rated {category} in {location}",
-                    f"{total_rev_count}+ Verified Google Reviews",
-                    "Dedicated Local Customer Support",
-                ],
-                "image_url": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&auto=format&fit=crop&q=80",
+                "story": description or f"{name} is a trusted {category.lower()} dedicated to providing outstanding service in {location}.",
+                "highlights": highlights,
+                "image_url": about_img,
             },
             "services": services_structured,
             "why_choose_us": why_choose_us,
             "reviews": {
-                "title": "What Our Customers Say",
+                "title": "Verified Customer Reviews" if total_rev_count > 0 else "Customer Feedback",
                 "average_rating": avg_rating,
                 "total_reviews": total_rev_count,
                 "featured_reviews": featured_reviews_list,
             },
-            "gallery": [
-                "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80",
-                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80",
-                "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80",
-                "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&auto=format&fit=crop&q=80",
-            ],
+            "gallery": gallery_images,
             "hours_location": {
                 "address": location,
                 "city": location.split(",")[0] if "," in location else location,
                 "phone": phone,
-                "email": business.website or "contact@optigoai.com",
-                "maps_query": f"{name}, {location}",
+                "email": website,
+                "maps_query": f"{name}, {location}" if location else name,
                 "opening_hours": opening_hours,
             },
             "faqs": faqs,
             "cta_banner": {
-                "title": f"Experience the Best of {name}",
-                "description": f"Conveniently located in {location}. Call us or get directions directly on Google Maps.",
-                "button_text": "Navigate on Google Maps",
+                "title": f"Connect with {name}",
+                "description": f"Located in {location}." if location else f"Visit or contact {name} today.",
+                "button_text": "Open in Google Maps",
                 "button_action": "directions",
             },
         }

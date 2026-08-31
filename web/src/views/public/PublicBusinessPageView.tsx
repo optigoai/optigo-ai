@@ -1,6 +1,7 @@
 // ==================================================
 // OptigoAI Enterprise — Public Business Website Engine
 // Dynamic single-template rendering for optigoai.com/{slug}
+// Strictly displays real business data from PostgreSQL
 // ==================================================
 
 import React, { useEffect, useState } from 'react';
@@ -60,11 +61,9 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
       .getPublicWebsite(currentSlug)
       .then((data) => {
         setSiteData(data);
-        // Set SEO Title
         if (data.seo_title) {
           document.title = data.seo_title;
         }
-        // Inject Schema.org JSON-LD
         if (data.schema_org_json) {
           const scriptId = 'optigo-jsonld-schema';
           let script = document.getElementById(scriptId) as HTMLScriptElement;
@@ -137,6 +136,10 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const hasReviews = reviews && reviews.featured_reviews && reviews.featured_reviews.length > 0;
+  const avgRating = reviews?.average_rating || 0;
+  const totalReviews = reviews?.total_reviews || 0;
+
   return (
     <div style={{ backgroundColor: '#FFFFFF', color: '#0F172A', fontFamily: 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif', minHeight: '100vh', scrollBehavior: 'smooth' }}>
       {/* Custom CSS overrides from Admin */}
@@ -171,7 +174,9 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
                   Verified
                 </span>
               </div>
-              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>{category} • {location}</span>
+              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                {category} {location ? `• ${location}` : ''}
+              </span>
             </div>
           </div>
 
@@ -179,9 +184,9 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
           <nav style={{ display: 'flex', alignItems: 'center', gap: '18px', fontSize: '0.84rem', fontWeight: 600, color: '#475569' }} className="public-nav-links">
             <a href="#about" style={{ color: 'inherit', textDecoration: 'none' }}>About</a>
             <a href="#services" style={{ color: 'inherit', textDecoration: 'none' }}>Offerings</a>
-            <a href="#reviews" style={{ color: 'inherit', textDecoration: 'none' }}>Reviews</a>
-            <a href="#location" style={{ color: 'inherit', textDecoration: 'none' }}>Hours & Location</a>
-            <a href="#faqs" style={{ color: 'inherit', textDecoration: 'none' }}>FAQs</a>
+            {hasReviews && <a href="#reviews" style={{ color: 'inherit', textDecoration: 'none' }}>Reviews</a>}
+            <a href="#location" style={{ color: 'inherit', textDecoration: 'none' }}>Location & Hours</a>
+            {faqs.length > 0 && <a href="#faqs" style={{ color: 'inherit', textDecoration: 'none' }}>FAQs</a>}
           </nav>
 
           {/* Direct CTA Buttons */}
@@ -204,7 +209,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
                 }}
               >
                 <Phone size={13} />
-                <span>Call Us</span>
+                <span>Call</span>
               </a>
             )}
 
@@ -254,7 +259,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', backgroundColor: '#E0F2FE', color: '#0369A1', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '16px' }}>
               <Sparkles size={13} />
-              <span>{hero.badge || 'Official Business Page'}</span>
+              <span>{hero.badge || `Verified ${category}`}</span>
             </div>
 
             <h1 style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.15, letterSpacing: '-0.03em', marginBottom: '14px' }}>
@@ -265,19 +270,28 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
               {hero.subheadline}
             </p>
 
-            {/* Google Rating Meter */}
+            {/* Google Rating Meter (Strictly from DB) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px', padding: '10px 14px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', width: 'fit-content' }}>
-              <div style={{ display: 'flex', gap: '2px', color: '#F59E0B' }}>
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={15} fill="#F59E0B" />
-                ))}
-              </div>
-              <span style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0F172A' }}>
-                {reviews?.average_rating || 4.8} / 5.0
-              </span>
-              <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                ({reviews?.total_reviews || 20}+ Verified Google Reviews)
-              </span>
+              {totalReviews > 0 ? (
+                <>
+                  <div style={{ display: 'flex', gap: '2px', color: '#F59E0B' }}>
+                    {[...Array(Math.min(5, Math.max(1, Math.round(avgRating))))].map((_, i) => (
+                      <Star key={i} size={15} fill="#F59E0B" />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0F172A' }}>
+                    {avgRating} / 5.0
+                  </span>
+                  <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                    ({totalReviews} Verified Google Reviews)
+                  </span>
+                </>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0F172A', fontSize: '0.84rem', fontWeight: 700 }}>
+                  <CheckCircle2 size={16} color="#0284C7" />
+                  <span>Official Verified Listing {location ? `in ${location}` : ''}</span>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -301,7 +315,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
                 }}
               >
                 <Navigation size={16} />
-                <span>{hero.primary_cta_text || 'Get Driving Directions'}</span>
+                <span>{hero.primary_cta_text || 'Get Directions'}</span>
               </a>
 
               {phone && (
@@ -322,44 +336,72 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
                   }}
                 >
                   <Phone size={16} />
-                  <span>{hero.secondary_cta_text || 'Call Directly'}</span>
+                  <span>{hero.secondary_cta_text || 'Call Business'}</span>
                 </a>
               )}
             </div>
           </div>
 
-          {/* Hero Visual */}
+          {/* Hero Visual (Image from DB profile or clean brand card) */}
           <div>
-            <img
-              src={hero.hero_image_url || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80'}
-              alt={business_name}
-              style={{
-                width: '100%',
-                height: '380px',
-                objectFit: 'cover',
-                borderRadius: '20px',
-                border: '1px solid #E2E8F0',
-                boxShadow: '0 12px 30px rgba(0,0,0,0.08)',
-              }}
-            />
+            {hero.hero_image_url ? (
+              <img
+                src={hero.hero_image_url}
+                alt={business_name}
+                style={{
+                  width: '100%',
+                  height: '380px',
+                  objectFit: 'cover',
+                  borderRadius: '20px',
+                  border: '1px solid #E2E8F0',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.08)',
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  height: '340px',
+                  backgroundColor: '#0F172A',
+                  borderRadius: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '30px',
+                  color: '#FFFFFF',
+                  textAlign: 'center',
+                  border: '1px solid #1E293B',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.08)',
+                }}
+              >
+                <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: '#1E293B', border: '1px solid #334155', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', fontWeight: 800, marginBottom: '16px' }}>
+                  {business_name.charAt(0)}
+                </div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '4px' }}>{business_name}</h3>
+                <span style={{ fontSize: '0.86rem', color: '#94A3B8' }}>{category} {location ? `• ${location}` : ''}</span>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* 3. About Us & Highlights */}
       <section id="about" style={{ padding: '60px 24px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.1fr', gap: '40px', alignItems: 'center' }}>
-          <div>
-            <img
-              src={about.image_url || 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&auto=format&fit=crop&q=80'}
-              alt="About Us"
-              style={{ width: '100%', height: '340px', objectFit: 'cover', borderRadius: '16px', border: '1px solid #E2E8F0' }}
-            />
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: about.image_url ? '0.9fr 1.1fr' : '1fr', gap: '40px', alignItems: 'center' }}>
+          {about.image_url && (
+            <div>
+              <img
+                src={about.image_url}
+                alt="About Us"
+                style={{ width: '100%', height: '340px', objectFit: 'cover', borderRadius: '16px', border: '1px solid #E2E8F0' }}
+              />
+            </div>
+          )}
 
           <div>
             <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Our Story & Heritage
+              Our Story & Profile
             </span>
             <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', marginTop: '6px', marginBottom: '14px' }}>
               {about.title || `About ${business_name}`}
@@ -369,7 +411,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {about.highlights.map((item, idx) => (
+              {(about.highlights || []).map((item, idx) => (
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <CheckCircle2 size={14} />
@@ -387,7 +429,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '36px' }}>
             <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Specialties & Offerings
+              Specialties & Catalog
             </span>
             <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', marginTop: '6px' }}>
               What We Offer
@@ -423,14 +465,26 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284C7' }}>{svc.price_range || 'Inquire for Details'}</span>
-                  <a
-                    href={`tel:${phone}`}
-                    style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
-                  >
-                    <span>Inquire</span>
-                    <ArrowRight size={12} />
-                  </a>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284C7' }}>{svc.price_range || 'Details on Request'}</span>
+                  {phone ? (
+                    <a
+                      href={`tel:${phone}`}
+                      style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <span>Inquire</span>
+                      <ArrowRight size={12} />
+                    </a>
+                  ) : (
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <span>Visit</span>
+                      <ArrowRight size={12} />
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
@@ -442,10 +496,10 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
       <section style={{ padding: '60px 24px', maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
           <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            The {business_name} Difference
+            Why Choose Us
           </span>
           <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', marginTop: '6px' }}>
-            Why Customers Trust Us
+            The {business_name} Commitment
           </h2>
         </div>
 
@@ -471,66 +525,68 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
         </div>
       </section>
 
-      {/* 6. Verified Customer Reviews */}
-      <section id="reviews" style={{ backgroundColor: '#F8FAFC', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', padding: '60px 24px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-            <div>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Real Feedback
-              </span>
-              <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', marginTop: '4px' }}>
-                {reviews?.title || 'What Our Customers Say'}
-              </h2>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
-              <Star size={18} fill="#F59E0B" color="#F59E0B" />
-              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>{reviews?.average_rating || 4.8}</span>
-              <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Overall Google Rating</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-            {(reviews?.featured_reviews || []).map((rev, idx) => (
-              <div
-                key={idx}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: '14px',
-                  padding: '22px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', gap: '2px', color: '#F59E0B', marginBottom: '10px' }}>
-                    {[...Array(rev.rating || 5)].map((_, i) => (
-                      <Star key={i} size={14} fill="#F59E0B" />
-                    ))}
-                  </div>
-                  <p style={{ fontSize: '0.86rem', color: '#334155', lineHeight: 1.6, fontStyle: 'italic' }}>
-                    "{rev.text}"
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A' }}>{rev.author_name}</span>
-                    <CheckCircle2 size={13} color="#15803D" />
-                  </div>
-                  <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{rev.review_date || 'Google Review'}</span>
-                </div>
+      {/* 6. Verified Customer Reviews (Strictly from DB) */}
+      {hasReviews && (
+        <section id="reviews" style={{ backgroundColor: '#F8FAFC', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', padding: '60px 24px' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+              <div>
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Real Feedback
+                </span>
+                <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', marginTop: '4px' }}>
+                  {reviews.title || 'Verified Customer Reviews'}
+                </h2>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* 7. Hours & Location */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+                <Star size={18} fill="#F59E0B" color="#F59E0B" />
+                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>{avgRating}</span>
+                <span style={{ fontSize: '0.8rem', color: '#64748B' }}>({totalReviews} Reviews)</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+              {reviews.featured_reviews.map((rev, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '14px',
+                    padding: '22px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', gap: '2px', color: '#F59E0B', marginBottom: '10px' }}>
+                      {[...Array(rev.rating || 5)].map((_, i) => (
+                        <Star key={i} size={14} fill="#F59E0B" />
+                      ))}
+                    </div>
+                    <p style={{ fontSize: '0.86rem', color: '#334155', lineHeight: 1.6, fontStyle: 'italic' }}>
+                      "{rev.text}"
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A' }}>{rev.author_name}</span>
+                      <CheckCircle2 size={13} color="#15803D" />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{rev.review_date || 'Google Review'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 7. Location & Hours */}
       <section id="location" style={{ padding: '60px 24px', maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '36px' }}>
           <div>
@@ -538,19 +594,21 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
               Find Us
             </span>
             <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', marginTop: '4px', marginBottom: '16px' }}>
-              Location & Operating Hours
+              Location & Details
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#EFF6FF', color: '#0284C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <MapPin size={16} />
+              {location && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#EFF6FF', color: '#0284C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <MapPin size={16} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#64748B' }}>Address</div>
+                    <div style={{ fontSize: '0.92rem', fontWeight: 600, color: '#0F172A' }}>{location}</div>
+                  </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#64748B' }}>Address</div>
-                  <div style={{ fontSize: '0.92rem', fontWeight: 600, color: '#0F172A' }}>{hoursLoc?.address || location}</div>
-                </div>
-              </div>
+              )}
 
               {phone && (
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
@@ -591,7 +649,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <Clock size={18} color="#0284C7" />
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0F172A' }}>Weekly Business Schedule</h3>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0F172A' }}>Business Schedule</h3>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -617,68 +675,70 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
       </section>
 
       {/* 8. FAQs Section */}
-      <section id="faqs" style={{ backgroundColor: '#F8FAFC', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', padding: '60px 24px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Frequently Asked Questions
-            </span>
-            <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', marginTop: '4px' }}>
-              Common Inquiries
-            </h2>
-          </div>
+      {faqs.length > 0 && (
+        <section id="faqs" style={{ backgroundColor: '#F8FAFC', borderTop: '1px solid #E2E8F0', borderBottom: '1px solid #E2E8F0', padding: '60px 24px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Frequently Asked Questions
+              </span>
+              <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', marginTop: '4px' }}>
+                Common Inquiries
+              </h2>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {faqs.map((faq, idx) => (
-              <div
-                key={idx}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: '10px',
-                  overflow: 'hidden',
-                }}
-              >
-                <button
-                  onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {faqs.map((faq, idx) => (
+                <div
+                  key={idx}
                   style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    background: 'transparent',
-                    border: 'none',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '0.92rem',
-                    fontWeight: 700,
-                    color: '#0F172A',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
                   }}
                 >
-                  <span>{faq.question}</span>
-                  {expandedFaq === idx ? <ChevronUp size={16} color="#64748B" /> : <ChevronDown size={16} color="#64748B" />}
-                </button>
+                  <button
+                    onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                    style={{
+                      width: '100%',
+                      padding: '16px 20px',
+                      background: 'transparent',
+                      border: 'none',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '0.92rem',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                    }}
+                  >
+                    <span>{faq.question}</span>
+                    {expandedFaq === idx ? <ChevronUp size={16} color="#64748B" /> : <ChevronDown size={16} color="#64748B" />}
+                  </button>
 
-                {expandedFaq === idx && (
-                  <div style={{ padding: '0 20px 16px', fontSize: '0.84rem', color: '#475569', lineHeight: 1.6, borderTop: '1px solid #F1F5F9' }}>
-                    {faq.answer}
-                  </div>
-                )}
-              </div>
-            ))}
+                  {expandedFaq === idx && (
+                    <div style={{ padding: '0 20px 16px', fontSize: '0.84rem', color: '#475569', lineHeight: 1.6, borderTop: '1px solid #F1F5F9' }}>
+                      {faq.answer}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 9. Bottom CTA Banner */}
       <section style={{ padding: '60px 24px', backgroundColor: '#0F172A', color: '#FFFFFF', textAlign: 'center' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '12px', letterSpacing: '-0.02em' }}>
-            {cta?.title || `Visit ${business_name} Today`}
+            {cta?.title || `Connect with ${business_name}`}
           </h2>
           <p style={{ fontSize: '0.95rem', color: '#94A3B8', lineHeight: 1.6, marginBottom: '24px' }}>
-            {cta?.description || `We look forward to serving you in ${location}. Contact us or navigate directly on Google Maps.`}
+            {cta?.description || (location ? `Visit us in ${location} or navigate directly on Google Maps.` : `Contact ${business_name} today.`)}
           </p>
 
           <a
@@ -700,7 +760,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
             }}
           >
             <Navigation size={15} />
-            <span>{cta?.button_text || 'Navigate on Google Maps'}</span>
+            <span>{cta?.button_text || 'Open in Google Maps'}</span>
           </a>
         </div>
       </section>
