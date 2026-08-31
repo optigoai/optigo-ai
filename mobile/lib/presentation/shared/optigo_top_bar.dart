@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../auth/auth_provider.dart';
 import 'notification_modal.dart';
 import 'app_side_drawer.dart';
+import 'cmo_chat_drawer.dart';
 
 class OptigoTopBar extends StatelessWidget {
   final String? subtitle;
@@ -44,91 +45,97 @@ class OptigoTopBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Left: Business & User Profile Pill (Storefront + User Name + Switcher Dropdown)
-          InkWell(
-            onTap: onMenuTap ?? () => _openSideDrawer(context),
-            borderRadius: BorderRadius.circular(30),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Hamburger Menu Icon
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFDBEAFE)),
+          Expanded(
+            child: InkWell(
+              onTap: onMenuTap ?? () => _openSideDrawer(context),
+              borderRadius: BorderRadius.circular(30),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.menu_rounded,
-                        size: 20,
-                        color: Color(0xFF2563EB),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Hamburger Menu Icon
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFDBEAFE)),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.menu_rounded,
+                          size: 19,
+                          color: Color(0xFF2563EB),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  // Business Name + User Name
-                  Padding(
-                    padding: const EdgeInsets.only(right: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.storefront_rounded,
-                              size: 13,
-                              color: Color(0xFF2563EB),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              authProvider.currentBusiness?.name ?? 'Optigo Business',
-                              style: const TextStyle(
-                                fontSize: 11.5,
+                    const SizedBox(width: 7),
+                    // Business Name + User Name
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.storefront_rounded,
+                                size: 12,
                                 color: Color(0xFF2563EB),
-                                fontWeight: FontWeight.w700,
                               ),
-                            ),
-                            const Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              size: 14,
-                              color: Color(0xFF64748B),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          displayName,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                              const SizedBox(width: 3),
+                              Flexible(
+                                child: Text(
+                                  authProvider.currentBusiness?.name ?? 'Optigo Business',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFF2563EB),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 13,
+                                color: Color(0xFF64748B),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 1),
+                          Text(
+                            displayName,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
+          const SizedBox(width: 6),
 
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -136,10 +143,10 @@ class OptigoTopBar extends StatelessWidget {
               if (onRefreshTap != null) ...[
                 InkWell(
                   onTap: isRefreshing ? null : onRefreshTap,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(20),
                   child: Container(
-                    width: 44,
-                    height: 44,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
@@ -147,7 +154,7 @@ class OptigoTopBar extends StatelessWidget {
                       boxShadow: [
                         BoxShadow(
                           color: const Color(0xFF6366F1).withValues(alpha: 0.08),
-                          blurRadius: 10,
+                          blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
@@ -155,28 +162,82 @@ class OptigoTopBar extends StatelessWidget {
                     child: Center(
                       child: isRefreshing
                           ? const SizedBox(
-                              width: 18,
-                              height: 18,
+                              width: 16,
+                              height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
                             )
                           : const Icon(
                               Icons.auto_awesome,
-                              size: 20,
+                              size: 18,
                               color: Color(0xFF4F46E5),
                             ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
               ],
+
+              // Ask AI Mascot Action Button
+              InkWell(
+                onTap: () => CmoChatDrawer.show(
+                  context,
+                  currentScreen: subtitle?.toLowerCase().contains('reviews') == true
+                      ? 'reviews'
+                      : (subtitle?.toLowerCase().contains('visibility') == true
+                          ? 'seo'
+                          : (subtitle?.toLowerCase().contains('grow') == true
+                              ? 'actions'
+                              : (subtitle?.toLowerCase().contains('studio') == true ? 'create' : 'home'))),
+                ),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  height: 38,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/images/optigo-bot.png',
+                        width: 20,
+                        height: 20,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Ask AI',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
 
               // Right: Circular Isolated Notification Bell
               InkWell(
                 onTap: onNotificationTap ?? () => NotificationModal.show(context),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 child: Container(
-                  width: 44,
-                  height: 44,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -184,7 +245,7 @@ class OptigoTopBar extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
+                        blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -194,18 +255,19 @@ class OptigoTopBar extends StatelessWidget {
                     children: [
                       const Icon(
                         Icons.notifications_none_rounded,
-                        size: 22,
-                        color: Color(0xFF0F172A),
+                        size: 20,
+                        color: Color(0xFF334155),
                       ),
                       Positioned(
-                        top: 10,
-                        right: 11,
+                        top: 8,
+                        right: 8,
                         child: Container(
                           width: 7,
                           height: 7,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEF4444),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444),
                             shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
                           ),
                         ),
                       ),

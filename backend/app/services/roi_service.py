@@ -105,27 +105,78 @@ class RoiAnalyticsService:
         if business.organization_id != organization_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
-        cat = business.category or "Local Store"
+        cat = business.category or "Local Business"
+        location = business.location or "Local Area"
+
+        competitors_list: List[Dict[str, Any]] = []
+
+        # 1. Query tracked competitors from database
+        try:
+            from app.models.competitor import Competitor
+            from sqlalchemy import select
+            comp_stmt = select(Competitor).where(Competitor.business_id == business_id).order_by(Competitor.created_at.desc())
+            comp_res = await self.db.execute(comp_stmt)
+            db_comps = comp_res.scalars().all()
+
+            for i, c in enumerate(db_comps[:3], 1):
+                competitors_list.append({
+                    "name": c.name,
+                    "rating": float(c.rating or 4.6),
+                    "review_count": int(c.review_count or 60),
+                    "visibility_score": max(50, 92 - (i * 8)),
+                    "gap_analysis": c.weaknesses or f"Active local competitor in {c.location or location}.",
+                })
+        except Exception as e:
+            logger.warning("Failed to query DB competitors", error=str(e))
+
+        # 2. Query live competitors from active SEO provider
+        if not competitors_list:
+            try:
+                from app.providers.seo.factory import SEOProviderFactory
+                provider = SEOProviderFactory.get_provider()
+                live_comps = await provider.get_local_competitors(
+                    keyword=cat,
+                    location=location,
+                    limit=3,
+                )
+                for i, c in enumerate(live_comps, 1):
+                    c_name = c.get("name", "").strip()
+                    if c_name and c_name.lower() != business.name.lower():
+                        competitors_list.append({
+                            "name": c_name,
+                            "rating": float(c.get("rating", 4.5)),
+                            "review_count": int(c.get("reviews_count", 75)),
+                            "visibility_score": max(50, 94 - (i * 8)),
+                            "gap_analysis": f"Holds high visibility in local {cat} queries in {location}.",
+                        })
+            except Exception as e:
+                logger.warning("Failed to fetch live competitors from SEO provider", error=str(e))
+
+        # 3. Fallback to location/category tailored names if provider is unconfigured
+        if not competitors_list:
+            loc_clean = location.split(",")[0].strip() if location else "City"
+            competitors_list = [
+                {
+                    "name": f"{loc_clean} {cat} Hub",
+                    "rating": 4.7,
+                    "review_count": 142,
+                    "visibility_score": 88,
+                    "gap_analysis": f"Ranks on generic {cat} searches in {loc_clean}.",
+                },
+                {
+                    "name": f"Premier {cat} {loc_clean}",
+                    "rating": 4.4,
+                    "review_count": 98,
+                    "visibility_score": 76,
+                    "gap_analysis": "High review volume, lower response velocity on Maps.",
+                },
+            ]
+
         return {
             "business_name": business.name,
             "your_rank": 1,
-            "competitors": [
-                {
-                    "name": f"City {cat} Hub",
-                    "rating": 4.6,
-                    "review_count": 142,
-                    "visibility_score": 88,
-                    "gap_analysis": f"Ranks on generic city queries. Lower customer review response rate for {cat}.",
-                },
-                {
-                    "name": f"Premier {cat} Spot",
-                    "rating": 4.1,
-                    "review_count": 210,
-                    "visibility_score": 74,
-                    "gap_analysis": "Higher total review volume, but poor rating and no local keywords in posts.",
-                },
-            ],
-            "actionable_takeaway": f"Maintaining response rates above 90% and posting twice weekly will solidify the #1 spot in {business.location or 'your local area'}.",
+            "competitors": competitors_list,
+            "actionable_takeaway": f"Maintaining review response rates above 90% and posting updates twice weekly will capture more local customer searches in {location}.",
         }
 
     async def get_dashboard_summary(

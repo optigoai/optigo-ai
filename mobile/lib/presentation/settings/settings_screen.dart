@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../app/theme.dart';
 import '../auth/auth_provider.dart';
 import '../business_profile/business_profile_screen.dart';
 
@@ -16,6 +18,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _reviewAlertsEnabled = true;
   bool _seoRankAlertsEnabled = true;
   String _selectedAiTone = 'Professional'; // 'Professional', 'Empathetic', 'Warm', 'Casual'
+
+  final Map<String, String> _aiToneExamples = {
+    'Professional': '“Thank you for your visit. We take pride in delivering consistent quality and attentive service.”',
+    'Empathetic': '“We truly appreciate your feedback and are genuinely committed to making every experience delightful.”',
+    'Warm': '“So wonderful having you with us! Can’t wait to welcome you and your family back soon! 😊”',
+    'Casual': '“Thanks for the awesome shoutout! We’re thrilled you enjoyed it — catch you next time! 🚀”',
+  };
 
   void _showAccountSecurityModal(BuildContext context, AppAuthProvider authProvider) {
     final user = authProvider.user;
@@ -54,9 +63,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Account & Security',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0F172A),
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
@@ -71,19 +84,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 12),
                 _buildInputField(label: 'Phone Number', controller: phoneController, icon: Icons.phone_rounded),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Security & Password',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password reset link sent to your registered email!'), duration: Duration(seconds: 2)),
+                      SnackBar(
+                        content: const Text('Password reset link sent to your registered email!'),
+                        backgroundColor: OptigoTheme.success,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.lock_reset_rounded, size: 16, color: Color(0xFF2563EB)),
-                  label: const Text('Change Account Password', style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF2563EB))),
+                  label: Text(
+                    'Change Account Password',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF2563EB),
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     side: const BorderSide(color: Color(0xFFDBEAFE)),
@@ -97,7 +125,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () {
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Account details updated successfully!'), duration: Duration(seconds: 2)),
+                        SnackBar(
+                          content: const Text('Account details updated successfully!'),
+                          backgroundColor: OptigoTheme.success,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -105,7 +138,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
-                    child: const Text('Save Changes', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white)),
+                    child: Text(
+                      'Save Changes',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -125,12 +165,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569))),
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF475569),
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
           readOnly: readOnly,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF0F172A),
+          ),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, size: 18, color: const Color(0xFF64748B)),
             filled: true,
@@ -174,9 +225,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Billing & Subscription',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                Text(
+                  'Subscription & Usage',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF0F172A),
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
@@ -186,14 +241,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                  colors: [Color(0xFF1E1B4B), Color(0xFF2563EB)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,9 +256,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'OptigoAI Enterprise Pro',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -211,18 +270,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           color: const Color(0xFF10B981),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('ACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white)),
+                        child: Text(
+                          'ACTIVE',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  const Text('Unlimited AI CMO actions, GBP sync & SEO tracking', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+                  Text(
+                    'Unlimited AI Marketing actions, GBP sync & SEO tracking',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Renews on: Sep 24, 2026', style: TextStyle(fontSize: 12, color: Color(0xFFCBD5E1), fontWeight: FontWeight.w600)),
-                      Text('₹4,999 / mo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white)),
+                      Text(
+                        'Active Plan',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: const Color(0xFFCBD5E1),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Verified Pro',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -231,7 +317,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 20),
             _buildBillingRow('Google Business Profile Sync', 'Unlimited'),
             _buildBillingRow('AI Strategy Consultations', 'Unlimited'),
-            _buildBillingRow('Tracked Search Keywords', '50 / 50 Active'),
+            _buildBillingRow('Tracked Search Keywords', 'Active & Real-Time'),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -242,7 +328,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Manage Invoices', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
+                child: Text(
+                  'Close',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],
@@ -261,10 +353,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF10B981)),
               const SizedBox(width: 8),
-              Text(feature, style: const TextStyle(fontSize: 13, color: Color(0xFF334155), fontWeight: FontWeight.w600)),
+              Text(
+                feature,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: const Color(0xFF334155),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
-          Text(limit, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+          Text(
+            limit,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
         ],
       ),
     );
@@ -299,9 +405,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Connected Integrations',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF0F172A),
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
@@ -312,25 +422,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
             _buildIntegrationTile(
               title: 'Google Business Profile',
-              subtitle: 'casaraza.gbp@gmail.com',
+              subtitle: 'Active & Synchronized',
               icon: Icons.storefront_rounded,
               isConnected: true,
             ),
             _buildIntegrationTile(
               title: 'Google Search Console',
-              subtitle: 'sc-domain:casaraza.com',
+              subtitle: 'Local search queries linked',
               icon: Icons.travel_explore_rounded,
               isConnected: true,
             ),
             _buildIntegrationTile(
-              title: 'Instagram Business & Meta',
-              subtitle: '@casaraza_official',
+              title: 'Instagram Business',
+              subtitle: 'Direct social posting',
               icon: Icons.camera_alt_rounded,
               isConnected: true,
             ),
             _buildIntegrationTile(
               title: 'WhatsApp Business API',
-              subtitle: '+91 98470 12345',
+              subtitle: 'Instant alerts channel',
               icon: Icons.chat_rounded,
               isConnected: false,
             ),
@@ -369,8 +479,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
               ],
             ),
           ),
@@ -382,7 +505,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             child: Text(
               isConnected ? 'Connected' : 'Link',
-              style: TextStyle(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: isConnected ? const Color(0xFF059669) : const Color(0xFF64748B),
@@ -406,99 +529,190 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(2),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'AI CMO & Notification Preferences',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'AI Response Tone',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: ['Professional', 'Empathetic', 'Warm', 'Casual'].map((tone) {
-                  final isSel = _selectedAiTone == tone;
-                  return ChoiceChip(
-                    label: Text(tone),
-                    selected: isSel,
-                    selectedColor: const Color(0xFF2563EB),
-                    labelStyle: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: isSel ? Colors.white : const Color(0xFF1E293B),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'AI Marketing Preferences',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0F172A),
+                      ),
                     ),
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() => _selectedAiTone = tone);
-                        setModalState(() => _selectedAiTone = tone);
-                      }
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 18),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Daily Morning CMO Briefing', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
-                subtitle: const Text('Executive summary of marketing health at 9:00 AM', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
-                value: _dailyBriefingEnabled,
-                activeColor: const Color(0xFF2563EB),
-                onChanged: (val) {
-                  setState(() => _dailyBriefingEnabled = val);
-                  setModalState(() => _dailyBriefingEnabled = val);
-                },
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Real-time Review Alerts', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
-                subtitle: const Text('Instant notification when customer posts a Google review', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
-                value: _reviewAlertsEnabled,
-                activeColor: const Color(0xFF2563EB),
-                onChanged: (val) {
-                  setState(() => _reviewAlertsEnabled = val);
-                  setModalState(() => _reviewAlertsEnabled = val);
-                },
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('SEO Rank Shift Alerts', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
-                subtitle: const Text('Notify when Google Maps rank moves up or down', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
-                value: _seoRankAlertsEnabled,
-                activeColor: const Color(0xFF2563EB),
-                onChanged: (val) {
-                  setState(() => _seoRankAlertsEnabled = val);
-                  setModalState(() => _seoRankAlertsEnabled = val);
-                },
-              ),
-            ],
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'AI Generated Copy Tone',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: ['Professional', 'Empathetic', 'Warm', 'Casual'].map((tone) {
+                    final isSel = _selectedAiTone == tone;
+                    return ChoiceChip(
+                      label: Text(tone),
+                      selected: isSel,
+                      selectedColor: const Color(0xFF2563EB),
+                      labelStyle: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isSel ? Colors.white : const Color(0xFF1E293B),
+                      ),
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() => _selectedAiTone = tone);
+                          setModalState(() => _selectedAiTone = tone);
+                        }
+                      },
+                    );
+                  }).toList(),
+                ),
+
+                // AI Tone Live Preview Card
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFDBEAFE)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.auto_awesome_rounded, size: 14, color: Color(0xFF2563EB)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Sample AI Reply in "$_selectedAiTone" Tone:',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF2563EB),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _aiToneExamples[_selectedAiTone] ?? '',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12.5,
+                          color: const Color(0xFF1E293B),
+                          fontStyle: FontStyle.italic,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    'Daily Morning Marketing Briefing',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Executive summary of marketing health at 9:00 AM',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                  value: _dailyBriefingEnabled,
+                  activeColor: const Color(0xFF2563EB),
+                  onChanged: (val) {
+                    setState(() => _dailyBriefingEnabled = val);
+                    setModalState(() => _dailyBriefingEnabled = val);
+                  },
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    'Real-time Review Alerts',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Instant notification when customer posts a Google review',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                  value: _reviewAlertsEnabled,
+                  activeColor: const Color(0xFF2563EB),
+                  onChanged: (val) {
+                    setState(() => _reviewAlertsEnabled = val);
+                    setModalState(() => _reviewAlertsEnabled = val);
+                  },
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    'SEO Rank Shift Alerts',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Notify when Google Maps rank moves up or down',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                  value: _seoRankAlertsEnabled,
+                  activeColor: const Color(0xFF2563EB),
+                  onChanged: (val) {
+                    setState(() => _seoRankAlertsEnabled = val);
+                    setModalState(() => _seoRankAlertsEnabled = val);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -534,9 +748,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Help & Support Center',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF0F172A),
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
@@ -549,10 +767,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSupportTile(Icons.menu_book_rounded, 'OptigoAI Knowledge Base', 'docs.optigoai.com/guides'),
             _buildSupportTile(Icons.security_rounded, 'Privacy Policy & Terms', 'optigoai.com/privacy'),
             const SizedBox(height: 20),
-            const Center(
+            Center(
               child: Text(
-                'OptigoAI Enterprise Platform • Version 2.4.0',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)),
+                'OptigoAI • Premier AI Marketing Edition',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF94A3B8),
+                ),
               ),
             ),
           ],
@@ -578,8 +800,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
-                Text(subtitle, style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
               ],
             ),
           ),
@@ -594,12 +829,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
       barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
-        content: const Text('Are you sure you want to log out of your OptigoAI account?'),
+        title: Text(
+          'Log Out',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF0F172A),
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to log out of your OptigoAI account?',
+          style: GoogleFonts.plusJakartaSans(
+            color: const Color(0xFF475569),
+            fontSize: 14,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w700)),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.plusJakartaSans(
+                color: const Color(0xFF64748B),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -612,7 +865,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.w800)),
+            child: Text(
+              'Log Out',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ],
       ),
@@ -642,9 +900,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF0F172A), size: 18),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Settings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF0F172A),
+          ),
         ),
         centerTitle: true,
       ),
@@ -668,7 +930,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-            // User Profile Header Card (Matching Image 33)
+            // User Profile Header Card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(18),
@@ -697,7 +959,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Center(
                       child: Text(
                         initial,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF2563EB)),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF2563EB),
+                        ),
                       ),
                     ),
                   ),
@@ -708,12 +974,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Text(
                           displayName,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF0F172A),
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           email,
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: const Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -724,7 +998,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 18),
 
-            // Settings Menu Rows List (Inspired by Image 33)
+            // Settings Menu Rows List
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -757,13 +1031,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const Divider(height: 1, color: Color(0xFFF1F5F9)),
                   _buildSettingsMenuTile(
-                    title: 'Integrations',
+                    title: 'Connected Integrations',
                     icon: Icons.hub_rounded,
                     onTap: () => _showIntegrationsModal(context),
                   ),
                   const Divider(height: 1, color: Color(0xFFF1F5F9)),
                   _buildSettingsMenuTile(
-                    title: 'Preferences',
+                    title: 'AI Tone & Preferences',
                     icon: Icons.tune_rounded,
                     onTap: () => _showPreferencesModal(context),
                   ),
@@ -812,7 +1086,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w700,
                   color: isDestructive ? const Color(0xFFEF4444) : const Color(0xFF0F172A),

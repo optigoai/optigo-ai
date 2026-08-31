@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../app/app.dart';
+import '../../app/theme.dart';
 import '../shared/optigo_button.dart';
 import '../shared/optigo_text_field.dart';
 import 'auth_provider.dart';
@@ -49,7 +51,9 @@ class _SignupScreenState extends State<SignupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.errorMessage ?? 'Signup failed. Please try again.'),
-          backgroundColor: const Color(0xFFEF4444),
+          backgroundColor: OptigoTheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -78,30 +82,30 @@ class _SignupScreenState extends State<SignupScreen> {
                   constraints: const BoxConstraints(),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // Title & Subtitle
-                const Text(
-                  'Create Your\nAccount',
-                  style: TextStyle(
-                    fontSize: 30,
+                Text(
+                  'Create Your\nOptigoAI Account',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 28,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
+                    color: const Color(0xFF0F172A),
                     letterSpacing: -0.8,
                     height: 1.15,
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Start growing your business with AI CMO.',
-                  style: TextStyle(
-                    fontSize: 14.5,
+                const SizedBox(height: 6),
+                Text(
+                  'Start growing local visibility and revenue with AI.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
+                    color: const Color(0xFF64748B),
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
                 // Full Name
                 OptigoTextField(
@@ -119,7 +123,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 // Organization / Business Name
                 OptigoTextField(
                   controller: _orgController,
-                  label: 'Organization / Store Name',
+                  label: 'Business / Store Name',
                   hintText: 'Panekkatt Oil & Flour Mill',
                   prefixIcon: Icons.storefront_outlined,
                   validator: (val) {
@@ -166,40 +170,118 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
                 // Create Account Button
                 OptigoButton(
                   text: 'Create Account',
+                  useGradient: true,
                   isLoading: isLoading,
                   onPressed: _handleSignup,
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
+
+                // Or Continue With Divider
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Text(
+                        'OR',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF94A3B8),
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                  ],
+                ),
+
+                const SizedBox(height: 18),
+
+                // Google Sign Up Option
+                InkWell(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Google One-Tap sign-up is ready for your account!'),
+                        backgroundColor: const Color(0xFF0F172A),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: double.infinity,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.g_mobiledata_rounded, size: 22, color: Color(0xFFEA4335)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Sign up with Google',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 22),
 
                 // Return to Sign In
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Already have an account? ',
-                      style: TextStyle(fontSize: 13.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: const Text(
+                      child: Text(
                         'Sign In',
-                        style: TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF2563EB),
+                          color: const Color(0xFF2563EB),
                         ),
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
               ],
             ),
           ),

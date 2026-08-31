@@ -6,7 +6,6 @@ import 'recommendations/recommendations_screen.dart';
 import 'content/content_studio_screen.dart';
 import 'seo/seo_optimizer_screen.dart';
 import 'reviews/reviews_screen.dart';
-import 'shared/cmo_chat_drawer.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -26,20 +25,6 @@ class _MainShellState extends State<MainShell> {
 
   void _navigateToTab(int index) {
     setState(() => _currentIndex = index);
-  }
-
-  void _handleRouteNavigate(String route) {
-    if (route == 'home') {
-      _navigateToTab(0);
-    } else if (route == 'actions') {
-      _navigateToTab(1);
-    } else if (route == 'create') {
-      _navigateToTab(2);
-    } else if (route == 'seo') {
-      _navigateToTab(3);
-    } else if (route == 'reviews') {
-      _navigateToTab(4);
-    }
   }
 
   @override
@@ -69,39 +54,6 @@ class _MainShellState extends State<MainShell> {
         index: _currentIndex,
         children: screens,
       ),
-      floatingActionButton: ListenableBuilder(
-        listenable: FeatureFlagService(),
-        builder: (context, _) {
-          if (!FeatureFlagService().isEnabled('ai_cmo_chat')) {
-            return const SizedBox.shrink();
-          }
-          return GestureDetector(
-            onTap: () => CmoChatDrawer.show(
-              context,
-              currentScreen: ['home', 'actions', 'create', 'seo', 'reviews'][_currentIndex],
-              onNavigate: _handleRouteNavigate,
-            ),
-            child: Container(
-              height: 58,
-              margin: const EdgeInsets.only(bottom: 4, right: 2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Image.asset(
-                'assets/images/ask-optigo-btn.png',
-                fit: BoxFit.contain,
-              ),
-            ),
-          );
-        },
-      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -130,9 +82,9 @@ class _MainShellState extends State<MainShell> {
                 ),
                 _buildNavBarItem(
                   index: 1,
-                  activeIcon: Icons.auto_awesome_rounded,
-                  inactiveIcon: Icons.auto_awesome_outlined,
-                  label: 'Priorities',
+                  activeIcon: Icons.trending_up_rounded,
+                  inactiveIcon: Icons.trending_up_outlined,
+                  label: 'Grow',
                 ),
                 _buildNavBarItem(
                   index: 2,
@@ -142,14 +94,14 @@ class _MainShellState extends State<MainShell> {
                 ),
                 _buildNavBarItem(
                   index: 3,
-                  activeIcon: Icons.travel_explore_rounded,
-                  inactiveIcon: Icons.search_rounded,
-                  label: 'SEO',
+                  activeIcon: Icons.pin_drop_rounded,
+                  inactiveIcon: Icons.pin_drop_outlined,
+                  label: 'Visibility',
                 ),
                 _buildNavBarItem(
                   index: 4,
-                  activeIcon: Icons.rate_review_rounded,
-                  inactiveIcon: Icons.rate_review_outlined,
+                  activeIcon: Icons.star_rounded,
+                  inactiveIcon: Icons.star_outline_rounded,
                   label: 'Reviews',
                 ),
               ],

@@ -14,11 +14,12 @@ import '../../data/repositories/seo_repository.dart';
 import '../auth/auth_provider.dart';
 import '../shared/optigo_top_bar.dart';
 import '../shared/cmo_chat_drawer.dart';
+import '../shared/optigo_pill.dart';
 import 'widgets/bespoke_circular_score_gauge.dart';
 import 'widgets/bespoke_trend_sparkline.dart';
 import 'widgets/bespoke_keyword_distribution_bar.dart';
-import 'widgets/bespoke_sentiment_pulse_meter.dart';
 import 'widgets/bespoke_weekly_momentum_bar_chart.dart';
+import 'widgets/health_breakdown_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onNavigateToRecommendations;
@@ -47,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<RecommendationModel> _recommendations = [];
   List<ReviewModel> _reviews = [];
   List<SeoKeywordModel> _keywords = [];
+  List<Map<String, dynamic>> _competitors = [];
 
   bool _initialized = false;
   bool _isLoading = false;
@@ -106,10 +108,24 @@ class _HomeScreenState extends State<HomeScreen> {
         _loadReviews(),
         _loadKeywords(),
         _loadAudit(),
+        _loadCompetitors(),
       ]);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadCompetitors() async {
+    final authProvider = context.read<AppAuthProvider>();
+    final bizId = authProvider.currentBusiness?.id;
+    if (bizId == null || _seoRepo == null) return;
+
+    try {
+      final comps = await _seoRepo!.getCompetitorBenchmark(bizId);
+      if (mounted) {
+        setState(() => _competitors = comps);
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadIntelligence() async {
@@ -252,35 +268,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 20),
 
-                  // 4. Hero Bento Grid (Health Radial Gauge + Google Maps Momentum)
+                  // 4. Hero Score Grid (Marketing Health Radial Gauge + Google Maps Position)
                   _buildHeroBentoRow(healthScore),
-
-                  const SizedBox(height: 18),
-
-                  // 4.5 Executive Weekly Customer Reach Bar Chart (Distinct Interaction Visualization)
-                  _buildWeeklyCustomerReachSection(healthScore),
-
-                  const SizedBox(height: 18),
-
-                  // 5. Visual Multi-Card Pulse Carousel (Keywords, Reviews, Competitors)
-                  _buildInsightCarousel(),
-
-                  const SizedBox(height: 20),
-
-                  // 6. AI CMO Strategic Action Center (Single High-Impact Priority)
-                  _buildTopPriorityActionCard(),
 
                   const SizedBox(height: 22),
 
-                  // 7. Quick Action Power Dock (4 Interactive Visual Tiles)
+                  // 5. Executive Weekly Customer Reach Bar Chart (Prominent Visualization Centerpiece)
+                  _buildWeeklyCustomerReachSection(healthScore),
+
+                  const SizedBox(height: 22),
+
+                  // 6. Visual Multi-Card Pulse Carousel (Keywords, Reviews, Competitors)
+                  _buildInsightCarousel(),
+
+                  const SizedBox(height: 22),
+
+                  // 7. Top Growth Opportunities (High-ROI Strategic Action Cards)
+                  _buildTopOpportunitiesSection(),
+
+                  const SizedBox(height: 22),
+
+                  // 8. Quick Growth Tools Dock (4 Interactive Tiles)
                   _buildQuickActionDock(),
 
-                  const SizedBox(height: 24),
-
-                  // 8. Growth Opportunities & Recent Activity Stream
-                  _buildGrowthOpportunitiesSection(),
-
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
@@ -393,48 +404,79 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        // Quick Action Shortcut Chips
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: [
-              _buildPromptChip('💬 Draft reply', 'Draft a response for my latest review'),
-              const SizedBox(width: 8),
-              _buildPromptChip('✨ Create post', 'Write a high-converting promotional post'),
-              const SizedBox(width: 8),
-              _buildPromptChip('🚀 Boost SEO', 'How can I rank #1 on Google Maps in my area?'),
-              const SizedBox(width: 8),
-              _buildPromptChip('🎯 Competitors', 'Analyze my top local competitors'),
-            ],
-          ),
+        // Quick Action Shortcut Chips (Zero emoji in UI chrome, 100% responsive)
+        Row(
+          children: [
+            Expanded(
+              child: _buildPromptChip(
+                Icons.rate_review_rounded,
+                'Reply',
+                'Draft a response for my latest review',
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildPromptChip(
+                Icons.campaign_rounded,
+                'Post',
+                'Write a high-converting promotional post',
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildPromptChip(
+                Icons.pin_drop_rounded,
+                'SEO',
+                'How can I rank #1 on Google Maps in my area?',
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: _buildPromptChip(
+                Icons.groups_rounded,
+                'Rivals',
+                'Analyze my top local competitors',
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildPromptChip(String label, String prompt) {
+  Widget _buildPromptChip(IconData icon, String label, String prompt) {
     return InkWell(
       onTap: () => CmoChatDrawer.show(
         context,
         currentScreen: 'home',
         initialMessage: prompt,
       ),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(14),
+          color: Colors.white.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
-        child: Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 11.5,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF475569),
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 13, color: const Color(0xFF2563EB)),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF334155),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -455,89 +497,114 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Row(
       children: [
-        // Left Card: Deep Midnight & Neon Azure Card
+        // Left Card: Signature Brand Hero Gradient (Marketing Health with "Why X?" breakdown)
         Expanded(
-          child: Container(
-            height: 195,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF0B132B), Color(0xFF1C2541), Color(0xFF1E293B)],
-                stops: [0.0, 0.55, 1.0],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFF334155), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0B132B).withValues(alpha: 0.25),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+          child: InkWell(
+            onTap: () => HealthBreakdownSheet.show(
+              context,
+              overallScore: healthScore,
+              googleScore: 78,
+              reviewScore: _reviews.isNotEmpty
+                  ? ((_reviews.map((r) => r.rating).reduce((a, b) => a + b) / _reviews.length) * 20).round()
+                  : 75,
+              visibilityScore: _intelligence?.visibilityScore ?? 65,
+              contentScore: 70,
+              onNavigateToTab: widget.onNavigateToTab,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              height: 195,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1E1B4B), Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                  stops: [0.0, 0.55, 1.0],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.4), width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1E1B4B).withValues(alpha: 0.3),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.insights_rounded,
+                          color: Color(0xFF93C5FD),
+                          size: 16,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.bolt_rounded,
-                        color: Color(0xFF60A5FA),
-                        size: 16,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: (healthScore >= 75
+                                  ? const Color(0xFF10B981)
+                                  : (healthScore >= 50 ? const Color(0xFF3B82F6) : const Color(0xFFF59E0B)))
+                              .withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          healthScore >= 75
+                              ? 'Optimal'
+                              : (healthScore >= 50 ? 'Good' : (healthScore >= 35 ? 'Moderate' : 'Needs Boost')),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: healthScore >= 75
+                                ? const Color(0xFF34D399)
+                                : (healthScore >= 50 ? const Color(0xFF60A5FA) : const Color(0xFFFBBF24)),
+                          ),
+                        ),
                       ),
+                    ],
+                  ),
+                  Center(
+                    child: BespokeCircularScoreGauge(
+                      score: healthScore,
+                      size: 96,
+                      isDarkCard: true,
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: (healthScore >= 75
-                                ? const Color(0xFF10B981)
-                                : (healthScore >= 50 ? const Color(0xFF3B82F6) : const Color(0xFFF59E0B)))
-                            .withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(10),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Marketing Health',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF94A3B8),
+                        ),
                       ),
-                      child: Text(
-                        healthScore >= 75
-                            ? 'Optimal'
-                            : (healthScore >= 50 ? 'Good' : (healthScore >= 35 ? 'Moderate' : 'Needs Boost')),
+                      Text(
+                        'Why $healthScore? ›',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
-                          color: healthScore >= 75
-                              ? const Color(0xFF34D399)
-                              : (healthScore >= 50 ? const Color(0xFF60A5FA) : const Color(0xFFFBBF24)),
+                          color: const Color(0xFF93C5FD),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                Center(
-                  child: BespokeCircularScoreGauge(
-                    score: healthScore,
-                    size: 96,
-                    isDarkCard: true,
+                    ],
                   ),
-                ),
-                Text(
-                  'Top 10% in your category',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -684,9 +751,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
+  // ==========================================
   // 5. Visual Multi-Card Pulse Carousel
   // ==========================================
   Widget _buildInsightCarousel() {
+    final authProvider = context.watch<AppAuthProvider>();
+    final business = authProvider.currentBusiness;
+    final bizName = business?.name ?? 'Your Business';
+    final location = business?.location ?? 'your area';
+
     final totalKeywords = _keywords.length;
     final top3Count = _keywords.where((k) => (k.currentRank ?? 99) <= 3).length;
     final top10Count = _keywords.where((k) => (k.currentRank ?? 99) > 3 && (k.currentRank ?? 99) <= 10).length;
@@ -696,12 +769,29 @@ class _HomeScreenState extends State<HomeScreen> {
     final avgRank = validRanks.isNotEmpty
         ? (validRanks.reduce((a, b) => a + b) / validRanks.length)
         : 2.5;
-    final bizName = context.read<AppAuthProvider>().currentBusiness?.name ?? 'Your Business';
 
     final avgRating = _reviews.isNotEmpty
         ? (_reviews.map((r) => r.rating).reduce((a, b) => a + b) / _reviews.length)
         : 0.0;
     final pendingCount = _reviews.where((r) => !r.isReplied).length;
+    final positiveCount = _reviews.where((r) => r.rating >= 4).length;
+    final positivePct = _reviews.isNotEmpty
+        ? ((positiveCount / _reviews.length) * 100).round()
+        : 88;
+
+    // Real competitor extraction
+    String topCompName = 'Top Local Competitor';
+    int topCompRank = 2;
+    double topCompScore = 0.72;
+
+    if (_competitors.isNotEmpty) {
+      topCompName = _competitors[0]['name'] ?? topCompName;
+      topCompRank = _competitors[0]['rank'] ?? 2;
+      topCompScore = ((_competitors[0]['visibility_score'] ?? 72) / 100.0).clamp(0.2, 0.95);
+    } else if (_audit != null && _audit!.competitorInsights.isNotEmpty) {
+      final raw = _audit!.competitorInsights.first;
+      topCompName = raw.split('(').first.trim();
+    }
 
     return Container(
       width: double.infinity,
@@ -719,9 +809,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Column(
         children: [
-          // Segmented Navigation Header Tabs
+          // 1. Sleek Segmented Pill Navigation Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -731,17 +821,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     physics: const BouncingScrollPhysics(),
                     child: Row(
                       children: [
-                        _buildSegmentTab('Visibility', 0),
+                        _buildSegmentTab(
+                          icon: Icons.pin_drop_rounded,
+                          label: 'Visibility',
+                          badge: '$totalKeywords',
+                          index: 0,
+                        ),
                         const SizedBox(width: 6),
-                        _buildSegmentTab('Reviews', 1),
+                        _buildSegmentTab(
+                          icon: Icons.star_rounded,
+                          label: 'Reviews',
+                          badge: avgRating > 0 ? '${avgRating.toStringAsFixed(1)}★' : '${_reviews.length}',
+                          index: 1,
+                        ),
                         const SizedBox(width: 6),
-                        _buildSegmentTab('Benchmark', 2),
+                        _buildSegmentTab(
+                          icon: Icons.groups_rounded,
+                          label: 'Benchmark',
+                          badge: '#${avgRank.toStringAsFixed(0)}',
+                          index: 2,
+                        ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
-                // Indicator dots
+                const SizedBox(width: 8),
+                // Animated Indicator Dots
                 Row(
                   children: List.generate(3, (index) {
                     final isActive = _currentInsightIndex == index;
@@ -763,14 +868,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
 
-          // Swiper Carousel Body
+          // 2. Swiper Carousel Body (180px height for optimal vertical breathing room)
           SizedBox(
-            height: 140,
+            height: 180,
             child: PageView(
               controller: _insightCarouselController,
               onPageChanged: (idx) => setState(() => _currentInsightIndex = idx),
               children: [
-                // Slide 1: Keywords & Distribution
+                // ------------------------------------------
+                // Slide 1: Local Search Visibility & Keywords
+                // ------------------------------------------
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -780,20 +887,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Google Maps Keyword Distribution',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0F172A),
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                'Search Discovery',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              OptigoPill(
+                                label: '$top3Count in Top 3',
+                                variant: OptigoPillVariant.success,
+                                fontSize: 10,
+                              ),
+                            ],
                           ),
                           InkWell(
                             onTap: () => widget.onNavigateToTab?.call(3), // SEO Tab
                             child: Row(
                               children: [
                                 Text(
-                                  'SEO Optimizer',
+                                  'SEO Hub',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
@@ -812,7 +929,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         top20Count: top20Count,
                         totalCount: totalKeywords,
                       ),
-                      // Dynamic Keyword Pill preview from backend keywords
+                      // Live Tracked Keyword Pills
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
@@ -826,15 +943,37 @@ class _HomeScreenState extends State<HomeScreen> {
                                   );
                                 }).toList()
                               : [
-                                  _buildMiniKeywordBadge('No tracked keywords yet', '#-'),
+                                  _buildMiniKeywordBadge('Track keywords in SEO Hub', '#-'),
                                 ],
                         ),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.auto_awesome_rounded, size: 12, color: Color(0xFF2563EB)),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              top3Count > 0
+                                  ? '$top3Count keywords in Google 3-Pack • Capturing local search intent'
+                                  : 'Rankings tracked live on Google Search & Maps in $location',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF64748B),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
 
-                // Slide 2: Review Sentiment & Pulse (100% live computed data)
+                // ------------------------------------------
+                // Slide 2: Customer Reviews & Reputation Pulse
+                // ------------------------------------------
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -844,20 +983,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Customer Reputation & Sentiment',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0F172A),
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                'Customer Reputation',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              OptigoPill(
+                                label: '${_reviews.length} Reviews',
+                                variant: OptigoPillVariant.neutral,
+                                fontSize: 10,
+                              ),
+                            ],
                           ),
                           InkWell(
                             onTap: () => widget.onNavigateToTab?.call(4), // Reviews Tab
                             child: Row(
                               children: [
                                 Text(
-                                  'View Reviews',
+                                  'Reviews Hub',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
@@ -870,18 +1019,171 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      BespokeSentimentPulseMeter(
-                        averageRating: avgRating,
-                        totalReviews: _reviews.length,
-                        pendingReplies: pendingCount,
-                        fiveStarCount: _reviews.where((r) => r.rating == 5).length,
-                        fourStarCount: _reviews.where((r) => r.rating == 4).length,
+                      // Rich Sentiment Meter
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Big Rating Number with Star Visual
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  Text(
+                                    avgRating > 0 ? avgRating.toStringAsFixed(1) : '5.0',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF0F172A),
+                                      letterSpacing: -1.0,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    color: Color(0xFFF59E0B),
+                                    size: 24,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${_reviews.length} Google Reviews',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(width: 18),
+
+                          // Sentiment Progress Bar & Reply Status
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Positive Sentiment',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF334155),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFECFDF5),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                                      ),
+                                      child: Text(
+                                        '$positivePct%',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: const Color(0xFF059669),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: LinearProgressIndicator(
+                                    value: (positivePct / 100).clamp(0.0, 1.0),
+                                    minHeight: 6,
+                                    backgroundColor: const Color(0xFFE2E8F0),
+                                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          pendingCount > 0
+                                              ? Icons.mark_chat_unread_rounded
+                                              : Icons.check_circle_rounded,
+                                          size: 13,
+                                          color: pendingCount > 0
+                                              ? const Color(0xFFEF4444)
+                                              : const Color(0xFF10B981),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          pendingCount > 0
+                                              ? '$pendingCount replies needed'
+                                              : '100% replied on Google Maps',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: pendingCount > 0
+                                                ? const Color(0xFFEF4444)
+                                                : const Color(0xFF10B981),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const Text(
+                                      'GBP Live',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        color: Color(0xFF94A3B8),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Icon(
+                            avgRating >= 4.5 ? Icons.military_tech_rounded : Icons.thumb_up_rounded,
+                            size: 13,
+                            color: const Color(0xFF2563EB),
+                          ),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              avgRating >= 4.5
+                                  ? 'Top 5% rated in category • Google Business Profile synced'
+                                  : 'Active review responses maintain high local customer trust',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF64748B),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
 
-                // Slide 3: Competitor Benchmark Radar (100% dynamic from backend audit)
+                // ------------------------------------------
+                // Slide 3: Area Competitor & Market Benchmark
+                // ------------------------------------------
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -891,31 +1193,43 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Market Share & Category Leaderboard',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0F172A),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEFF6FF),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'Rank #${avgRank.toStringAsFixed(0)} in Area',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF2563EB),
+                          Row(
+                            children: [
+                              Text(
+                                'Area Leaderboard',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F172A),
+                                ),
                               ),
+                              const SizedBox(width: 8),
+                              OptigoPill(
+                                label: 'Rank #${avgRank.toStringAsFixed(0)} in Area',
+                                variant: avgRank <= 3 ? OptigoPillVariant.success : OptigoPillVariant.warning,
+                                fontSize: 10,
+                              ),
+                            ],
+                          ),
+                          InkWell(
+                            onTap: () => widget.onNavigateToTab?.call(3), // SEO Tab
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Full Audit',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF2563EB),
+                                  ),
+                                ),
+                                const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF2563EB)),
+                              ],
                             ),
                           ),
                         ],
                       ),
+                      // 3 Dynamic Benchmark Bars
                       Row(
                         children: [
                           Expanded(
@@ -926,18 +1240,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               '#${avgRank.toStringAsFixed(0)}',
                             ),
                           ),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: _buildBenchmarkBar(
-                              'Local Competitors',
-                              (_audit != null && _audit!.citationScore > 0)
-                                  ? (_audit!.citationScore / 100.0).clamp(0.1, 1.0)
-                                  : 0.65,
-                              const Color(0xFF94A3B8),
-                              '#2',
+                              topCompName.length > 12 ? '${topCompName.substring(0, 10)}..' : topCompName,
+                              topCompScore,
+                              const Color(0xFF64748B),
+                              '#$topCompRank',
                             ),
                           ),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: _buildBenchmarkBar(
                               'Market Avg',
@@ -945,14 +1257,28 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ? (_audit!.keywordScore / 100.0).clamp(0.1, 1.0)
                                   : 0.48,
                               const Color(0xFFCBD5E1),
-                              '#3',
+                              '#4',
                             ),
                           ),
                         ],
                       ),
-                      Text(
-                        'Based on Google Maps signals, review velocity, and citations.',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                      Row(
+                        children: [
+                          const Icon(Icons.insights_rounded, size: 13, color: Color(0xFF2563EB)),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              'Google Maps rankings vs top rivals in $location',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF64748B),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -965,7 +1291,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSegmentTab(String label, int index) {
+  Widget _buildSegmentTab({
+    required IconData icon,
+    required String label,
+    required String badge,
+    required int index,
+  }) {
     final isSelected = _currentInsightIndex == index;
     return InkWell(
       onTap: () {
@@ -975,28 +1306,75 @@ class _HomeScreenState extends State<HomeScreen> {
           curve: Curves.easeInOut,
         );
       },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 11.5,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: isSelected ? const Color(0xFF60A5FA) : const Color(0xFF64748B),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? Colors.white : const Color(0xFF475569),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                badge,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: isSelected ? Colors.white : const Color(0xFF475569),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildMiniKeywordBadge(String keyword, String rank) {
+    final rankNum = int.tryParse(rank.replaceAll('#', '')) ?? 99;
+    final badgeColor = rankNum <= 3
+        ? const Color(0xFF10B981)
+        : (rankNum <= 10 ? const Color(0xFF2563EB) : const Color(0xFFF59E0B));
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(8),
@@ -1005,20 +1383,26 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const Icon(Icons.pin_drop_rounded, size: 11, color: Color(0xFF64748B)),
+          const SizedBox(width: 4),
           Text(
             keyword,
-            style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF334155),
+            ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
             decoration: BoxDecoration(
-              color: const Color(0xFF10B981),
+              color: badgeColor,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               rank,
-              style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white),
+              style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Colors.white),
             ),
           ),
         ],
@@ -1036,23 +1420,32 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w700, color: const Color(0xFF475569)),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF334155),
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 4),
             Text(
               rank,
-              style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w800, color: color),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
-            value: val,
-            minHeight: 5,
+            value: val.clamp(0.05, 1.0),
+            minHeight: 6,
             backgroundColor: const Color(0xFFF1F5F9),
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
@@ -1062,29 +1455,134 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 6. AI CMO Priority Action Center
+  // 5. Top 3 Growth Opportunities (Centerpiece)
   // ==========================================
-  Widget _buildTopPriorityActionCard() {
-    final topRec = _recommendations.isNotEmpty ? _recommendations.first : null;
-    final title = topRec?.title ?? 'Respond to 2 new reviews to maintain 4.9★ rating';
-    final isUrgent = topRec?.isUrgent ?? true;
+  Widget _buildTopOpportunitiesSection() {
+    final topRecs = _recommendations.where((r) => r.status != 'completed' && r.status != 'done').take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Top Growth Opportunities',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF0F172A),
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Highest ROI actions for your business today',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            InkWell(
+              onTap: () => widget.onNavigateToTab?.call(1), // Grow Tab
+              child: Row(
+                children: [
+                  Text(
+                    'View all (${_recommendations.length})',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF2563EB),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF2563EB)),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 14),
+
+        if (topRecs.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFECFDF5),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFA7F3D0)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF10B981),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_rounded, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'All Caught Up!',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF065F46),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'All high-priority marketing actions are complete. You are fully optimized today.',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: const Color(0xFF047857),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...topRecs.map((rec) => _buildOpportunityCard(rec)),
+      ],
+    );
+  }
+
+  Widget _buildOpportunityCard(RecommendationModel rec) {
+    final isUrgent = rec.isUrgent;
+    final pillVariant = isUrgent
+        ? OptigoPillVariant.error
+        : (rec.priority == 'opportunity' ? OptigoPillVariant.success : OptigoPillVariant.warning);
+
+    final categoryLabel = (rec.relatedFeature ?? 'Action').toUpperCase();
+    final timeEstimate = rec.effort.isNotEmpty ? rec.effort : '2 min';
+    final desc = rec.explanation.isNotEmpty ? rec.explanation : rec.reason;
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFEFF6FF), Color(0xFFF8FAFC)],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFBFDBFE), width: 1.2),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isUrgent ? const Color(0xFFFECACA) : const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -1094,82 +1592,104 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              OptigoPill(
+                label: categoryLabel,
+                variant: pillVariant,
+                fontSize: 10,
+              ),
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: isUrgent ? const Color(0xFFFEE2E2) : const Color(0xFFFEF3C7),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      isUrgent ? 'URGENT ACTION' : 'HIGH IMPACT',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        color: isUrgent ? const Color(0xFFDC2626) : const Color(0xFFD97706),
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.timer_outlined, size: 12, color: Color(0xFF64748B)),
-                        const SizedBox(width: 3),
-                        Text(
-                          '2 min',
-                          style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF64748B)),
-                        ),
-                      ],
-                    ),
+                  const Icon(Icons.timer_outlined, size: 12, color: Color(0xFF64748B)),
+                  const SizedBox(width: 3),
+                  Text(
+                    timeEstimate,
+                    style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF64748B)),
                   ),
                 ],
               ),
-              const Icon(Icons.auto_awesome_rounded, color: Color(0xFF2563EB), size: 18),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
-            title,
+            rec.title,
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 15.5,
+              fontSize: 14.5,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0F172A),
               height: 1.25,
-              letterSpacing: -0.3,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 4),
+          Text(
+            desc,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              color: const Color(0xFF64748B),
+              height: 1.35,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.insights_rounded, size: 13, color: Color(0xFF2563EB)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    rec.impact,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1E293B),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    if (widget.onNavigateToRecommendations != null) {
-                      widget.onNavigateToRecommendations!();
+                    if (rec.relatedFeature == 'reviews') {
+                      widget.onNavigateToTab?.call(4); // Reviews
+                    } else if (rec.relatedFeature == 'posts' || rec.relatedFeature == 'campaigns') {
+                      widget.onNavigateToTab?.call(2); // Studio
+                    } else if (rec.relatedFeature == 'seo') {
+                      widget.onNavigateToTab?.call(3); // Visibility
                     } else {
-                      widget.onNavigateToTab?.call(1);
+                      widget.onNavigateToTab?.call(1); // Grow
                     }
                   },
-                  icon: const Icon(Icons.bolt_rounded, size: 16, color: Colors.white),
+                  icon: const Icon(Icons.bolt_rounded, size: 15, color: Colors.white),
                   label: Text(
-                    'Execute with AI CMO',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13.5),
+                    'Execute in 1 Tap',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2563EB),
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
+              ),
+              const SizedBox(width: 6),
+              IconButton(
+                onPressed: () => _handleUpdateStatus(rec, 'dismissed'),
+                icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                tooltip: 'Not now',
               ),
             ],
           ),
@@ -1331,144 +1851,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // ==========================================
-  // 8. Growth Opportunities & Stream
-  // ==========================================
-  Widget _buildGrowthOpportunitiesSection() {
-    final pendingRecs = _recommendations.where((r) => !r.isCompleted).take(3).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Strategic Recommendations',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F172A),
-                letterSpacing: -0.3,
-              ),
-            ),
-            InkWell(
-              onTap: () {
-                if (widget.onNavigateToRecommendations != null) {
-                  widget.onNavigateToRecommendations!();
-                } else {
-                  widget.onNavigateToTab?.call(1);
-                }
-              },
-              child: Text(
-                'View All (${_recommendations.length})',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2563EB),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (pendingRecs.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Center(
-              child: Text(
-                'All growth recommendations completed! You are fully optimized.',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF64748B),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          )
-        else
-          ...pendingRecs.map((rec) => _buildOpportunityItem(rec)),
-      ],
-    );
-  }
-
-  Widget _buildOpportunityItem(RecommendationModel rec) {
-    final isUrgent = rec.isUrgent;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isUrgent ? const Color(0xFFFEE2E2) : const Color(0xFFEFF6FF),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isUrgent ? Icons.warning_amber_rounded : Icons.trending_up_rounded,
-              color: isUrgent ? const Color(0xFFDC2626) : const Color(0xFF2563EB),
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  rec.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  rec.explanation,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: const Color(0xFF64748B),
-                    height: 1.35,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: () => _handleUpdateStatus(rec, 'completed'),
-            icon: const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF94A3B8), size: 22),
-            tooltip: 'Mark Complete',
-          ),
-        ],
       ),
     );
   }

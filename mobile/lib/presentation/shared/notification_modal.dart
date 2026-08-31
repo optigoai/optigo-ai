@@ -3,6 +3,7 @@
 // ==================================================
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/repositories/notification_repository.dart';
@@ -45,30 +46,7 @@ class _NotificationModalState extends State<NotificationModal> {
       final list = await repo.listNotifications(businessId: bizId);
       if (mounted) {
         setState(() {
-          _notifications = list.isNotEmpty
-              ? list
-              : [
-                  AppNotificationModel(
-                    id: 'seed_1',
-                    businessId: bizId,
-                    notificationType: 'new_review',
-                    title: 'New Google Review Received',
-                    message: 'A customer left a 5-star review. Tap to generate an AI reply.',
-                    isRead: false,
-                    actionUrl: 'reviews',
-                    createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-                  ),
-                  AppNotificationModel(
-                    id: 'seed_2',
-                    businessId: bizId,
-                    notificationType: 'opportunity',
-                    title: 'Weekly Post Scheduled',
-                    message: 'Keep your Google Maps rank #1 with a fresh promotional post.',
-                    isRead: true,
-                    actionUrl: 'create',
-                    createdAt: DateTime.now().subtract(const Duration(days: 1)),
-                  ),
-                ];
+          _notifications = list;
           _isLoading = false;
         });
       }
@@ -92,16 +70,16 @@ class _NotificationModalState extends State<NotificationModal> {
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(
         color: Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
             ),
             child: Column(
@@ -120,27 +98,79 @@ class _NotificationModalState extends State<NotificationModal> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Proactive Alerts',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                    Text(
+                      'Notifications & Alerts',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0F172A),
+                      ),
                     ),
-                    TextButton(
-                      onPressed: _handleMarkAllRead,
-                      child: const Text('Mark all read', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2563EB))),
-                    ),
+                    if (_notifications.isNotEmpty)
+                      TextButton(
+                        onPressed: _handleMarkAllRead,
+                        child: Text(
+                          'Mark all read',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF2563EB),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ],
             ),
           ),
 
-          // List
+          // List or Empty State
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
                 : _notifications.isEmpty
-                    ? const Center(
-                        child: Text('No new alerts.', style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: const Color(0xFFDBEAFE)),
+                                ),
+                                child: const Icon(
+                                  Icons.notifications_none_rounded,
+                                  size: 32,
+                                  color: Color(0xFF2563EB),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'All caught up!',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'No unread notifications at the moment. We’ll alert you whenever new reviews or SEO updates arrive.',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  color: const Color(0xFF64748B),
+                                  height: 1.45,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
@@ -152,7 +182,7 @@ class _NotificationModalState extends State<NotificationModal> {
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: notif.isRead ? Colors.white : const Color(0xFFEFF6FF),
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: notif.isRead ? const Color(0xFFE2E8F0) : const Color(0xFFBFDBFE),
                               ),
@@ -161,8 +191,8 @@ class _NotificationModalState extends State<NotificationModal> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
-                                  width: 32,
-                                  height: 32,
+                                  width: 34,
+                                  height: 34,
                                   decoration: BoxDecoration(
                                     color: notif.isRead ? const Color(0xFFF1F5F9) : const Color(0xFF2563EB),
                                     shape: BoxShape.circle,
@@ -184,7 +214,7 @@ class _NotificationModalState extends State<NotificationModal> {
                                     children: [
                                       Text(
                                         notif.title,
-                                        style: TextStyle(
+                                        style: GoogleFonts.plusJakartaSans(
                                           fontSize: 13.5,
                                           fontWeight: notif.isRead ? FontWeight.w700 : FontWeight.w900,
                                           color: const Color(0xFF0F172A),
@@ -193,7 +223,11 @@ class _NotificationModalState extends State<NotificationModal> {
                                       const SizedBox(height: 3),
                                       Text(
                                         notif.message,
-                                        style: const TextStyle(fontSize: 12.5, color: Color(0xFF475569), height: 1.4),
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 12.5,
+                                          color: const Color(0xFF475569),
+                                          height: 1.4,
+                                        ),
                                       ),
                                     ],
                                   ),

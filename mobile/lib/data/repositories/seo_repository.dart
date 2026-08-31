@@ -125,4 +125,16 @@ class SeoRepository {
     );
     return response as Map<String, dynamic>;
   }
+
+  Future<List<Map<String, dynamic>>> getCompetitorBenchmark(String businessId) async {
+    try {
+      final response = await _apiClient.get('${ApiConstants.analytics}/competitors?business_id=$businessId');
+      if (response is Map<String, dynamic> && response['competitors'] is List) {
+        return List<Map<String, dynamic>>.from(response['competitors']);
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
 }

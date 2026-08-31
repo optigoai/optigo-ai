@@ -25,8 +25,9 @@ void main() {
     // Initial pump
     await tester.pump();
 
-    // Verify Splash Story appears with 'Get Started' and 'AI CMO'
-    expect(find.text('Get Started'), findsOneWidget);
-    expect(find.text('AI CMO'), findsOneWidget);
+    // Verify Splash Story appears with 'Next', 'Skip', and 'Your Business, Managed by AI'
+    expect(find.text('Next'), findsOneWidget);
+    expect(find.text('Skip'), findsOneWidget);
+    expect(find.text('Your Business, Managed by AI'), findsOneWidget);
   });
 }

@@ -17,7 +17,8 @@ class BespokeCircularScoreGauge extends StatefulWidget {
   });
 
   @override
-  State<BespokeCircularScoreGauge> createState() => _BespokeCircularScoreGaugeState();
+  State<BespokeCircularScoreGauge> createState() =>
+      _BespokeCircularScoreGaugeState();
 }
 
 class _BespokeCircularScoreGaugeState extends State<BespokeCircularScoreGauge>
@@ -35,10 +36,7 @@ class _BespokeCircularScoreGaugeState extends State<BespokeCircularScoreGauge>
     _scoreAnimation = Tween<double>(
       begin: 0,
       end: widget.score.toDouble().clamp(0, 100),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
   }
 
@@ -49,10 +47,9 @@ class _BespokeCircularScoreGaugeState extends State<BespokeCircularScoreGauge>
       _scoreAnimation = Tween<double>(
         begin: _scoreAnimation.value,
         end: widget.score.toDouble().clamp(0, 100),
-      ).animate(CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutCubic,
-      ));
+      ).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+      );
       _controller.forward(from: 0);
     }
   }
@@ -119,20 +116,24 @@ class _BespokeCircularScoreGaugeState extends State<BespokeCircularScoreGauge>
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: widget.size * 0.32,
                       fontWeight: FontWeight.w900,
-                      color: widget.isDarkCard ? Colors.white : const Color(0xFF0F172A),
+                      color:
+                          widget.isDarkCard
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                       letterSpacing: -1.0,
                       height: 1.0,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'HEALTH',
+                    'SCORE',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: widget.size * 0.09,
                       fontWeight: FontWeight.w800,
-                      color: widget.isDarkCard
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF64748B),
+                      color:
+                          widget.isDarkCard
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
                       letterSpacing: 0.8,
                     ),
                   ),
@@ -169,13 +170,15 @@ class _RadialScorePainter extends CustomPainter {
     final progressSweep = totalSweep * (score / 100);
 
     // Track Paint
-    final trackPaint = Paint()
-      ..color = isDark
-          ? const Color(0xFF334155).withValues(alpha: 0.45)
-          : const Color(0xFFE2E8F0)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    final trackPaint =
+        Paint()
+          ..color =
+              isDark
+                  ? const Color(0xFF334155).withValues(alpha: 0.45)
+                  : const Color(0xFFE2E8F0)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -191,17 +194,15 @@ class _RadialScorePainter extends CustomPainter {
       final gradient = SweepGradient(
         startAngle: startAngle,
         endAngle: startAngle + totalSweep,
-        colors: [
-          color.withValues(alpha: 0.6),
-          color,
-        ],
+        colors: [color.withValues(alpha: 0.6), color],
       );
 
-      final progressPaint = Paint()
-        ..shader = gradient.createShader(sweepRect)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
+      final progressPaint =
+          Paint()
+            ..shader = gradient.createShader(sweepRect)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth
+            ..strokeCap = StrokeCap.round;
 
       canvas.drawArc(
         sweepRect,
@@ -216,14 +217,16 @@ class _RadialScorePainter extends CustomPainter {
       final dotX = center.dx + radius * math.cos(endAngle);
       final dotY = center.dy + radius * math.sin(endAngle);
 
-      final outerDot = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill;
+      final outerDot =
+          Paint()
+            ..color = Colors.white
+            ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset(dotX, dotY), 4.5, outerDot);
 
-      final innerDot = Paint()
-        ..color = color
-        ..style = PaintingStyle.fill;
+      final innerDot =
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset(dotX, dotY), 2.5, innerDot);
     }
   }

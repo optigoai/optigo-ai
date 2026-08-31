@@ -1,5 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../auth/login_screen.dart';
 
 class SplashStoryScreen extends StatefulWidget {
@@ -9,29 +9,90 @@ class SplashStoryScreen extends StatefulWidget {
   State<SplashStoryScreen> createState() => _SplashStoryScreenState();
 }
 
-class _SplashStoryScreenState extends State<SplashStoryScreen> with SingleTickerProviderStateMixin {
+class _SplashStoryScreenState extends State<SplashStoryScreen> with TickerProviderStateMixin {
   int _currentStoryIndex = 0;
-  Timer? _timer;
   late AnimationController _progressController;
+  late AnimationController _bobController;
+  late Animation<double> _bobAnimation;
 
-  final List<Map<String, String>> _stories = [
+  final List<Map<String, dynamic>> _stories = [
     {
-      'title': 'AI CMO',
-      'subtitle': 'Your AI Marketing Manager',
-      'description': 'Understand your business, find growth opportunities, and help execute it in real-time.',
-      'badge': '24/7 STRATEGIC CMO',
+      'badge': 'AI MARKETING MANAGER',
+      'headline': 'Your Business, Managed by AI',
+      'supporting': 'Finds growth opportunities and helps execute them — in real time.',
+      'gradientColors': [
+        const Color(0xFF2563EB).withValues(alpha: 0.22),
+        const Color(0xFF3B82F6).withValues(alpha: 0.12),
+        Colors.transparent,
+      ],
+      'accentColor': const Color(0xFF2563EB),
+      'badgeBg': const Color(0xFFEFF6FF),
+      'badgeBorder': const Color(0xFFDBEAFE),
+      'badgeText': const Color(0xFF1D4ED8),
+      'accessory1': {
+        'icon': Icons.auto_awesome_rounded,
+        'label': '24/7 AI CMO',
+        'color': const Color(0xFF2563EB),
+        'bgColor': const Color(0xFFEFF6FF),
+      },
+      'accessory2': {
+        'icon': Icons.trending_up_rounded,
+        'label': '+28% Customer Reach',
+        'color': const Color(0xFF059669),
+        'bgColor': const Color(0xFFECFDF5),
+      },
     },
     {
-      'title': 'Local SEO & Visibility',
-      'subtitle': 'Dominate Google Local Search',
-      'description': 'Real-time keyword tracking, Firecrawl site audits, and automated Google Business Profile optimization.',
-      'badge': 'GOOGLE RANKING #1',
+      'badge': 'LOCAL SEO & RANKING',
+      'headline': 'Dominate Google Local Search',
+      'supporting': 'Real-time keyword tracking, site audits, and Google Business Profile optimization.',
+      'gradientColors': [
+        const Color(0xFF0D9488).withValues(alpha: 0.24),
+        const Color(0xFF10B981).withValues(alpha: 0.12),
+        Colors.transparent,
+      ],
+      'accentColor': const Color(0xFF0D9488),
+      'badgeBg': const Color(0xFFF0FDFA),
+      'badgeBorder': const Color(0xFFCCFBF1),
+      'badgeText': const Color(0xFF0F766E),
+      'accessory1': {
+        'icon': Icons.pin_drop_rounded,
+        'label': '#1 on Google Maps',
+        'color': const Color(0xFF0D9488),
+        'bgColor': const Color(0xFFF0FDFA),
+      },
+      'accessory2': {
+        'icon': Icons.grid_view_rounded,
+        'label': '3x3 Geo-Grid Top 3',
+        'color': const Color(0xFF2563EB),
+        'bgColor': const Color(0xFFEFF6FF),
+      },
     },
     {
-      'title': 'Creative & Reputation',
-      'subtitle': 'Automate Growth in 1-Tap',
-      'description': 'Gemini-powered review replies, instant marketing promotional banners, and multi-channel campaign generation.',
-      'badge': 'AI CAMPAIGN STUDIO',
+      'badge': 'CREATIVE & REPUTATION',
+      'headline': 'Automate Growth in 1-Tap',
+      'supporting': 'AI-drafted review replies, instant marketing creative, and multi-channel campaigns.',
+      'gradientColors': [
+        const Color(0xFF7C3AED).withValues(alpha: 0.22),
+        const Color(0xFF6366F1).withValues(alpha: 0.12),
+        Colors.transparent,
+      ],
+      'accentColor': const Color(0xFF7C3AED),
+      'badgeBg': const Color(0xFFF5F3FF),
+      'badgeBorder': const Color(0xFFEDE9FE),
+      'badgeText': const Color(0xFF6D28D9),
+      'accessory1': {
+        'icon': Icons.star_rounded,
+        'label': '5.0★ Review Replied',
+        'color': const Color(0xFFD97706),
+        'bgColor': const Color(0xFFFFFBEB),
+      },
+      'accessory2': {
+        'icon': Icons.palette_rounded,
+        'label': 'Studio Creative Live',
+        'color': const Color(0xFF7C3AED),
+        'bgColor': const Color(0xFFF5F3FF),
+      },
     },
   ];
 
@@ -40,12 +101,21 @@ class _SplashStoryScreenState extends State<SplashStoryScreen> with SingleTicker
     super.initState();
     _progressController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 5),
     )..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           _nextStory();
         }
       });
+
+    _bobController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat(reverse: true);
+
+    _bobAnimation = Tween<double>(begin: -6.0, end: 6.0).animate(
+      CurvedAnimation(parent: _bobController, curve: Curves.easeInOut),
+    );
 
     _startStory();
   }
@@ -78,6 +148,7 @@ class _SplashStoryScreenState extends State<SplashStoryScreen> with SingleTicker
 
   void _navigateToLogin() {
     _progressController.stop();
+    _bobController.stop();
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => const LoginScreen(),
@@ -90,14 +161,15 @@ class _SplashStoryScreenState extends State<SplashStoryScreen> with SingleTicker
 
   @override
   void dispose() {
-    _timer?.cancel();
     _progressController.dispose();
+    _bobController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final story = _stories[_currentStoryIndex];
+    final isLastSlide = _currentStoryIndex == _stories.length - 1;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -111,211 +183,380 @@ class _SplashStoryScreenState extends State<SplashStoryScreen> with SingleTicker
               _nextStory();
             }
           },
-          child: Container(
-            color: Colors.transparent,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              children: [
-                // 1. Instagram-Story Progress Bars
-                Row(
-                  children: List.generate(_stories.length, (index) {
-                    return Expanded(
-                      child: Container(
-                        height: 3.5,
-                        margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: AnimatedBuilder(
-                          animation: _progressController,
-                          builder: (context, _) {
-                            double value = 0.0;
-                            if (index < _currentStoryIndex) {
-                              value = 1.0;
-                            } else if (index == _currentStoryIndex) {
-                              value = _progressController.value;
-                            }
-                            return FractionallySizedBox(
-                              alignment: Alignment.centerLeft,
-                              widthFactor: value,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF2563EB),
-                                  borderRadius: BorderRadius.circular(4),
+          child: Stack(
+            children: [
+              // 1. Subtle Scattered Background Iconography Pattern
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _BackgroundPatternPainter(
+                    accentColor: story['accentColor'] as Color,
+                  ),
+                ),
+              ),
+
+              // 2. Main Content Layout
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                child: Column(
+                  children: [
+                    // Top Segmented Progress Bars
+                    Row(
+                      children: List.generate(_stories.length, (index) {
+                        return Expanded(
+                          child: Container(
+                            height: 4,
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: AnimatedBuilder(
+                              animation: _progressController,
+                              builder: (context, _) {
+                                double value = 0.0;
+                                if (index < _currentStoryIndex) {
+                                  value = 1.0;
+                                } else if (index == _currentStoryIndex) {
+                                  value = _progressController.value;
+                                }
+                                return FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: value,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Top Header Bar: Logo Lockup & Skip Button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Small Brand Lockup
+                        Row(
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF1E1B4B), Color(0xFF2563EB)],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.auto_awesome,
+                                  size: 15,
+                                  color: Colors.white,
                                 ),
                               ),
-                            );
-                          },
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'OptigoAI',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF0F172A),
+                                letterSpacing: -0.4,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    );
-                  }),
-                ),
 
-                const SizedBox(height: 16),
-
-                // Top Skip Action
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFDBEAFE)),
-                      ),
-                      child: Text(
-                        story['badge']!,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF2563EB),
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: _navigateToLogin,
-                      borderRadius: BorderRadius.circular(12),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        child: Text(
-                          'Skip',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF64748B),
+                        // Skip Action (Always jumps straight to Login)
+                        InkWell(
+                          onTap: _navigateToLogin,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Text(
+                              'Skip',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+
+                    const Spacer(flex: 2),
+
+                    // 3. Central Mascot Illustration with Per-Slide Glow & Accessories
+                    AnimatedBuilder(
+                      animation: _bobAnimation,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(0, _bobAnimation.value),
+                          child: child,
+                        );
+                      },
+                      child: Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Soft Radial Glow Blob (Slide-specific hue shift)
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 400),
+                            width: 240,
+                            height: 240,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: story['gradientColors'] as List<Color>,
+                              ),
+                            ),
+                          ),
+
+                          // Optigo Mascot Avatar
+                          SizedBox(
+                            width: 180,
+                            height: 180,
+                            child: Image.asset(
+                              'assets/images/optigo-bot.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+
+                          // Per-Slide Floating Accessory 1 (Top-Right)
+                          Positioned(
+                            top: -6,
+                            right: -10,
+                            child: _buildFloatingAccessory(
+                              icon: story['accessory1']['icon'] as IconData,
+                              label: story['accessory1']['label'] as String,
+                              color: story['accessory1']['color'] as Color,
+                              bgColor: story['accessory1']['bgColor'] as Color,
+                            ),
+                          ),
+
+                          // Per-Slide Floating Accessory 2 (Bottom-Left)
+                          Positioned(
+                            bottom: -4,
+                            left: -12,
+                            child: _buildFloatingAccessory(
+                              icon: story['accessory2']['icon'] as IconData,
+                              label: story['accessory2']['label'] as String,
+                              color: story['accessory2']['color'] as Color,
+                              bgColor: story['accessory2']['bgColor'] as Color,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
 
-                const Spacer(flex: 2),
+                    const Spacer(flex: 2),
 
-                // 2. Large 3D Optigo Bot Mascot (Matching Reference Screen 1)
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
+                    // 4. Category Badge Kicker
                     Container(
-                      width: 210,
-                      height: 210,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            const Color(0xFF818CF8).withValues(alpha: 0.25),
-                            const Color(0xFFC7D2FE).withValues(alpha: 0.08),
-                            Colors.transparent,
+                        color: story['badgeBg'] as Color,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: story['badgeBorder'] as Color),
+                      ),
+                      child: Text(
+                        story['badge'] as String,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: story['badgeText'] as Color,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // 5. Punchy Headline & Single Supporting Line
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Column(
+                        key: ValueKey(_currentStoryIndex),
+                        children: [
+                          Text(
+                            story['headline'] as String,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 27,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF0F172A),
+                              letterSpacing: -0.8,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              story['supporting'] as String,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                height: 1.45,
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const Spacer(flex: 3),
+
+                    // 6. Action Button (Next on Slides 1–2, Get Started on Slide 3)
+                    InkWell(
+                      onTap: isLastSlide ? _navigateToLogin : _nextStory,
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          gradient: isLastSlide
+                              ? const LinearGradient(
+                                  colors: [
+                                    Color(0xFF1E1B4B),
+                                    Color(0xFF1E3A8A),
+                                    Color(0xFF2563EB),
+                                  ],
+                                )
+                              : const LinearGradient(
+                                  colors: [
+                                    Color(0xFF1E3A8A),
+                                    Color(0xFF2563EB),
+                                  ],
+                                ),
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                              blurRadius: 14,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              isLastSlide ? 'Get Started' : 'Next',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ],
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: 175,
-                      height: 175,
-                      child: Image.asset(
-                        'assets/images/optigo-bot.png',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+
+                    const SizedBox(height: 10),
                   ],
                 ),
-
-                const Spacer(flex: 2),
-
-                // 3. Title & Subtitle (Matching Reference Screen 1)
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Column(
-                    key: ValueKey(_currentStoryIndex),
-                    children: [
-                      Text(
-                        story['title']!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
-                          letterSpacing: -0.8,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        story['subtitle']!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF475569),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          story['description']!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            height: 1.5,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const Spacer(flex: 3),
-
-                // 4. Primary Get Started Button
-                InkWell(
-                  onTap: _navigateToLogin,
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Get Started',
-                          style: TextStyle(
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildFloatingAccessory({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: bgColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 12, color: color),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Custom painter for subtle scattered iconography background texture
+class _BackgroundPatternPainter extends CustomPainter {
+  final Color accentColor;
+
+  _BackgroundPatternPainter({required this.accentColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = accentColor.withValues(alpha: 0.04)
+      ..style = PaintingStyle.fill;
+
+    // Draw subtle decorative ambient circles
+    canvas.drawCircle(Offset(size.width * 0.12, size.height * 0.22), 24, paint);
+    canvas.drawCircle(Offset(size.width * 0.88, size.height * 0.35), 32, paint);
+    canvas.drawCircle(Offset(size.width * 0.15, size.height * 0.72), 18, paint);
+    canvas.drawCircle(Offset(size.width * 0.85, size.height * 0.78), 26, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BackgroundPatternPainter oldDelegate) =>
+      oldDelegate.accentColor != accentColor;
 }

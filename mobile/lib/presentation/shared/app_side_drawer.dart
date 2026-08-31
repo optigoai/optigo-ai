@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../auth/auth_provider.dart';
 import '../business_profile/business_profile_screen.dart';
@@ -52,12 +53,30 @@ class AppSideDrawer extends StatelessWidget {
       barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
-        content: const Text('Are you sure you want to log out of OptigoAI?'),
+        title: Text(
+          'Log Out',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF0F172A),
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to log out of OptigoAI?',
+          style: GoogleFonts.plusJakartaSans(
+            color: const Color(0xFF475569),
+            fontSize: 14,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w700)),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.plusJakartaSans(
+                color: const Color(0xFF64748B),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -70,7 +89,12 @@ class AppSideDrawer extends StatelessWidget {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.w800)),
+            child: Text(
+              'Log Out',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ],
       ),
@@ -119,12 +143,12 @@ class AppSideDrawer extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Account & Navigation',
-                    style: TextStyle(
+                  Text(
+                    'OptigoAI Account',
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF64748B),
+                      color: const Color(0xFF64748B),
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -137,7 +161,7 @@ class AppSideDrawer extends StatelessWidget {
 
               const SizedBox(height: 10),
 
-              // User Profile Header Card (Matching Reference Screenshot)
+              // User Profile Header Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -158,7 +182,11 @@ class AppSideDrawer extends StatelessWidget {
                       child: Center(
                         child: Text(
                           initial,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF2563EB)),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF2563EB),
+                          ),
                         ),
                       ),
                     ),
@@ -169,12 +197,20 @@ class AppSideDrawer extends StatelessWidget {
                         children: [
                           Text(
                             displayName,
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF0F172A),
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             email,
-                            style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11.5,
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -189,7 +225,11 @@ class AppSideDrawer extends StatelessWidget {
                       ),
                       child: Text(
                         user?.role.toUpperCase() ?? 'OWNER',
-                        style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Color(0xFF2563EB)),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF2563EB),
+                        ),
                       ),
                     ),
                   ],
@@ -198,7 +238,7 @@ class AppSideDrawer extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // Active Business Card & Switcher (Matching Reference Screenshot)
+              // Active Business Card & Switcher
               if (currentBiz != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -224,11 +264,19 @@ class AppSideDrawer extends StatelessWidget {
                           children: [
                             Text(
                               currentBiz.name,
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
+                              ),
                             ),
                             Text(
                               currentBiz.location ?? 'Location not set',
-                              style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
@@ -253,7 +301,12 @@ class AppSideDrawer extends StatelessWidget {
                                     color: isCur ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
                                   ),
                                   const SizedBox(width: 8),
-                                  Text(b.name, style: TextStyle(fontWeight: isCur ? FontWeight.w800 : FontWeight.w500)),
+                                  Text(
+                                    b.name,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontWeight: isCur ? FontWeight.w800 : FontWeight.w500,
+                                    ),
+                                  ),
                                 ],
                               ),
                             );
@@ -267,7 +320,7 @@ class AppSideDrawer extends StatelessWidget {
               const Divider(height: 1, color: Color(0xFFF1F5F9)),
               const SizedBox(height: 12),
 
-              // Navigation Links (Matching Reference Screenshot)
+              // Navigation Links
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.zero,
@@ -285,7 +338,7 @@ class AppSideDrawer extends StatelessWidget {
                     _buildDrawerNavTile(
                       title: 'Google Business Profile',
                       subtitle: 'View live GBP profile & hours',
-                      badgeText: '86%',
+                      badgeText: 'Verified',
                       icon: Icons.storefront_rounded,
                       onTap: () {
                         Navigator.pop(context);
@@ -312,15 +365,19 @@ class AppSideDrawer extends StatelessWidget {
                 ),
               ),
 
-              // Bottom Log Out Button (Matching Reference Screenshot)
+              // Bottom Log Out Button
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () => _confirmLogout(context, authProvider),
                   icon: const Icon(Icons.logout_rounded, size: 16, color: Color(0xFFEF4444)),
-                  label: const Text(
+                  label: Text(
                     'Log Out',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFFEF4444)),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFFEF4444),
+                    ),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -370,11 +427,18 @@ class AppSideDrawer extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF0F172A),
+                    ),
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ],
               ),
@@ -388,7 +452,11 @@ class AppSideDrawer extends StatelessWidget {
                 ),
                 child: Text(
                   badgeText,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF059669)),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF059669),
+                  ),
                 ),
               ),
               const SizedBox(width: 6),

@@ -53,14 +53,26 @@ class OptigoTheme {
     stops: [0.0, 0.22, 0.55, 1.0],
   );
 
+  // ---- Signature Brand Hero Gradient (Deep Indigo -> Electric Royal Azure) ----
+  static const LinearGradient signatureBrandGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFF1E1B4B), // Deep Midnight Indigo
+      Color(0xFF1E3A8A), // Rich Royal Cobalt
+      Color(0xFF2563EB), // Electric Royal Azure
+    ],
+    stops: [0.0, 0.5, 1.0],
+  );
+
   // ---- Hero Bento Dark Gradient ----
   static const LinearGradient darkBentoGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF0B132B), // Deep Midnight
-      Color(0xFF1C2541), // Rich Navy
-      Color(0xFF1E293B), // Slate 800
+      Color(0xFF1E1B4B),
+      Color(0xFF1E3A8A),
+      Color(0xFF2563EB),
     ],
     stops: [0.0, 0.55, 1.0],
   );

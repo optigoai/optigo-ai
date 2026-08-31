@@ -258,7 +258,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
   Widget _buildStep1IntentSelector() {
     return SingleChildScrollView(
       key: const ValueKey('step_1'),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -504,7 +504,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
   Widget _buildStep2CampaignBuilder() {
     return SingleChildScrollView(
       key: const ValueKey('step_2'),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -787,7 +787,7 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
 
     return SingleChildScrollView(
       key: const ValueKey('step_3'),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
