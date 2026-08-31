@@ -144,6 +144,36 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> put(String path, {Map<String, dynamic>? body}) async {
+    final url = Uri.parse('$baseUrl$path');
+    try {
+      final headers = await _buildHeaders();
+      final response = await http.put(
+        url,
+        headers: headers,
+        body: body != null ? jsonEncode(body) : null,
+      );
+
+      if (response.statusCode == 401 && !path.contains('/auth/')) {
+        final refreshed = await _tryRefreshToken();
+        if (refreshed) {
+          final retryHeaders = await _buildHeaders();
+          final retryResponse = await http.put(
+            url,
+            headers: retryHeaders,
+            body: body != null ? jsonEncode(body) : null,
+          );
+          return _handleResponse(retryResponse);
+        }
+      }
+
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Network error. Please check your connection.');
+    }
+  }
+
   Future<dynamic> patch(String path, {Map<String, dynamic>? body}) async {
     final url = Uri.parse('$baseUrl$path');
     try {

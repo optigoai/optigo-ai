@@ -26,12 +26,14 @@ from app.models.ai_log import AIRequestLog
 from app.models.feature_toggle import FeatureToggle
 from app.models.gsc import GoogleSearchConsoleConnection, SearchConsoleMetric
 from app.models.website_audit import WebsiteAudit
+from app.models.business_website import BusinessWebsite
 
 __all__ = [
     "Organization",
     "User",
     "UserRole",
     "Business",
+    "BusinessWebsite",
     "Review",
     "ReviewSentiment",
     "Recommendation",

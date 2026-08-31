@@ -26,6 +26,7 @@ import { BranchContentView } from '../../views/branch/BranchContentView';
 import { BranchRecommendationsView } from '../../views/branch/BranchRecommendationsView';
 import { BranchCmoChatView } from '../../views/branch/BranchCmoChatView';
 import { BranchSettingsView } from '../../views/branch/BranchSettingsView';
+import { BranchWebsiteBuilderView } from '../../views/branch/BranchWebsiteBuilderView';
 
 interface AppShellProps {
   children?: React.ReactNode;
@@ -52,6 +53,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     switch (activeBranchTab) {
       case 'dashboard': return <BranchDashboardView />;
       case 'profile': return <BranchProfileView />;
+      case 'website': return <BranchWebsiteBuilderView />;
       case 'seo': return <BranchSeoView />;
       case 'reviews': return <BranchReviewsView />;
       case 'content': return <BranchContentView />;

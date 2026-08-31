@@ -29,6 +29,7 @@ import {
   Plus,
   LogOut,
   Sparkles,
+  Globe,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -73,6 +74,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   const branchSecondary = [
+    { id: 'website', label: 'Website Builder', icon: Globe, tag: 'Public' },
     { id: 'content', label: 'Marketing Studio', icon: FileText },
     { id: 'recommendations', label: 'Growth Directives', icon: Zap, tag: 'Active' },
     { id: 'cmo', label: 'Advisor', icon: MessageSquare },

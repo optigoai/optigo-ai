@@ -198,3 +198,124 @@ export interface TeamMember {
   assigned_locations: string[];
   status: 'Active' | 'Invited' | 'Suspended';
 }
+
+export interface WebsiteHero {
+  headline: string;
+  subheadline: string;
+  badge?: string;
+  primary_cta_text?: string;
+  primary_cta_action?: string;
+  secondary_cta_text?: string;
+  secondary_cta_action?: string;
+  hero_image_url?: string;
+}
+
+export interface WebsiteAbout {
+  title: string;
+  story: string;
+  highlights: string[];
+  image_url?: string;
+}
+
+export interface WebsiteService {
+  name: string;
+  description: string;
+  price_range?: string;
+  badge?: string;
+  icon?: string;
+}
+
+export interface WebsiteWhyChooseUs {
+  title: string;
+  description: string;
+  icon?: string;
+}
+
+export interface WebsiteReviewItem {
+  author_name: string;
+  rating: number;
+  text: string;
+  review_date?: string;
+}
+
+export interface WebsiteReviewsSection {
+  title: string;
+  average_rating: number;
+  total_reviews: number;
+  featured_reviews: WebsiteReviewItem[];
+}
+
+export interface WebsiteHoursLocation {
+  address: string;
+  city: string;
+  phone?: string;
+  email?: string;
+  maps_query?: string;
+  opening_hours: string[];
+}
+
+export interface WebsiteFAQ {
+  question: string;
+  answer: string;
+}
+
+export interface WebsiteCTABanner {
+  title: string;
+  description: string;
+  button_text: string;
+  button_action: string;
+}
+
+export interface WebsiteContent {
+  theme_config?: {
+    accent_color: string;
+    font_family: string;
+    dark_mode: boolean;
+  };
+  hero: WebsiteHero;
+  about: WebsiteAbout;
+  services: WebsiteService[];
+  why_choose_us: WebsiteWhyChooseUs[];
+  reviews: WebsiteReviewsSection;
+  gallery: string[];
+  hours_location: WebsiteHoursLocation;
+  faqs: WebsiteFAQ[];
+  cta_banner: WebsiteCTABanner;
+}
+
+export interface BusinessWebsiteItem {
+  id: string;
+  business_id: string;
+  organization_id: string;
+  slug: string;
+  status: 'draft' | 'published' | 'unpublished';
+  seo_title?: string;
+  seo_description?: string;
+  content_json: WebsiteContent;
+  custom_html?: string;
+  custom_css?: string;
+  custom_js?: string;
+  view_count: number;
+  published_at?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PublicWebsiteData {
+  id: string;
+  business_name: string;
+  category: string;
+  location: string;
+  phone?: string;
+  website_url?: string;
+  slug: string;
+  seo_title: string;
+  seo_description: string;
+  content: WebsiteContent;
+  custom_html?: string;
+  custom_css?: string;
+  custom_js?: string;
+  published_at?: string;
+  canonical_url: string;
+  schema_org_json: Record<string, any>;
+}

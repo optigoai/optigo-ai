@@ -21,9 +21,17 @@ from app.api.v1.endpoints import (
     gsc,
     admin,
     features,
+    websites,
+    public_sites,
 )
 
 api_router = APIRouter(prefix="/api/v1")
+
+# Public Website Engine (Unauthenticated public business pages & sitemaps)
+api_router.include_router(public_sites.router)
+
+# Authenticated Business Website Builder & Manager
+api_router.include_router(websites.router)
 
 # Health check (public)
 api_router.include_router(health.router)

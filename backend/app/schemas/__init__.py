@@ -277,3 +277,12 @@ class ContentResponse(BaseModel):
     published_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+
+from app.schemas.website import (
+    WebsiteContentSchema,
+    WebsiteUpdateRequest,
+    WebsiteStatusUpdateRequest,
+    WebsiteResponse,
+    PublicWebsiteResponse,
+)

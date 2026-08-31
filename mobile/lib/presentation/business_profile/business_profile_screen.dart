@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../auth/auth_provider.dart';
+import '../website/website_builder_screen.dart';
 
 class BusinessProfileScreen extends StatefulWidget {
   const BusinessProfileScreen({super.key});
@@ -912,6 +913,25 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                 ),
                 child: Column(
                   children: [
+                    _buildMenuRow(
+                      title: 'Public Website Builder',
+                      countBadge: 'optigoai.com',
+                      icon: Icons.language_rounded,
+                      onTap: () {
+                        if (biz != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => WebsiteBuilderScreen(
+                                businessId: biz.id,
+                                businessName: bizName,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
                     _buildMenuRow(
                       title: 'Info & Operating Hours',
                       icon: Icons.access_time_rounded,

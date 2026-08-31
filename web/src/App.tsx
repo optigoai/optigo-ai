@@ -32,12 +32,23 @@ import { BranchContentView } from './views/branch/BranchContentView';
 import { BranchRecommendationsView } from './views/branch/BranchRecommendationsView';
 import { BranchCmoChatView } from './views/branch/BranchCmoChatView';
 import { BranchSettingsView } from './views/branch/BranchSettingsView';
+import { BranchWebsiteBuilderView } from './views/branch/BranchWebsiteBuilderView';
+import { PublicBusinessPageView } from './views/public/PublicBusinessPageView';
 
 const MainRouter: React.FC = () => {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { locations, isLoading: isFranchiseLoading } = useFranchise();
   const { scope, activeFranchiseTab, activeBranchTab, isOnboardingOpen, setIsOnboardingOpen } = useLocation();
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+
+  // Check if current URL path is a public business page (e.g. optigoai.com/casaraza-restaurant)
+  const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  const internalReserved = ['', 'login', 'signup', 'onboarding', 'app', 'admin', 'dashboard'];
+  const isPublicBusinessSlug = cleanPath.length > 0 && !internalReserved.includes(cleanPath.toLowerCase());
+
+  if (isPublicBusinessSlug) {
+    return <PublicBusinessPageView slug={cleanPath.replace(/^site\//, '')} />;
+  }
 
   if (isAuthLoading) {
     return (
@@ -78,6 +89,7 @@ const MainRouter: React.FC = () => {
         <>
           {activeBranchTab === 'dashboard' && <BranchDashboardView />}
           {activeBranchTab === 'profile' && <BranchProfileView />}
+          {activeBranchTab === 'website' && <BranchWebsiteBuilderView />}
           {activeBranchTab === 'seo' && <BranchSeoView />}
           {activeBranchTab === 'reviews' && <BranchReviewsView />}
           {activeBranchTab === 'content' && <BranchContentView />}
