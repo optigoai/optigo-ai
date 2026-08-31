@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     health,
     auth,
     businesses,
+    franchise,
     reviews,
     recommendations,
     contents,
@@ -32,6 +33,9 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 # Businesses & Onboarding
 api_router.include_router(businesses.router, prefix="/businesses", tags=["Businesses"])
+
+# Franchise & Enterprise Multi-Location
+api_router.include_router(franchise.router)
 
 # Reviews & Reputation
 api_router.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])

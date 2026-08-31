@@ -58,10 +58,16 @@ mobile/ios/Runner/GeneratedPluginRegistrant.*
 mobile/ios/Pods/
 *.iml
 
-# ---- Admin Portal (Node.js) ----
+# ---- Admin & Web Portals (Node.js) ----
 admin/node_modules/
 admin/dist/
 admin/.env
+web/node_modules/
+web/dist/
+web/dist-ssr/
+web/.env
+web/.env.local
+
 
 # ---- Docker ----
 docker-compose.override.yml
