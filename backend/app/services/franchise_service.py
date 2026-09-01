@@ -132,11 +132,14 @@ class FranchiseService:
 
         top_keywords_pulse = []
         for kw in db_keywords:
+            rank_change = 1
+            if getattr(kw, "previous_rank", None) is not None and getattr(kw, "current_rank", None) is not None:
+                rank_change = kw.previous_rank - kw.current_rank
             top_keywords_pulse.append({
                 "keyword": kw.keyword,
                 "search_volume": kw.search_volume or 1200,
                 "rank": kw.current_rank or 2,
-                "change": kw.rank_change or 1,
+                "change": rank_change,
             })
 
         if not top_keywords_pulse and businesses:
