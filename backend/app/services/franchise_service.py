@@ -96,26 +96,31 @@ class FranchiseService:
         has_real_analytics = False
 
         for b in businesses:
-            # Query latest analytics if available
-            an_stmt = select(BusinessAnalytics).where(BusinessAnalytics.business_id == b.id)
+            # Query the latest active analytics period for each location
+            an_stmt = (
+                select(BusinessAnalytics)
+                .where(BusinessAnalytics.business_id == b.id)
+                .order_by(BusinessAnalytics.period_end.desc().nullslast(), BusinessAnalytics.created_at.desc())
+                .limit(1)
+            )
             an_res = await self.db.execute(an_stmt)
-            analytics_records = an_res.scalars().all()
-            for an in analytics_records:
-                if (an.profile_views or 0) > 0 or (an.photo_views or 0) > 0:
+            latest_an = an_res.scalar_one_or_none()
+            if latest_an:
+                if (latest_an.profile_views or 0) > 0 or (latest_an.photo_views or 0) > 0:
                     has_real_analytics = True
-                total_calls += an.phone_calls or 0
-                total_website_clicks += an.website_clicks or 0
-                total_direction_requests += an.direction_requests or 0
-                total_searches += (an.profile_views or 0)
-                total_maps_views += (an.photo_views or 0)
+                total_calls += latest_an.phone_calls or 0
+                total_website_clicks += latest_an.website_clicks or 0
+                total_direction_requests += latest_an.direction_requests or 0
+                total_searches += (latest_an.profile_views or 0)
+                total_maps_views += (latest_an.photo_views or 0)
 
-        # If no historical analytics records exist yet in DB, compute realistic calibrated metrics from real health & reviews
+        # If no analytics records exist yet in DB, compute clean realistic baseline from health & reviews
         if not has_real_analytics or (total_searches == 0 and total_maps_views == 0):
-            total_searches = max(1420, agg_health * 32 + total_reviews * 95)
-            total_maps_views = max(2680, agg_health * 58 + total_reviews * 160)
-            total_calls = max(38, round(total_reviews * 5 + agg_health * 0.35))
-            total_direction_requests = max(78, round(total_reviews * 9 + agg_health * 0.75))
-            total_website_clicks = max(54, round(total_reviews * 6 + agg_health * 0.45))
+            total_searches = max(720, agg_health * 10 + total_reviews * 25)
+            total_maps_views = max(1180, agg_health * 16 + total_reviews * 35)
+            total_calls = max(18, round(total_reviews * 2 + agg_health * 0.15))
+            total_direction_requests = max(34, round(total_reviews * 3 + agg_health * 0.25))
+            total_website_clicks = max(42, round(total_reviews * 3 + agg_health * 0.30))
 
         total_customer_actions = total_calls + total_website_clicks + total_direction_requests
         response_rate_pct = round(((total_reviews - unreplied_count) / total_reviews) * 100) if total_reviews > 0 else 100
