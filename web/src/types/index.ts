@@ -185,6 +185,35 @@ export interface ReviewItem {
   is_replied: boolean;
   reply_text?: string;
   reply_date?: string;
+  key_themes?: string;
+}
+
+export interface ReviewManagementAnalytics {
+  total_reviews: number;
+  replied_count: number;
+  not_replied_count: number;
+  replied_percentage: number;
+  not_replied_percentage: number;
+  average_rating: number;
+  trending_keywords_7d: { keyword: string; count: number }[];
+  positive_keywords: { keyword: string; count: number; sentiment: string }[];
+  negative_keywords: { keyword: string; count: number; sentiment: string }[];
+  keyword_sentiment: {
+    positive_count: number;
+    negative_count: number;
+    positive_pct: number;
+    negative_pct: number;
+  };
+  monthly_rating_analysis: {
+    month: string;
+    reviews_count: number;
+    rating: number;
+  }[];
+  monthly_sentiment_trend: {
+    month: string;
+    positive: number;
+    negative: number;
+  }[];
 }
 
 export interface SEOKeywordItem {

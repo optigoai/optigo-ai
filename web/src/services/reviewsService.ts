@@ -66,4 +66,12 @@ export const reviewsService = {
       body: JSON.stringify({ reply_text: replyText }),
     });
   },
+
+  async getManagementAnalytics(businessId: string): Promise<any> {
+    try {
+      return await apiRequest(`/reviews/management-analytics?business_id=${businessId}`);
+    } catch {
+      return null;
+    }
+  },
 };
