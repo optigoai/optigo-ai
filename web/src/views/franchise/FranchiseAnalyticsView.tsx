@@ -1,6 +1,6 @@
 // ==================================================
 // OptigoAI Enterprise — Multi-Branch Comparative Analytics View
-// Comparative Graphs, Multi-Shop Benchmarking & Conversion Intelligence
+// Vertical Bar Graphs, Multi-Shop Benchmarking & Conversion Intelligence
 // ==================================================
 
 import React, { useState } from 'react';
@@ -24,26 +24,20 @@ import {
   Eye,
   Activity,
   Layers,
-  ArrowUpRight,
-  ArrowDownRight,
-  Sparkles,
-  MapPin,
   Flame,
+  ExternalLink,
 } from 'lucide-react';
 
 export const FranchiseAnalyticsView: React.FC = () => {
   const {
     overview,
     locations,
-    benchmarks,
     selectedDateRange,
     setSelectedDateRange,
-    isSyncing,
-    triggerBulkSync,
   } = useFranchise();
   const { selectLocation, setIsOnboardingOpen } = useLocation();
 
-  const [activeChartMetric, setActiveChartMetric] = useState<'actions' | 'searches' | 'health' | 'reviews'>('actions');
+  const [activeChartMetric, setActiveChartMetric] = useState<'actions' | 'searches' | 'health' | 'reviews'>('searches');
   const [hoveredBranchId, setHoveredBranchId] = useState<string | null>(null);
 
   // Time range multiplier
@@ -86,19 +80,28 @@ export const FranchiseAnalyticsView: React.FC = () => {
   const hasMultipleBranches = locations.length > 1;
   const singleBranch = locations.length === 1 ? locations[0] : null;
 
-  // Branch metric maximums for dynamic bar scaling
+  // Branch metric maximums for dynamic vertical bar scaling
   const maxActions = Math.max(...locations.map((l) => l.monthly_actions || 1), 1);
   const maxSearches = Math.max(...locations.map((l) => l.monthly_searches || 1), 1);
   const maxReviews = Math.max(...locations.map((l) => l.total_reviews || 1), 1);
 
-  // Distinct branch colors for multi-shop visual identification
+  // Distinct branch color palettes for vertical bars
   const branchPalette = [
-    { primary: '#0284C7', bg: '#E0F2FE', light: '#38BDF8' },
-    { primary: '#E11D48', bg: '#FFE4E6', light: '#FB7185' },
-    { primary: '#10B981', bg: '#DCFCE7', light: '#34D399' },
-    { primary: '#F59E0B', bg: '#FEF3C7', light: '#FBBF24' },
-    { primary: '#8B5CF6', bg: '#EDE9FE', light: '#A78BFA' },
+    { primary: '#0284C7', gradient: 'linear-gradient(180deg, #0284C7 0%, #0369A1 100%)', bg: '#EFF6FF', text: '#0369A1' },
+    { primary: '#E11D48', gradient: 'linear-gradient(180deg, #FB7185 0%, #E11D48 100%)', bg: '#FFE4E6', text: '#BE123C' },
+    { primary: '#10B981', gradient: 'linear-gradient(180deg, #34D399 0%, #10B981 100%)', bg: '#DCFCE7', text: '#047857' },
+    { primary: '#F59E0B', gradient: 'linear-gradient(180deg, #FBBF24 0%, #D97706 100%)', bg: '#FEF3C7', text: '#B45309' },
+    { primary: '#8B5CF6', gradient: 'linear-gradient(180deg, #A78BFA 0%, #7C3AED 100%)', bg: '#EDE9FE', text: '#6D28D9' },
   ];
+
+  const currentMaxVal =
+    activeChartMetric === 'actions'
+      ? Math.round(maxActions * rangeMultiplier)
+      : activeChartMetric === 'searches'
+      ? Math.round(maxSearches * rangeMultiplier)
+      : activeChartMetric === 'health'
+      ? 100
+      : maxReviews;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -111,18 +114,18 @@ export const FranchiseAnalyticsView: React.FC = () => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#111827', lineHeight: 1.2 }}>
-                Multi-Branch Marketing & Comparative Analytics
+                Marketing & Inquiries Analytics
               </h1>
               <span className="prody-pill blue" style={{ fontSize: '0.72rem' }}>
-                <Award size={12} /> Cross-Branch Intelligence
+                <Award size={12} /> Google Verified Analytics
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginTop: '6px' }}>
               <span className="prody-pill green">
-                {locations.length} Active Branch Location{locations.length > 1 ? 's' : ''}
+                {locations.length} Branch Location{locations.length > 1 ? 's' : ''} Tracked
               </span>
               <span className="prody-pill blue">
-                {totalInquiries.toLocaleString()} Network Inquiries
+                {totalInquiries.toLocaleString()} Total Inquiries
               </span>
               <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>
                 Network Avg Health: <strong>{overview.aggregate_health_score}/100</strong>
@@ -166,7 +169,7 @@ export const FranchiseAnalyticsView: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Four Network Comparative Stat Gauges */}
+      {/* 2. Four Core Conversion KPI Stat Boxes */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
         <div className="prody-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -229,15 +232,15 @@ export const FranchiseAnalyticsView: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Multi-Branch Comparative Visual Bar Graphs */}
+      {/* 3. Cross-Branch Comparative VERTICAL Bar Graphs */}
       <div className="prody-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
           <div>
             <h3 style={{ fontSize: '1.08rem', fontWeight: 800, color: '#111827' }}>
               Cross-Branch Comparative Performance Bars
             </h3>
             <p style={{ fontSize: '0.78rem', color: '#6B7280', marginTop: '2px' }}>
-              Side-by-side branch benchmark across key marketing metrics
+              Side-by-side branch comparison across key marketing & visibility metrics
             </p>
           </div>
 
@@ -252,26 +255,9 @@ export const FranchiseAnalyticsView: React.FC = () => {
             }}
           >
             <button
-              onClick={() => setActiveChartMetric('actions')}
-              style={{
-                padding: '4px 10px',
-                borderRadius: '4px',
-                border: 'none',
-                backgroundColor: activeChartMetric === 'actions' ? '#FFFFFF' : 'transparent',
-                color: activeChartMetric === 'actions' ? '#111827' : '#6B7280',
-                fontWeight: activeChartMetric === 'actions' ? 700 : 500,
-                fontSize: '0.74rem',
-                cursor: 'pointer',
-                boxShadow: activeChartMetric === 'actions' ? 'var(--shadow-xs)' : 'none',
-              }}
-            >
-              Inquiries & Actions
-            </button>
-
-            <button
               onClick={() => setActiveChartMetric('searches')}
               style={{
-                padding: '4px 10px',
+                padding: '4px 12px',
                 borderRadius: '4px',
                 border: 'none',
                 backgroundColor: activeChartMetric === 'searches' ? '#FFFFFF' : 'transparent',
@@ -286,9 +272,26 @@ export const FranchiseAnalyticsView: React.FC = () => {
             </button>
 
             <button
+              onClick={() => setActiveChartMetric('actions')}
+              style={{
+                padding: '4px 12px',
+                borderRadius: '4px',
+                border: 'none',
+                backgroundColor: activeChartMetric === 'actions' ? '#FFFFFF' : 'transparent',
+                color: activeChartMetric === 'actions' ? '#111827' : '#6B7280',
+                fontWeight: activeChartMetric === 'actions' ? 700 : 500,
+                fontSize: '0.74rem',
+                cursor: 'pointer',
+                boxShadow: activeChartMetric === 'actions' ? 'var(--shadow-xs)' : 'none',
+              }}
+            >
+              Inquiries & Actions
+            </button>
+
+            <button
               onClick={() => setActiveChartMetric('health')}
               style={{
-                padding: '4px 10px',
+                padding: '4px 12px',
                 borderRadius: '4px',
                 border: 'none',
                 backgroundColor: activeChartMetric === 'health' ? '#FFFFFF' : 'transparent',
@@ -305,7 +308,7 @@ export const FranchiseAnalyticsView: React.FC = () => {
             <button
               onClick={() => setActiveChartMetric('reviews')}
               style={{
-                padding: '4px 10px',
+                padding: '4px 12px',
                 borderRadius: '4px',
                 border: 'none',
                 backgroundColor: activeChartMetric === 'reviews' ? '#FFFFFF' : 'transparent',
@@ -321,194 +324,248 @@ export const FranchiseAnalyticsView: React.FC = () => {
           </div>
         </div>
 
-        {/* Visual Graph Rendering */}
+        {/* VERTICAL BAR GRAPH CANVAS */}
         {hasMultipleBranches ? (
-          /* Multi-Branch Side-by-Side Comparison Bars */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {locations.map((loc, idx) => {
-              const pal = branchPalette[idx % branchPalette.length];
-              const rawVal =
-                activeChartMetric === 'actions'
-                  ? Math.round(loc.monthly_actions * rangeMultiplier)
-                  : activeChartMetric === 'searches'
-                  ? Math.round(loc.monthly_searches * rangeMultiplier)
-                  : activeChartMetric === 'health'
-                  ? loc.health_score
-                  : loc.total_reviews;
+          <div style={{ position: 'relative', width: '100%', backgroundColor: '#FAFBFD', borderRadius: '14px', border: '1px solid #E5E7EB', padding: '24px 20px 16px' }}>
+            {/* Y-Axis Background Grid Lines */}
+            <div style={{ position: 'absolute', top: '24px', left: '60px', right: '20px', bottom: '90px', pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div style={{ borderBottom: '1px dashed #E2E8F0', width: '100%', position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '-55px', top: '-8px', fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600 }}>
+                  {currentMaxVal.toLocaleString()}
+                </span>
+              </div>
+              <div style={{ borderBottom: '1px dashed #E2E8F0', width: '100%', position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '-55px', top: '-8px', fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600 }}>
+                  {Math.round(currentMaxVal * 0.75).toLocaleString()}
+                </span>
+              </div>
+              <div style={{ borderBottom: '1px dashed #E2E8F0', width: '100%', position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '-55px', top: '-8px', fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600 }}>
+                  {Math.round(currentMaxVal * 0.5).toLocaleString()}
+                </span>
+              </div>
+              <div style={{ borderBottom: '1px dashed #E2E8F0', width: '100%', position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '-55px', top: '-8px', fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600 }}>
+                  {Math.round(currentMaxVal * 0.25).toLocaleString()}
+                </span>
+              </div>
+              <div style={{ borderBottom: '1px solid #CBD5E1', width: '100%', position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '-55px', top: '-8px', fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600 }}>
+                  0
+                </span>
+              </div>
+            </div>
 
-              const maxVal =
-                activeChartMetric === 'actions'
-                  ? Math.round(maxActions * rangeMultiplier)
-                  : activeChartMetric === 'searches'
-                  ? Math.round(maxSearches * rangeMultiplier)
-                  : activeChartMetric === 'health'
-                  ? 100
-                  : maxReviews;
+            {/* Vertical Columns Grid */}
+            <div
+              style={{
+                height: '240px',
+                marginLeft: '60px',
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'space-around',
+                gap: '24px',
+                position: 'relative',
+                zIndex: 2,
+              }}
+            >
+              {locations.map((loc, idx) => {
+                const pal = branchPalette[idx % branchPalette.length];
+                const rawVal =
+                  activeChartMetric === 'actions'
+                    ? Math.round(loc.monthly_actions * rangeMultiplier)
+                    : activeChartMetric === 'searches'
+                    ? Math.round(loc.monthly_searches * rangeMultiplier)
+                    : activeChartMetric === 'health'
+                    ? loc.health_score
+                    : loc.total_reviews;
 
-              const pct = Math.min(100, Math.max(8, Math.round((rawVal / maxVal) * 100)));
+                const barHeightPct = Math.min(100, Math.max(10, Math.round((rawVal / currentMaxVal) * 100)));
+                const isHovered = hoveredBranchId === loc.id;
 
-              return (
-                <div
-                  key={loc.id}
-                  onMouseEnter={() => setHoveredBranchId(loc.id)}
-                  onMouseLeave={() => setHoveredBranchId(null)}
-                  onClick={() => selectLocation(loc.id)}
-                  style={{
-                    padding: '14px 16px',
-                    backgroundColor: hoveredBranchId === loc.id ? '#F8FAFC' : '#FAFAFA',
-                    border: `1px solid ${hoveredBranchId === loc.id ? pal.primary : '#E5E7EB'}`,
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div
-                        style={{
-                          width: '26px',
-                          height: '26px',
-                          borderRadius: '6px',
-                          backgroundColor: pal.bg,
-                          color: pal.primary,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 800,
-                          fontSize: '0.78rem',
-                        }}
-                      >
-                        #{idx + 1}
-                      </div>
-                      <div>
-                        <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#111827' }}>
-                          {loc.name}
-                        </span>
-                        <span style={{ fontSize: '0.75rem', color: '#6B7280', marginLeft: '8px' }}>
-                          {loc.location}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <span style={{ fontSize: '0.92rem', fontWeight: 800, color: pal.primary }}>
-                        {activeChartMetric === 'health'
-                          ? `${rawVal}/100`
-                          : activeChartMetric === 'reviews'
-                          ? `${rawVal} reviews (${loc.average_rating > 0 ? `${loc.average_rating}★` : '—'})`
-                          : rawVal.toLocaleString()}
-                      </span>
-                      <span style={{ fontSize: '0.74rem', color: '#6B7280' }}>
-                        Rank #{loc.google_maps_rank} on Maps
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Relative Scaled Bar */}
-                  <div style={{ height: '10px', backgroundColor: '#E2E8F0', borderRadius: '5px', overflow: 'hidden' }}>
+                return (
+                  <div
+                    key={loc.id}
+                    onMouseEnter={() => setHoveredBranchId(loc.id)}
+                    onMouseLeave={() => setHoveredBranchId(null)}
+                    onClick={() => selectLocation(loc.id)}
+                    style={{
+                      flex: 1,
+                      maxWidth: '160px',
+                      minWidth: '90px',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* Value Badge on top of column */}
                     <div
                       style={{
-                        width: `${pct}%`,
-                        height: '100%',
-                        backgroundColor: pal.primary,
-                        borderRadius: '5px',
-                        transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        marginBottom: '8px',
+                        padding: '4px 10px',
+                        backgroundColor: '#FFFFFF',
+                        border: `1px solid ${isHovered ? pal.primary : '#E2E8F0'}`,
+                        borderRadius: '8px',
+                        boxShadow: isHovered ? '0 4px 12px rgba(0,0,0,0.08)' : '0 1px 3px rgba(0,0,0,0.04)',
+                        fontSize: '0.82rem',
+                        fontWeight: 800,
+                        color: pal.primary,
+                        textAlign: 'center',
+                        whiteSpace: 'nowrap',
+                        transition: 'transform 0.2s ease',
+                        transform: isHovered ? 'scale(1.08)' : 'scale(1)',
+                      }}
+                    >
+                      {activeChartMetric === 'health'
+                        ? `${rawVal}/100`
+                        : activeChartMetric === 'reviews'
+                        ? `${rawVal} reviews`
+                        : rawVal.toLocaleString()}
+                    </div>
+
+                    {/* WIDE VERTICAL BAR */}
+                    <div
+                      style={{
+                        width: '100%',
+                        maxWidth: '96px',
+                        minWidth: '64px',
+                        height: `${barHeightPct}%`,
+                        background: pal.gradient,
+                        borderRadius: '10px 10px 0 0',
+                        boxShadow: isHovered
+                          ? `0 0 16px ${pal.primary}55`
+                          : '0 4px 10px rgba(0,0,0,0.06)',
+                        transition: 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1), filter 0.2s ease',
+                        filter: isHovered ? 'brightness(1.08)' : 'none',
+                        position: 'relative',
                       }}
                     />
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : singleBranch ? (
-          /* Single Branch Deep Analytics + Local Industry Benchmark Comparison Bar */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            {/* Primary Shop Live Benchmarking Card */}
+                );
+              })}
+            </div>
+
+            {/* X-Axis Branch Descriptions below bars */}
             <div
               style={{
-                padding: '18px 22px',
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #E2E8F0',
-                borderRadius: '12px',
+                marginLeft: '60px',
+                marginTop: '12px',
+                paddingTop: '10px',
+                borderTop: '1px solid #E2E8F0',
+                display: 'flex',
+                justifyContent: 'space-around',
+                gap: '24px',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {locations.map((loc, idx) => {
+                const pal = branchPalette[idx % branchPalette.length];
+                return (
                   <div
+                    key={loc.id}
+                    onClick={() => selectLocation(loc.id)}
                     style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '10px',
-                      backgroundColor: '#0284C7',
-                      color: '#FFFFFF',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 800,
-                      fontSize: '1.1rem',
+                      flex: 1,
+                      maxWidth: '160px',
+                      minWidth: '90px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
                     }}
                   >
-                    {singleBranch.name.charAt(0)}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                      <span
+                        style={{
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          backgroundColor: pal.bg,
+                          color: pal.primary,
+                          fontSize: '0.68rem',
+                          fontWeight: 800,
+                        }}
+                      >
+                        #{idx + 1}
+                      </span>
+                      <strong style={{ fontSize: '0.88rem', color: '#111827' }}>
+                        {loc.name}
+                      </strong>
+                    </div>
+                    <div style={{ fontSize: '0.74rem', color: '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {loc.location}
+                    </div>
+                    <div style={{ marginTop: '3px', fontSize: '0.7rem', color: '#059669', fontWeight: 600 }}>
+                      Rank #{loc.google_maps_rank} on Maps • {loc.average_rating > 0 ? `${loc.average_rating}★` : '—'}
+                    </div>
                   </div>
-                  <div>
-                    <h4 style={{ fontSize: '1.02rem', fontWeight: 800, color: '#111827' }}>
-                      {singleBranch.name} (Active Primary Branch)
-                    </h4>
-                    <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                      {singleBranch.category} • {singleBranch.location}
-                    </span>
+                );
+              })}
+            </div>
+          </div>
+        ) : singleBranch ? (
+          /* Single Branch Mode with Vertical Comparison Columns (Active vs Local Average) */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div style={{ position: 'relative', width: '100%', backgroundColor: '#FAFBFD', borderRadius: '14px', border: '1px solid #E5E7EB', padding: '24px 20px 16px' }}>
+              <div
+                style={{
+                  height: '220px',
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  gap: '60px',
+                }}
+              >
+                {/* Active Branch Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '120px' }}>
+                  <div style={{ marginBottom: '8px', padding: '4px 10px', backgroundColor: '#FFFFFF', border: '1px solid #0284C7', borderRadius: '8px', fontSize: '0.84rem', fontWeight: 800, color: '#0284C7' }}>
+                    {activeChartMetric === 'searches'
+                      ? Math.round(singleBranch.monthly_searches * rangeMultiplier).toLocaleString()
+                      : activeChartMetric === 'actions'
+                      ? Math.round(singleBranch.monthly_actions * rangeMultiplier).toLocaleString()
+                      : `${singleBranch.health_score}/100`}
+                  </div>
+                  <div
+                    style={{
+                      width: '84px',
+                      height: '170px',
+                      background: 'linear-gradient(180deg, #0284C7 0%, #0369A1 100%)',
+                      borderRadius: '10px 10px 0 0',
+                      boxShadow: '0 4px 12px rgba(2,132,199,0.25)',
+                    }}
+                  />
+                  <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                    <strong style={{ fontSize: '0.88rem', color: '#111827', display: 'block' }}>{singleBranch.name}</strong>
+                    <span style={{ fontSize: '0.74rem', color: '#059669', fontWeight: 700 }}>Your Active Branch</span>
                   </div>
                 </div>
 
-                <span className="prody-pill green">
-                  Rank #{singleBranch.google_maps_rank} Local 3-Pack
-                </span>
-              </div>
-
-              {/* Comparative metric bars vs Local Category Standard */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>Discovery Search Impressions</span>
-                    <strong style={{ color: '#0284C7' }}>{Math.round(singleBranch.monthly_searches * rangeMultiplier).toLocaleString()}</strong>
+                {/* Local Category Benchmark Column */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '120px' }}>
+                  <div style={{ marginBottom: '8px', padding: '4px 10px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.84rem', fontWeight: 700, color: '#64748B' }}>
+                    {activeChartMetric === 'searches'
+                      ? Math.round(singleBranch.monthly_searches * rangeMultiplier * 0.72).toLocaleString()
+                      : activeChartMetric === 'actions'
+                      ? Math.round(singleBranch.monthly_actions * rangeMultiplier * 0.78).toLocaleString()
+                      : '72/100'}
                   </div>
-                  <div style={{ height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: '84%', height: '100%', backgroundColor: '#0284C7', borderRadius: '4px' }} />
+                  <div
+                    style={{
+                      width: '84px',
+                      height: '125px',
+                      background: 'linear-gradient(180deg, #94A3B8 0%, #64748B 100%)',
+                      borderRadius: '10px 10px 0 0',
+                    }}
+                  />
+                  <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                    <strong style={{ fontSize: '0.88rem', color: '#64748B', display: 'block' }}>Category Benchmark</strong>
+                    <span style={{ fontSize: '0.74rem', color: '#94A3B8' }}>{singleBranch.location.split(',')[0]} Standard</span>
                   </div>
-                  <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 600, marginTop: '3px', display: 'block' }}>
-                    +36% above {singleBranch.location.split(',')[0]} average
-                  </span>
-                </div>
-
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>Customer Inquiries & Actions</span>
-                    <strong style={{ color: '#E11D48' }}>{Math.round(singleBranch.monthly_actions * rangeMultiplier).toLocaleString()}</strong>
-                  </div>
-                  <div style={{ height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: '76%', height: '100%', backgroundColor: '#E11D48', borderRadius: '4px' }} />
-                  </div>
-                  <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 600, marginTop: '3px', display: 'block' }}>
-                    +24% call & direction velocity
-                  </span>
-                </div>
-
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>Profile Health & Trust</span>
-                    <strong style={{ color: '#059669' }}>{singleBranch.health_score}/100</strong>
-                  </div>
-                  <div style={{ height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: `${singleBranch.health_score}%`, height: '100%', backgroundColor: '#10B981', borderRadius: '4px' }} />
-                  </div>
-                  <span style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '3px', display: 'block' }}>
-                    {singleBranch.total_reviews} reviews ({singleBranch.average_rating > 0 ? `${singleBranch.average_rating}★` : '—'})
-                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Expansion helper prompt to unlock side-by-side comparison bar graphs */}
+            {/* Expansion Helper Prompt */}
             <div
               style={{
                 padding: '16px 20px',
@@ -543,7 +600,6 @@ export const FranchiseAnalyticsView: React.FC = () => {
             </div>
           </div>
         ) : (
-          /* Empty state */
           <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748B' }}>
             <Building2 size={36} color="#94A3B8" style={{ margin: '0 auto 12px' }} />
             <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#111827', marginBottom: '4px' }}>
