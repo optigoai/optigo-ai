@@ -155,77 +155,81 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   decoration: const BoxDecoration(
                     border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.5)),
                   ),
-                  child: Row(
-                    children: [
-                      // Tab 0: Dashboard & Sentiment Analysis
-                      InkWell(
-                        onTap: () => setState(() => _activeTabIndex = 0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: _activeTabIndex == 0 ? const Color(0xFF4F46E5) : Colors.transparent,
-                                width: 3,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        // Tab 0: Dashboard & Sentiment Analysis
+                        InkWell(
+                          onTap: () => setState(() => _activeTabIndex = 0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: _activeTabIndex == 0 ? const Color(0xFF4F46E5) : Colors.transparent,
+                                  width: 3,
+                                ),
                               ),
                             ),
-                          ),
-                          child: Text(
-                            'Dashboard & Sentiment Analysis',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13.5,
-                              fontWeight: _activeTabIndex == 0 ? FontWeight.w800 : FontWeight.w600,
-                              color: _activeTabIndex == 0 ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                            child: Text(
+                              'Dashboard & Sentiment Analysis',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: _activeTabIndex == 0 ? FontWeight.w800 : FontWeight.w600,
+                                color: _activeTabIndex == 0 ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 18),
+                        const SizedBox(width: 12),
 
-                      // Tab 1: Review Management
-                      InkWell(
-                        onTap: () => setState(() => _activeTabIndex = 1),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: _activeTabIndex == 1 ? const Color(0xFF4F46E5) : Colors.transparent,
-                                width: 3,
+                        // Tab 1: Review Management
+                        InkWell(
+                          onTap: () => setState(() => _activeTabIndex = 1),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: _activeTabIndex == 1 ? const Color(0xFF4F46E5) : Colors.transparent,
+                                  width: 3,
+                                ),
                               ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Review Management',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13.5,
-                                  fontWeight: _activeTabIndex == 1 ? FontWeight.w800 : FontWeight.w600,
-                                  color: _activeTabIndex == 1 ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF4F46E5),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  totalCount > 1000 ? '${(totalCount / 1000).toStringAsFixed(1)}K' : '$totalCount',
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Review Management',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: _activeTabIndex == 1 ? FontWeight.w800 : FontWeight.w600,
+                                    color: _activeTabIndex == 1 ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF4F46E5),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    totalCount > 1000 ? '${(totalCount / 1000).toStringAsFixed(1)}K' : '$totalCount',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
@@ -845,9 +849,23 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                           ),
                         ],
                       ),
-                      Text(
-                        rev.reviewDate ?? 'Recent',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8)),
+                      Builder(
+                        builder: (context) {
+                          String dateStr = rev.reviewDate ?? 'Recent';
+                          if (dateStr.contains('T')) {
+                            try {
+                              final dt = DateTime.parse(dateStr);
+                              const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                              dateStr = '${dt.day} ${months[dt.month - 1]}, ${dt.year}';
+                            } catch (_) {
+                              dateStr = dateStr.split('T')[0];
+                            }
+                          }
+                          return Text(
+                            dateStr,
+                            style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF94A3B8)),
+                          );
+                        },
                       ),
                     ],
                   ),
