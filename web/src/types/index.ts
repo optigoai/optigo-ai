@@ -43,6 +43,9 @@ export interface BusinessLocation {
   missing_fields: string[];
   monthly_searches: number;
   monthly_actions: number;
+  public_website_slug?: string;
+  public_website_status?: 'published' | 'draft' | 'unpublished';
+  public_website_url?: string;
   last_synced?: string;
   created_at?: string;
 }
@@ -62,6 +65,31 @@ export interface FranchiseOverview {
   franchise_avg_rating: number;
   positive_sentiment_pct: number;
   unreplied_reviews_count: number;
+  response_rate_pct?: number;
+  discovery_searches_pct?: number;
+  direct_searches_pct?: number;
+  search_views_breakdown?: {
+    direct_searches: number;
+    discovery_searches: number;
+    maps_views: number;
+  };
+  customer_actions_breakdown?: {
+    phone_calls: number;
+    direction_requests: number;
+    website_clicks: number;
+  };
+  top_keywords_pulse?: {
+    keyword: string;
+    search_volume: number;
+    rank: number;
+    change: number;
+  }[];
+  urgent_actions?: {
+    title: string;
+    category: string;
+    impact: string;
+    action_tab: string;
+  }[];
   top_performing_location?: {
     id: string;
     name: string;
