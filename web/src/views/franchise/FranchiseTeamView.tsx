@@ -2,7 +2,7 @@
 // OptigoAI Enterprise — Prody Light Team View
 // ==================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useFranchise } from '../../context/FranchiseContext';
 import {
@@ -15,19 +15,28 @@ import { TeamMember } from '../../types';
 
 export const FranchiseTeamView: React.FC = () => {
   const { user } = useAuth();
-  const { locations } = useFranchise();
+  const { locations, team: contextTeam } = useFranchise();
 
-  const [team, setTeam] = useState<TeamMember[]>([
-    {
-      id: 'm-1',
-      name: user?.full_name || 'Organization Admin',
-      email: user?.email || 'admin@optigoai.com',
-      role: 'Franchise Owner',
-      assigned_regions: ['All Regions'],
-      assigned_locations: ['All Locations'],
-      status: 'Active',
-    },
-  ]);
+  const [team, setTeam] = useState<TeamMember[]>(() => {
+    if (contextTeam && contextTeam.length > 0) return contextTeam;
+    return [
+      {
+        id: user?.id || 'm-1',
+        name: user?.full_name || 'Organization Admin',
+        email: user?.email || 'admin@optigoai.com',
+        role: 'Franchise Owner',
+        assigned_regions: ['All Regions'],
+        assigned_locations: ['All Locations'],
+        status: 'Active',
+      },
+    ];
+  });
+
+  useEffect(() => {
+    if (contextTeam && contextTeam.length > 0) {
+      setTeam(contextTeam);
+    }
+  }, [contextTeam]);
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteName, setInviteName] = useState('');

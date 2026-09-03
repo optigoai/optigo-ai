@@ -72,6 +72,17 @@ async def get_profile_audit(
     return await service.get_profile_audit(org_id)
 
 
+@router.get("/team", status_code=status.HTTP_200_OK)
+async def get_franchise_team(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> List[Dict[str, Any]]:
+    """Get real users and team members for this franchise organization."""
+    org_id = get_org_id(current_user)
+    service = FranchiseService(db)
+    return await service.get_franchise_team(org_id)
+
+
 @router.post("/bulk-sync", status_code=status.HTTP_200_OK)
 async def trigger_bulk_sync(
     db: AsyncSession = Depends(get_db),

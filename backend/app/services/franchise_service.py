@@ -491,3 +491,29 @@ class FranchiseService:
                 key=lambda a: (0 if a["urgency"] == "High" else 1, a["health_score"]),
             ),
         }
+
+    async def get_franchise_team(self, organization_id: str) -> List[Dict[str, Any]]:
+        """
+        Query real users assigned to the organization.
+        """
+        from app.models.user import User, UserRole
+        stmt = select(User).where(User.organization_id == organization_id)
+        res = await self.db.execute(stmt)
+        users = res.scalars().all()
+
+        team = []
+        for u in users:
+            role_label = (
+                "Franchise Owner" if u.role == UserRole.OWNER
+                else ("Enterprise Admin" if u.role == UserRole.ADMIN else "Store Manager")
+            )
+            team.append({
+                "id": u.id,
+                "name": u.full_name or u.email.split("@")[0].capitalize(),
+                "email": u.email,
+                "role": role_label,
+                "assigned_regions": ["All Regions"],
+                "assigned_locations": ["All Locations"],
+                "status": "Active" if u.is_active else "Invited",
+            })
+        return team

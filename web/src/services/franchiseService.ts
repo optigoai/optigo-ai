@@ -9,6 +9,7 @@ import {
   FranchiseBenchmarks,
   RegionSummary,
   ProfileAuditData,
+  TeamMember,
 } from '../types';
 
 export const franchiseService = {
@@ -94,6 +95,15 @@ export const franchiseService = {
         issues_by_type: { unreplied_reviews: 0, missing_phone: 0, missing_website: 0, missing_description: 0, low_health_score: 0 },
         locations_requiring_fixes: [],
       };
+    }
+  },
+
+  async getTeam(): Promise<TeamMember[]> {
+    try {
+      const res = await apiRequest<TeamMember[]>('/franchise/team');
+      return res || [];
+    } catch {
+      return [];
     }
   },
 

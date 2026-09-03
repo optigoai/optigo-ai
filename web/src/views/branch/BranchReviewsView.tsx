@@ -203,18 +203,18 @@ export const BranchReviewsView: React.FC = () => {
       ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="reviews-view" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* 1. Header & Navigation Tabs */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
         {/* Two Separate Tabs: Dashboard & Sentiment Analysis vs Review Management */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
+        <div className="reviews-main-tabs" style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
           <button
             onClick={() => setActiveMainTab('management')}
             style={{
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '1.25rem',
+              fontSize: '0.9rem',
               fontWeight: 800,
               color: activeMainTab === 'management' ? '#1255E6' : '#111827',
               paddingBottom: '8px',
@@ -231,7 +231,7 @@ export const BranchReviewsView: React.FC = () => {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '1.25rem',
+              fontSize: '0.9rem',
               fontWeight: 800,
               color: activeMainTab === 'reviews' ? '#1255E6' : '#111827',
               paddingBottom: '8px',
@@ -245,7 +245,7 @@ export const BranchReviewsView: React.FC = () => {
             <span>Review Management</span>
             <span
               style={{
-                backgroundColor: '#1255E6',
+                  backgroundColor: '#0F46CB',
                 color: '#FFFFFF',
                 borderRadius: '12px',
                 padding: '2px 8px',
@@ -462,13 +462,13 @@ export const BranchReviewsView: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <button
                   className="btn btn-secondary btn-sm"
-                  style={{ backgroundColor: '#6D28D9', color: '#FFFFFF', border: 'none', gap: '6px', fontWeight: 700 }}
+                  style={{ backgroundColor: '#0F46CB', color: '#FFFFFF', border: 'none', gap: '6px', fontWeight: 700 }}
                 >
                   <Download size={13} /> Export CSV
                 </button>
                 <button
                   className="btn btn-secondary btn-sm"
-                  style={{ backgroundColor: '#6D28D9', color: '#FFFFFF', border: 'none', gap: '6px', fontWeight: 700 }}
+                  style={{ backgroundColor: '#0F46CB', color: '#FFFFFF', border: 'none', gap: '6px', fontWeight: 700 }}
                 >
                   <Share2 size={13} /> Share
                 </button>
@@ -488,9 +488,9 @@ export const BranchReviewsView: React.FC = () => {
                       cursor: 'pointer',
                       fontSize: '0.88rem',
                       fontWeight: 700,
-                      color: selectedTimeframe === tf ? '#6D28D9' : '#6B7280',
+                      color: selectedTimeframe === tf ? '#0F46CB' : '#6B7280',
                       paddingBottom: '4px',
-                      borderBottom: selectedTimeframe === tf ? '2px solid #6D28D9' : '2px solid transparent',
+                      borderBottom: selectedTimeframe === tf ? '2px solid #0F46CB' : '2px solid transparent',
                     }}
                   >
                     {tf}
@@ -523,7 +523,7 @@ export const BranchReviewsView: React.FC = () => {
                         width: '26px',
                         height: '26px',
                         borderRadius: '50%',
-                        backgroundColor: '#6D28D9',
+                        backgroundColor: '#0F46CB',
                         color: '#FFFFFF',
                         display: 'flex',
                         alignItems: 'center',
@@ -616,7 +616,7 @@ export const BranchReviewsView: React.FC = () => {
                 <button
                   className="btn btn-primary"
                   style={{
-                    backgroundColor: '#5B21B6',
+                    backgroundColor: '#0F46CB',
                     color: '#FFFFFF',
                     border: 'none',
                     borderRadius: '8px',
@@ -630,7 +630,7 @@ export const BranchReviewsView: React.FC = () => {
                 </button>
 
                 {/* Trending Sentiment For Last 7 days */}
-                <div style={{ padding: '16px 20px', backgroundColor: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: '10px' }}>
+                <div style={{ padding: '16px 20px', backgroundColor: '#EEF4FE', border: '1px solid #BFDBFE', borderRadius: '10px' }}>
                   <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#111827', marginBottom: '12px' }}>
                     Trending Sentiment For Last 7 days
                   </h4>
@@ -644,7 +644,7 @@ export const BranchReviewsView: React.FC = () => {
                           gap: '6px',
                           padding: '6px 14px',
                           borderRadius: '20px',
-                          backgroundColor: '#6D28D9',
+                          backgroundColor: '#0F46CB',
                           color: '#FFFFFF',
                           fontSize: '0.82rem',
                           fontWeight: 700,
@@ -986,7 +986,7 @@ export const BranchReviewsView: React.FC = () => {
                       <button
                         onClick={() => handleOpenAiReply(rev)}
                         style={{
-                          backgroundColor: '#6D28D9',
+                          backgroundColor: '#0F46CB',
                           color: '#FFFFFF',
                           border: 'none',
                           borderRadius: '6px',
@@ -1036,7 +1036,7 @@ export const BranchReviewsView: React.FC = () => {
                       <button
                         onClick={() => setActiveBranchTab('content')}
                         style={{
-                          backgroundColor: '#6D28D9',
+                          backgroundColor: '#0F46CB',
                           color: '#FFFFFF',
                           border: 'none',
                           borderRadius: '6px',
@@ -1108,7 +1108,7 @@ export const BranchReviewsView: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={18} color="#6D28D9" />
+                <Sparkles size={18} color="#0F46CB" />
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827' }}>
                   AI Review Reply Generator
                 </h3>
@@ -1142,9 +1142,9 @@ export const BranchReviewsView: React.FC = () => {
                     style={{
                       padding: '4px 10px',
                       borderRadius: '6px',
-                      border: selectedTone === tone ? '1px solid #6D28D9' : '1px solid #D1D5DB',
-                      backgroundColor: selectedTone === tone ? '#F5F3FF' : '#FFFFFF',
-                      color: selectedTone === tone ? '#6D28D9' : '#4B5563',
+                      border: selectedTone === tone ? '1px solid #0F46CB' : '1px solid #D1D5DB',
+                      backgroundColor: selectedTone === tone ? '#EEF4FE' : '#FFFFFF',
+                      color: selectedTone === tone ? '#0F46CB' : '#4B5563',
                       fontSize: '0.78rem',
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -1188,7 +1188,7 @@ export const BranchReviewsView: React.FC = () => {
                 onClick={handlePostReply}
                 disabled={isPosting || !generatedReply}
                 className="btn btn-primary btn-sm"
-                style={{ backgroundColor: '#6D28D9', color: '#FFFFFF', border: 'none', gap: '6px' }}
+                style={{ backgroundColor: '#0F46CB', color: '#FFFFFF', border: 'none', gap: '6px' }}
               >
                 <Send size={13} />
                 <span>{isPosting ? 'Posting...' : 'Post Reply to Google'}</span>

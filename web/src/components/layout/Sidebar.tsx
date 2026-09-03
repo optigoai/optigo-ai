@@ -22,7 +22,6 @@ import {
   Zap,
   MessageSquare,
   Settings,
-  Search,
   HelpCircle,
   Bell,
   PanelLeftClose,
@@ -52,7 +51,7 @@ export const Sidebar: React.FC = () => {
   } = useLocation();
 
   const { logout, user } = useAuth();
-  const { locations, audit } = useFranchise();
+  const { locations, audit, regions, team } = useFranchise();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Primary Navigation (Home, Locations, Insights, AI Analysis, Reports)
@@ -64,11 +63,26 @@ export const Sidebar: React.FC = () => {
     { id: 'reports', label: 'Reports', icon: FileText },
   ];
 
+  // Real counts derived from database records
+  const realRegionsCount = (
+    regions.length > 0 
+      ? regions.length 
+      : new Set(locations.map((l) => l.region).filter(Boolean)).size || (locations.length > 0 ? 1 : 0)
+  ).toString();
+
+  const realTeamCount = (team.length > 0 ? team.length : 1).toString();
+
   // Secondary Group Navigation (Governance)
   const franchiseSecondary = [
-    { id: 'regions', label: 'Regions', icon: Compass, count: '3' },
-    { id: 'team', label: 'People', icon: Users, count: '6' },
-    { id: 'audit', label: 'Profile Audit', icon: ShieldCheck, tag: audit.attention_required_count > 0 ? '!' : undefined },
+    { id: 'regions', label: 'Regions', icon: Compass, count: realRegionsCount },
+    { id: 'team', label: 'People', icon: Users, count: realTeamCount },
+    {
+      id: 'audit',
+      label: 'Profile Audit',
+      icon: ShieldCheck,
+      count: audit.attention_required_count > 0 ? audit.attention_required_count.toString() : undefined,
+      tag: audit.attention_required_count > 0 ? '!' : undefined,
+    },
   ];
 
   // Branch Mode Navigation
@@ -104,6 +118,7 @@ export const Sidebar: React.FC = () => {
     return (
       <button
         key={item.id}
+        className="sidebar-nav-item"
         onClick={() => setTab(item.id)}
         title={isSidebarCollapsed ? item.label : undefined}
         style={{
@@ -387,10 +402,6 @@ export const Sidebar: React.FC = () => {
           }}
           title={isSidebarCollapsed ? "Search network (Click to expand)" : undefined}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', flexShrink: 0 }}>
-            <Search size={isSidebarCollapsed ? 18 : 16} color="#ffffff" />
-          </div>
-          
           <div style={{
             display: 'flex',
             alignItems: 'center',

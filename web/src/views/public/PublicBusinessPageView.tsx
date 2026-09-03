@@ -86,7 +86,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
 
   if (isLoading) {
     return (
-      <div style={{ width: '100vw', minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284C7', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+      <div style={{ width: '100vw', minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284C7', fontFamily: 'Manrope, sans-serif' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: '40px', height: '40px', border: '3px solid #E2E8F0', borderTopColor: '#0284C7', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>Loading official business page...</p>
@@ -97,7 +97,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
 
   if (error || !siteData) {
     return (
-      <div style={{ width: '100vw', minHeight: '100vh', backgroundColor: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+      <div style={{ width: '100vw', minHeight: '100vh', backgroundColor: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'Manrope, sans-serif' }}>
         <div style={{ maxWidth: '440px', width: '100%', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '36px 28px', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#FEE2E2', color: '#E11D48', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
             <Globe size={24} />
@@ -141,7 +141,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
   const totalReviews = reviews?.total_reviews || 0;
 
   return (
-    <div style={{ backgroundColor: '#FFFFFF', color: '#0F172A', fontFamily: 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif', minHeight: '100vh', scrollBehavior: 'smooth' }}>
+    <div style={{ backgroundColor: '#FFFFFF', color: '#0F172A', fontFamily: 'Manrope, -apple-system, BlinkMacSystemFont, sans-serif', minHeight: '100vh', scrollBehavior: 'smooth' }}>
       {/* Custom CSS overrides from Admin */}
       {siteData.custom_css && (
         <style dangerouslySetInnerHTML={{ __html: siteData.custom_css }} />

@@ -9,6 +9,7 @@ import {
   FranchiseBenchmarks,
   RegionSummary,
   ProfileAuditData,
+  TeamMember,
 } from '../types';
 import { franchiseService } from '../services/franchiseService';
 import { useAuth } from './AuthContext';
@@ -21,6 +22,7 @@ interface FranchiseContextType {
   benchmarks: FranchiseBenchmarks;
   regions: RegionSummary[];
   audit: ProfileAuditData;
+  team: TeamMember[];
   isLoading: boolean;
   isSyncing: boolean;
   selectedDateRange: DateRange;
@@ -78,6 +80,7 @@ export const FranchiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [benchmarks, setBenchmarks] = useState<FranchiseBenchmarks>(EMPTY_BENCHMARKS);
   const [regions, setRegions] = useState<RegionSummary[]>([]);
   const [audit, setAudit] = useState<ProfileAuditData>(EMPTY_AUDIT);
+  const [team, setTeam] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [selectedDateRange, setSelectedDateRange] = useState<DateRange>('30d');
@@ -91,17 +94,19 @@ export const FranchiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setBenchmarks(EMPTY_BENCHMARKS);
       setRegions([]);
       setAudit(EMPTY_AUDIT);
+      setTeam([]);
       return;
     }
 
     setIsLoading(true);
     try {
-      const [ov, locs, bm, regs, aud] = await Promise.all([
+      const [ov, locs, bm, regs, aud, tm] = await Promise.all([
         franchiseService.getOverview(),
         franchiseService.getLocations(),
         franchiseService.getBenchmarks(),
         franchiseService.getRegions(),
         franchiseService.getAudit(),
+        franchiseService.getTeam(),
       ]);
 
       setOverview(ov);
@@ -109,6 +114,7 @@ export const FranchiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setBenchmarks(bm || EMPTY_BENCHMARKS);
       setRegions(regs || []);
       setAudit(aud || EMPTY_AUDIT);
+      setTeam(tm || []);
     } catch {
       // Clear on error
     } finally {
@@ -150,6 +156,7 @@ export const FranchiseProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         benchmarks,
         regions,
         audit,
+        team,
         isLoading,
         isSyncing,
         selectedDateRange,
