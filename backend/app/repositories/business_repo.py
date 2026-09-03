@@ -93,6 +93,7 @@ class BusinessRepository:
         website: Optional[str] = None,
         phone: Optional[str] = None,
         description: Optional[str] = None,
+        services: Optional[str] = None,
     ) -> Business:
         if name is not None:
             business.name = name
@@ -106,5 +107,7 @@ class BusinessRepository:
             business.phone = phone
         if description is not None:
             business.description = description
+        if services is not None:
+            business.services = services
         await self.db.flush()
         return business

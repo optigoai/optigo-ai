@@ -412,7 +412,7 @@ export const BusinessOnboardingView: React.FC<BusinessOnboardingViewProps> = ({ 
           )}
 
           {step < 3 ? (
-            <button type="button" onClick={handleNext} className="btn btn-coral btn-sm" style={{ gap: '6px' }}>
+            <button type="button" onClick={handleNext} className="btn btn-primary btn-sm" style={{ gap: '6px' }}>
               <span>Continue</span>
               <ArrowRight size={13} />
             </button>
@@ -421,7 +421,7 @@ export const BusinessOnboardingView: React.FC<BusinessOnboardingViewProps> = ({ 
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="btn btn-coral btn-sm"
+              className="btn btn-primary btn-sm"
               style={{ gap: '6px' }}
             >
               <span>{isSubmitting ? 'Connecting...' : 'Launch Location Profile'}</span>

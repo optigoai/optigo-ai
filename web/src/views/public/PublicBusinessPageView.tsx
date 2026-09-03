@@ -108,7 +108,7 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
           </p>
           <a
             href="/"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#0F172A', color: '#FFFFFF', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#1255E6', color: '#FFFFFF', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none' }}
           >
             <span>Visit OptigoAI Home</span>
             <ArrowRight size={14} />
@@ -162,12 +162,12 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           {/* Business Brand */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#EEF4FE', color: '#1255E6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem', border: '1px solid #BFDBFE' }}>
               {business_name.charAt(0)}
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#173D35', letterSpacing: '-0.02em' }}>
                   {business_name}
                 </span>
                 <span style={{ padding: '2px 6px', backgroundColor: '#DCFCE7', color: '#15803D', fontSize: '0.68rem', fontWeight: 700, borderRadius: '4px' }}>
@@ -362,24 +362,24 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
                 style={{
                   width: '100%',
                   height: '340px',
-                  backgroundColor: '#0F172A',
+                  background: 'linear-gradient(135deg, #EEF4FE 0%, #EFF6FF 100%)',
                   borderRadius: '20px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   padding: '30px',
-                  color: '#FFFFFF',
+                  color: '#173D35',
                   textAlign: 'center',
-                  border: '1px solid #1E293B',
-                  boxShadow: '0 12px 30px rgba(0,0,0,0.08)',
+                  border: '1px solid #99F6E4',
+                  boxShadow: '0 12px 30px rgba(15,118,110,0.12)',
                 }}
               >
-                <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: '#1E293B', border: '1px solid #334155', color: '#38BDF8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', fontWeight: 800, marginBottom: '16px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: '#FFFFFF', border: '1px solid #BFDBFE', color: '#1255E6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', fontWeight: 800, marginBottom: '16px', boxShadow: '0 6px 16px rgba(18,85,230,0.1)' }}>
                   {business_name.charAt(0)}
                 </div>
                 <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '4px' }}>{business_name}</h3>
-                <span style={{ fontSize: '0.86rem', color: '#94A3B8' }}>{category} {location ? `• ${location}` : ''}</span>
+                <span style={{ fontSize: '0.86rem', color: '#527267' }}>{category} {location ? `• ${location}` : ''}</span>
               </div>
             )}
           </div>
@@ -732,12 +732,12 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
       )}
 
       {/* 9. Bottom CTA Banner */}
-      <section style={{ padding: '60px 24px', backgroundColor: '#0F172A', color: '#FFFFFF', textAlign: 'center' }}>
+      <section style={{ padding: '60px 24px', background: 'linear-gradient(135deg, #EEF4FE 0%, #F0F5FF 100%)', color: '#0F172A', textAlign: 'center', borderTop: '1px solid #BFDBFE', borderBottom: '1px solid #BFDBFE' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '12px', letterSpacing: '-0.02em' }}>
             {cta?.title || `Connect with ${business_name}`}
           </h2>
-          <p style={{ fontSize: '0.95rem', color: '#94A3B8', lineHeight: 1.6, marginBottom: '24px' }}>
+          <p style={{ fontSize: '0.95rem', color: '#527267', lineHeight: 1.6, marginBottom: '24px' }}>
             {cta?.description || (location ? `Visit us in ${location} or navigate directly on Google Maps.` : `Contact ${business_name} today.`)}
           </p>
 
@@ -766,14 +766,14 @@ export const PublicBusinessPageView: React.FC<PublicBusinessPageViewProps> = ({
       </section>
 
       {/* 10. Footer */}
-      <footer style={{ backgroundColor: '#090D16', color: '#64748B', padding: '24px', fontSize: '0.78rem', borderTop: '1px solid #1E293B' }}>
+      <footer style={{ backgroundColor: '#F8FCFA', color: '#6B8B80', padding: '24px', fontSize: '0.78rem', borderTop: '1px solid #DCE7E3' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             © {new Date().getFullYear()} {business_name}. All rights reserved.
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>Official page hosted on</span>
-            <a href="/" style={{ color: '#94A3B8', fontWeight: 700, textDecoration: 'none' }}>OptigoAI Business Network</a>
+            <a href="/" style={{ color: '#1255E6', fontWeight: 700, textDecoration: 'none' }}>OptigoAI Business Network</a>
           </div>
         </div>
       </footer>

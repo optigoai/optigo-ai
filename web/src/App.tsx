@@ -16,10 +16,10 @@ import { BusinessOnboardingView } from './views/onboarding/BusinessOnboardingVie
 // Franchise Multi-Location Views
 import { FranchiseOverviewView } from './views/franchise/FranchiseOverviewView';
 import { FranchiseLocationsView } from './views/franchise/FranchiseLocationsView';
-import { FranchiseBenchmarksView } from './views/franchise/FranchiseBenchmarksView';
+import { FranchiseInsightsView } from './views/franchise/FranchiseInsightsView';
+import { FranchiseAiAnalysisView } from './views/franchise/FranchiseAiAnalysisView';
 import { FranchiseRegionsView } from './views/franchise/FranchiseRegionsView';
 import { FranchiseAuditView } from './views/franchise/FranchiseAuditView';
-import { FranchiseAnalyticsView } from './views/franchise/FranchiseAnalyticsView';
 import { FranchiseTeamView } from './views/franchise/FranchiseTeamView';
 import { FranchiseReportsView } from './views/franchise/FranchiseReportsView';
 
@@ -52,7 +52,7 @@ const MainRouter: React.FC = () => {
 
   if (isAuthLoading) {
     return (
-      <div style={{ width: '100vw', height: '100vh', background: '#0B0F19', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60A5FA', fontSize: '0.95rem' }}>
+      <div style={{ width: '100vw', height: '100vh', background: '#F0F4F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1255E6', fontSize: '0.95rem' }}>
         <span>Loading OptigoAI Enterprise...</span>
       </div>
     );
@@ -78,10 +78,10 @@ const MainRouter: React.FC = () => {
         <>
           {activeFranchiseTab === 'overview' && <FranchiseOverviewView />}
           {activeFranchiseTab === 'locations' && <FranchiseLocationsView />}
-          {activeFranchiseTab === 'benchmarks' && <FranchiseBenchmarksView />}
+          {(activeFranchiseTab === 'insights' || activeFranchiseTab === 'benchmarks' || activeFranchiseTab === 'analytics') && <FranchiseInsightsView />}
+          {(activeFranchiseTab === 'ai-analysis' || activeFranchiseTab === 'advisor') && <FranchiseAiAnalysisView />}
           {activeFranchiseTab === 'regions' && <FranchiseRegionsView />}
           {activeFranchiseTab === 'audit' && <FranchiseAuditView />}
-          {activeFranchiseTab === 'analytics' && <FranchiseAnalyticsView />}
           {activeFranchiseTab === 'team' && <FranchiseTeamView />}
           {activeFranchiseTab === 'reports' && <FranchiseReportsView />}
         </>

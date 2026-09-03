@@ -32,23 +32,23 @@ export const FranchiseBenchmarksView: React.FC = () => {
   const [activeMetricTab, setActiveMetricTab] = useState<'health' | 'rating' | 'actions' | 'reviews'>('health');
 
   const averages = benchmarks.franchise_averages || {
-    health_score: overview?.aggregate_health_score || 65,
-    rating: overview?.franchise_avg_rating || 3.6,
-    reviews_per_location: 8,
-    completeness_score: 85,
-    monthly_actions: 170,
+    health_score: overview?.aggregate_health_score || 0,
+    rating: overview?.franchise_avg_rating || 0,
+    reviews_per_location: locations.length > 0 ? Math.round((overview?.total_reviews || 0) / locations.length) : 0,
+    completeness_score: locations.length > 0 ? Math.round(locations.reduce((s, l) => s + (l.completeness_score || 0), 0) / locations.length) : 0,
+    monthly_actions: locations.length > 0 ? Math.round((overview?.total_customer_actions || 0) / locations.length) : 0,
   };
 
-  const sortedByHealth = [...locations].sort((a, b) => b.health_score - a.health_score);
+  const sortedByHealth = [...locations].sort((a, b) => (b.health_score || 0) - (a.health_score || 0));
   const sortedByActions = [...locations].sort((a, b) => (b.monthly_actions || 0) - (a.monthly_actions || 0));
-  const sortedByRating = [...locations].sort((a, b) => b.average_rating - a.average_rating);
+  const sortedByRating = [...locations].sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
 
   const topBranch = sortedByHealth[0];
   const secondBranch = sortedByHealth[1];
   const thirdBranch = sortedByHealth[2];
 
   const maxHealth = 100;
-  const maxActions = Math.max(...locations.map((l) => l.monthly_actions || 100), 200);
+  const maxActions = Math.max(...locations.map((l) => l.monthly_actions || 0), 10);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', maxWidth: '1280px', margin: '0 auto', width: '100%' }}>
@@ -157,7 +157,7 @@ export const FranchiseBenchmarksView: React.FC = () => {
               Avg Monthly Actions
             </span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '6px' }}>
-              <span style={{ fontSize: '1.85rem', fontWeight: 900, color: '#7c3aed' }}>
+              <span style={{ fontSize: '1.85rem', fontWeight: 900, color: '#1255E6' }}>
                 {averages.monthly_actions}
               </span>
               <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>calls & clicks</span>
@@ -188,7 +188,7 @@ export const FranchiseBenchmarksView: React.FC = () => {
               onClick={() => selectLocation(topBranch.id)}
               style={{
                 padding: '20px',
-                borderRadius: '16px',
+                borderRadius: '24px',
                 background: 'linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)',
                 border: '2px solid #f59e0b',
                 boxShadow: '0 8px 20px -4px rgba(245,158,11,0.2)',
@@ -236,7 +236,7 @@ export const FranchiseBenchmarksView: React.FC = () => {
                 onClick={() => selectLocation(secondBranch.id)}
                 style={{
                   padding: '20px',
-                  borderRadius: '16px',
+                  borderRadius: '24px',
                   background: 'linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%)',
                   border: '1.5px solid #cbd5e1',
                   cursor: 'pointer',
@@ -283,7 +283,7 @@ export const FranchiseBenchmarksView: React.FC = () => {
                 onClick={() => selectLocation(thirdBranch.id)}
                 style={{
                   padding: '20px',
-                  borderRadius: '16px',
+                  borderRadius: '24px',
                   background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
                   border: '1.5px solid #e2e8f0',
                   cursor: 'pointer',
@@ -323,7 +323,7 @@ export const FranchiseBenchmarksView: React.FC = () => {
               <div
                 style={{
                   padding: '20px',
-                  borderRadius: '16px',
+                  borderRadius: '24px',
                   backgroundColor: '#f8fafc',
                   border: '1.5px dashed #cbd5e1',
                   display: 'flex',
@@ -419,7 +419,7 @@ export const FranchiseBenchmarksView: React.FC = () => {
               val = loc.monthly_actions || 100;
               displayVal = `${val} actions`;
               barPct = (val / maxActions) * 100;
-              barColor = '#7c3aed';
+              barColor = '#1255E6';
               delta = val - averages.monthly_actions;
             } else if (activeMetricTab === 'rating') {
               val = loc.average_rating;

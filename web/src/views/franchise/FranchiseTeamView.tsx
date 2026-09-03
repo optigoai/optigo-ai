@@ -20,8 +20,8 @@ export const FranchiseTeamView: React.FC = () => {
   const [team, setTeam] = useState<TeamMember[]>([
     {
       id: 'm-1',
-      name: user?.full_name || 'Ahmed Yazeen',
-      email: user?.email || 'director@casaraza.com',
+      name: user?.full_name || 'Organization Admin',
+      email: user?.email || 'admin@optigoai.com',
       role: 'Franchise Owner',
       assigned_regions: ['All Regions'],
       assigned_locations: ['All Locations'],
@@ -75,7 +75,7 @@ export const FranchiseTeamView: React.FC = () => {
           </div>
         </div>
 
-        <button onClick={() => setIsInviteOpen(true)} className="btn btn-coral btn-sm" style={{ gap: '6px' }}>
+        <button onClick={() => setIsInviteOpen(true)} className="btn btn-primary btn-sm" style={{ gap: '6px' }}>
           <Plus size={14} />
           <span>Invite Member</span>
         </button>
@@ -186,7 +186,7 @@ export const FranchiseTeamView: React.FC = () => {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
                 <button type="button" onClick={() => setIsInviteOpen(false)} className="btn btn-secondary btn-sm">Cancel</button>
-                <button type="submit" className="btn btn-coral btn-sm">
+                <button type="submit" className="btn btn-primary btn-sm">
                   <Check size={14} /> Send Invitation
                 </button>
               </div>

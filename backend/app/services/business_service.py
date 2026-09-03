@@ -75,6 +75,7 @@ class BusinessService:
         website: Optional[str] = None,
         phone: Optional[str] = None,
         description: Optional[str] = None,
+        services: Optional[str] = None,
     ) -> Business:
         business = await self.get_business(business_id, organization_id)
         return await self.repo.update(
@@ -85,4 +86,5 @@ class BusinessService:
             website=website,
             phone=phone,
             description=description,
+            services=services,
         )

@@ -216,9 +216,9 @@ export const BranchReviewsView: React.FC = () => {
               cursor: 'pointer',
               fontSize: '1.25rem',
               fontWeight: 800,
-              color: activeMainTab === 'management' ? '#4F46E5' : '#111827',
+              color: activeMainTab === 'management' ? '#1255E6' : '#111827',
               paddingBottom: '8px',
-              borderBottom: activeMainTab === 'management' ? '3px solid #4F46E5' : '3px solid transparent',
+              borderBottom: activeMainTab === 'management' ? '3px solid #1255E6' : '3px solid transparent',
               transition: 'all 0.2s ease',
             }}
           >
@@ -233,9 +233,9 @@ export const BranchReviewsView: React.FC = () => {
               cursor: 'pointer',
               fontSize: '1.25rem',
               fontWeight: 800,
-              color: activeMainTab === 'reviews' ? '#4F46E5' : '#111827',
+              color: activeMainTab === 'reviews' ? '#1255E6' : '#111827',
               paddingBottom: '8px',
-              borderBottom: activeMainTab === 'reviews' ? '3px solid #4F46E5' : '3px solid transparent',
+              borderBottom: activeMainTab === 'reviews' ? '3px solid #1255E6' : '3px solid transparent',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
@@ -245,7 +245,7 @@ export const BranchReviewsView: React.FC = () => {
             <span>Review Management</span>
             <span
               style={{
-                backgroundColor: '#4F46E5',
+                backgroundColor: '#1255E6',
                 color: '#FFFFFF',
                 borderRadius: '12px',
                 padding: '2px 8px',
@@ -261,10 +261,10 @@ export const BranchReviewsView: React.FC = () => {
         <button
           onClick={handleSyncGbp}
           disabled={isSyncingGbp}
-          className="btn btn-secondary btn-sm"
-          style={{ gap: '6px' }}
+          className="btn btn-secondary"
+          style={{ gap: '8px', padding: '10px 18px', fontSize: '0.88rem', fontWeight: 800, borderRadius: '10px' }}
         >
-          <RefreshCw size={14} className={isSyncingGbp ? 'spin-anim' : ''} />
+          <RefreshCw size={16} className={isSyncingGbp ? 'spin-anim' : ''} color="#2563eb" />
           <span>{isSyncingGbp ? 'Syncing Google...' : 'Sync Google Reviews'}</span>
         </button>
       </div>
@@ -274,60 +274,177 @@ export const BranchReviewsView: React.FC = () => {
       {/* ======================================================== */}
       {activeMainTab === 'management' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Row 1: Replied vs Not Replied Breakdown Card */}
-          <div className="prody-card" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#111827' }}>
-                Replied vs Not Replied
-              </h3>
-              <HelpCircle size={15} color="#9CA3AF" />
-            </div>
+          {/* Row 1: Review Star Distribution (Left) & Replied vs Not Replied (Right) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '18px', alignItems: 'stretch' }}>
+            {/* Left Card: 1 to 5 Star Rating Breakdown */}
+            <div className="prody-card" style={{ padding: '32px', borderRadius: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px', backgroundColor: '#ffffff', boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04)' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                      Review Star Count
+                    </h3>
+                    <HelpCircle size={15} color="#94a3b8" />
+                  </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '48px', flexWrap: 'wrap' }}>
-              {/* Donut Ring Chart */}
-              <div style={{ position: 'relative', width: '130px', height: '130px' }}>
-                <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
-                  {/* Background Circle (Red - Not Replied) */}
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#EF4444"
-                    strokeWidth="3.8"
-                  />
-                  {/* Replied Arc (Green) */}
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#22C55E"
-                    strokeWidth="3.8"
-                    strokeDasharray={`${Number(repliedPct)}, 100`}
-                  />
-                </svg>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', padding: '3px 10px', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#b45309' }}>{avgRating}</span>
+                    <Star size={15} fill="#f59e0b" color="#f59e0b" />
+                    <span style={{ fontSize: '0.74rem', color: '#92400e', fontWeight: 700 }}>({totalCount} Reviews)</span>
+                  </div>
+                </div>
+
+                {/* 5-Star to 1-Star Rows */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {[
+                    { stars: 5, count: reviews.filter((r) => r.rating === 5).length, color: '#16a34a' },
+                    { stars: 4, count: reviews.filter((r) => r.rating === 4).length, color: '#84cc16' },
+                    { stars: 3, count: reviews.filter((r) => r.rating === 3).length, color: '#f59e0b' },
+                    { stars: 2, count: reviews.filter((r) => r.rating === 2).length, color: '#f97316' },
+                    { stars: 1, count: reviews.filter((r) => r.rating === 1).length, color: '#ef4444' },
+                  ].map((row) => {
+                    const pct = totalCount > 0 ? Math.round((row.count / totalCount) * 100) : 0;
+                    return (
+                      <div key={row.stars} style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.8rem' }}>
+                        {/* Star Label */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '45px', fontWeight: 700, color: '#334155' }}>
+                          <span>{row.stars}</span>
+                          <Star size={13} fill="#f59e0b" color="#f59e0b" />
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div style={{ flex: 1, height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div
+                            style={{
+                              height: '100%',
+                              width: `${pct}%`,
+                              backgroundColor: row.color,
+                              borderRadius: '4px',
+                              transition: 'width 0.3s ease',
+                            }}
+                          />
+                        </div>
+
+                        {/* Count & Percentage */}
+                        <div style={{ minWidth: '95px', textAlign: 'right', fontWeight: 700, color: '#475569', fontSize: '0.76rem' }}>
+                          <span>{row.count}</span>
+                          <span style={{ color: '#94a3b8', fontWeight: 500, marginLeft: '4px' }}>({pct}%)</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Legend & Exact Stats */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '240px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#22C55E' }} />
-                    <strong style={{ fontSize: '0.95rem', color: '#111827' }}>Replied</strong>
+              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                  Positive Rating: <strong>{totalCount > 0 ? Math.round((reviews.filter((r) => r.rating >= 4).length / totalCount) * 100) : 0}% (4★ & 5★)</strong>
+                </span>
+                <span className="prody-pill green" style={{ fontSize: '0.7rem', padding: '1px 7px' }}>
+                  Verified Google Data
+                </span>
+              </div>
+            </div>
+
+            {/* Right Card: Replied vs Not Replied Breakdown */}
+            <div className="prody-card" style={{ padding: '32px', borderRadius: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px', backgroundColor: '#ffffff', boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04)' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                      Replied vs Not Replied
+                    </h3>
+                    <HelpCircle size={15} color="#94a3b8" />
                   </div>
-                  <strong style={{ fontSize: '1rem', color: '#2563EB' }}>{repliedPct}%</strong>
-                  <span style={{ fontSize: '0.9rem', color: '#6B7280', fontWeight: 600 }}>
-                    {repliedCount} Reviews
+
+                  <span className={`prody-pill ${Number(repliedPct) >= 80 ? 'green' : 'yellow'}`} style={{ fontSize: '0.74rem', fontWeight: 800 }}>
+                    {repliedPct}% Response Rate
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#EF4444' }} />
-                    <strong style={{ fontSize: '0.95rem', color: '#111827' }}>Not Replied</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap', marginTop: '6px' }}>
+                  {/* Donut Ring Chart */}
+                  <div style={{ position: 'relative', width: '120px', height: '120px', flexShrink: 0 }}>
+                    <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                      {/* Background Circle (Red - Not Replied) */}
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#ef4444"
+                        strokeWidth="4"
+                      />
+                      {/* Replied Arc (Green) */}
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#16a34a"
+                        strokeWidth="4"
+                        strokeDasharray={`${Number(repliedPct)}, 100`}
+                      />
+                    </svg>
+
+                    {/* Center Text inside Donut */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        textAlign: 'center',
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a' }}>{repliedPct}%</div>
+                      <span style={{ fontSize: '0.62rem', color: '#64748b', fontWeight: 700 }}>REPLIED</span>
+                    </div>
                   </div>
-                  <strong style={{ fontSize: '1rem', color: '#2563EB' }}>{notRepliedPct}%</strong>
-                  <span style={{ fontSize: '0.9rem', color: '#6B7280', fontWeight: 600 }}>
-                    {pendingCount} Reviews
-                  </span>
+
+                  {/* Legend & Exact Stats */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1, minWidth: '180px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
+                        <strong style={{ fontSize: '0.85rem', color: '#166534' }}>Replied</strong>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#15803d' }}>{repliedPct}%</span>
+                        <span style={{ fontSize: '0.72rem', color: '#166534', marginLeft: '6px' }}>({repliedCount})</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', backgroundColor: '#fef2f2', border: '1px solid #fecdd3' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
+                        <strong style={{ fontSize: '0.85rem', color: '#991b1b' }}>Not Replied</strong>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#b91c1c' }}>{notRepliedPct}%</span>
+                        <span style={{ fontSize: '0.72rem', color: '#991b1b', marginLeft: '6px' }}>({pendingCount})</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                  {pendingCount > 0 ? `${pendingCount} reviews waiting for response` : 'All customer reviews answered'}
+                </span>
+                {pendingCount > 0 && (
+                  <button
+                    onClick={() => setActiveMainTab('reviews')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#2563eb',
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reply now →
+                  </button>
+                )}
               </div>
             </div>
           </div>

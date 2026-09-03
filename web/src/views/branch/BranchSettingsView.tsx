@@ -110,9 +110,9 @@ export const BranchSettingsView: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-            <button type="submit" className="btn btn-coral btn-sm" style={{ gap: '4px' }}>
-              <Save size={14} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+            <button type="submit" className="btn btn-primary" style={{ gap: '8px', padding: '11px 24px', fontSize: '0.9rem', borderRadius: '10px' }}>
+              <Save size={16} />
               <span>Save Preferences</span>
             </button>
           </div>

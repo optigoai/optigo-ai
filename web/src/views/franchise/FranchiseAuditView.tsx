@@ -50,7 +50,7 @@ export const FranchiseAuditView: React.FC = () => {
             Avg Completeness
           </span>
           <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#059669', marginTop: '4px' }}>
-            {audit.average_completeness_pct || 90}%
+            {audit.average_completeness_pct || 0}%
           </div>
           <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Across all profiles</span>
         </div>

@@ -171,7 +171,7 @@ export const SignupView: React.FC<SignupViewProps> = ({ onNavigateLogin }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="btn btn-coral"
+            className="btn btn-primary"
             style={{ width: '100%', padding: '10px', marginTop: '6px', fontSize: '0.86rem' }}
           >
             <span>{isLoading ? 'Creating Account...' : 'Get Started'}</span>

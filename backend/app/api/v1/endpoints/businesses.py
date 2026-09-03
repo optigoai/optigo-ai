@@ -83,6 +83,7 @@ async def update_business(
         website=req.website,
         phone=req.phone,
         description=req.description,
+        services=req.services,
     )
     return BusinessResponse.model_validate(business)
 

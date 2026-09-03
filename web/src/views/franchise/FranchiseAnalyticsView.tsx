@@ -91,7 +91,7 @@ export const FranchiseAnalyticsView: React.FC = () => {
     { primary: '#E11D48', gradient: 'linear-gradient(180deg, #FB7185 0%, #E11D48 100%)', bg: '#FFE4E6', text: '#BE123C' },
     { primary: '#10B981', gradient: 'linear-gradient(180deg, #34D399 0%, #10B981 100%)', bg: '#DCFCE7', text: '#047857' },
     { primary: '#F59E0B', gradient: 'linear-gradient(180deg, #FBBF24 0%, #D97706 100%)', bg: '#FEF3C7', text: '#B45309' },
-    { primary: '#8B5CF6', gradient: 'linear-gradient(180deg, #A78BFA 0%, #7C3AED 100%)', bg: '#EDE9FE', text: '#6D28D9' },
+    { primary: '#0E7490', gradient: 'linear-gradient(180deg, #22D3EE 0%, #0E7490 100%)', bg: '#ECFEFF', text: '#0E7490' },
   ];
 
   const currentMaxVal =
@@ -608,7 +608,7 @@ export const FranchiseAnalyticsView: React.FC = () => {
             <p style={{ fontSize: '0.84rem', marginBottom: '18px' }}>
               Connect your first business profile to view marketing analytics and conversion metrics.
             </p>
-            <button onClick={() => setIsOnboardingOpen(true)} className="btn btn-coral btn-sm">
+            <button onClick={() => setIsOnboardingOpen(true)} className="btn btn-primary btn-sm">
               <Plus size={14} />
               <span>Add Location</span>
             </button>

@@ -110,6 +110,7 @@ class BusinessUpdateRequest(BaseModel):
     website: Optional[str] = None
     phone: Optional[str] = None
     description: Optional[str] = None
+    services: Optional[str] = None
 
 
 class BusinessResponse(BaseModel):
@@ -120,6 +121,7 @@ class BusinessResponse(BaseModel):
     website: Optional[str] = None
     phone: Optional[str] = None
     description: Optional[str] = None
+    services: Optional[str] = None
     health_score: Optional[int] = None
     onboarding_completed: bool
     ai_business_profile: Optional[dict[str, Any]] = None

@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Building2, Lock, Mail, ArrowRight } from 'lucide-react';
+import optigoLogo from '../../assets/optigoai-logo.png';
 
 interface LoginViewProps {
   onNavigateSignup: () => void;
@@ -56,20 +57,20 @@ export const LoginView: React.FC<LoginViewProps> = ({ onNavigateSignup }) => {
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              backgroundColor: '#111827',
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E2E8F0',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#FFFFFF',
-              fontWeight: 800,
-              fontSize: '1.2rem',
-              marginBottom: '10px',
+              padding: '6px',
+              marginBottom: '12px',
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.12)',
             }}
           >
-            O
+            <img src={optigoLogo} alt="OptigoAI Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.02em' }}>
             OptigoAI Enterprise
@@ -133,7 +134,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onNavigateSignup }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="btn btn-coral"
+            className="btn btn-primary"
             style={{ width: '100%', padding: '10px', marginTop: '6px', fontSize: '0.86rem' }}
           >
             <span>{isLoading ? 'Authenticating...' : 'Sign In'}</span>

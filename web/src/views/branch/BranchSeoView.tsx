@@ -104,8 +104,8 @@ export const BranchSeoView: React.FC = () => {
           </div>
         </div>
 
-        <button onClick={loadKeywords} disabled={isLoading} className="btn btn-secondary btn-sm" style={{ gap: '6px' }}>
-          <RefreshCw size={14} className={isLoading ? 'spin-anim' : ''} />
+        <button onClick={loadKeywords} disabled={isLoading} className="btn btn-secondary" style={{ gap: '8px', padding: '10px 18px', fontSize: '0.88rem', fontWeight: 800, borderRadius: '10px' }}>
+          <RefreshCw size={16} className={isLoading ? 'spin-anim' : ''} color="#2563eb" />
           <span>{isLoading ? 'Refreshing...' : 'Refresh Rankings'}</span>
         </button>
       </div>
@@ -116,33 +116,47 @@ export const BranchSeoView: React.FC = () => {
         <div className="prody-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div>
-              <h3 style={{ fontSize: '0.96rem', fontWeight: 700, color: '#111827' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
                 3x3 Geo-Grid Neighborhood Heatmap
               </h3>
-              <p style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+              <p style={{ fontSize: '0.8rem', color: '#64748b' }}>
                 Search position within {radiusKm}km radius
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '3px' }}>
+            <div style={{ display: 'flex', gap: '6px' }}>
               {[3, 5, 10].map((r) => (
                 <button
                   key={r}
                   onClick={() => setRadiusKm(r)}
                   style={{
-                    padding: '3px 8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-subtle)',
-                    backgroundColor: radiusKm === r ? '#111827' : '#FFFFFF',
-                    color: radiusKm === r ? '#FFFFFF' : '#4B5563',
-                    fontSize: '0.72rem',
-                    fontWeight: 600,
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    border: '1.5px solid #cbd5e1',
+                    backgroundColor: radiusKm === r ? '#1255E6' : '#ffffff',
+                    color: radiusKm === r ? '#ffffff' : '#334155',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
                     cursor: 'pointer',
+                    boxShadow: radiusKm === r ? '0 2px 6px rgba(18, 85, 230, 0.25)' : 'none',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   {r}km
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Legend directly above grid */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: '#64748b', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
+              <span>Top 3 Map Pack</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
+              <span>Position #4–#10</span>
             </div>
           </div>
 
@@ -176,11 +190,6 @@ export const BranchSeoView: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#6B7280', marginTop: '10px' }}>
-            <span>Green: Top 3 Map Pack</span>
-            <span>Amber: Position #4-#10</span>
           </div>
         </div>
 
@@ -219,8 +228,8 @@ export const BranchSeoView: React.FC = () => {
                 />
               </div>
 
-              <button type="submit" disabled={isAdding || !newKeyword.trim()} className="btn btn-coral" style={{ marginTop: '2px' }}>
-                <Plus size={14} />
+              <button type="submit" disabled={isAdding || !newKeyword.trim()} className="btn btn-primary" style={{ marginTop: '6px', gap: '8px', padding: '12px 20px', fontSize: '0.88rem', fontWeight: 800, borderRadius: '10px' }}>
+                <Plus size={16} />
                 <span>{isAdding ? 'Adding...' : 'Track Keyword'}</span>
               </button>
             </form>
@@ -230,19 +239,21 @@ export const BranchSeoView: React.FC = () => {
 
       {/* 3. Filter Tabs & Keywords Table */}
       <div className="prody-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => setFilterTab('all')}
               style={{
-                padding: '4px 10px',
-                borderRadius: '4px',
+                padding: '6px 14px',
+                borderRadius: '8px',
                 border: 'none',
-                backgroundColor: filterTab === 'all' ? '#111827' : '#F3F4F6',
-                color: filterTab === 'all' ? '#FFFFFF' : '#4B5563',
-                fontSize: '0.75rem',
-                fontWeight: 600,
+                backgroundColor: filterTab === 'all' ? '#1255E6' : '#f1f5f9',
+                color: filterTab === 'all' ? '#ffffff' : '#475569',
+                fontSize: '0.82rem',
+                fontWeight: 800,
                 cursor: 'pointer',
+                boxShadow: filterTab === 'all' ? '0 2px 6px rgba(18, 85, 230, 0.25)' : 'none',
+                transition: 'all 0.15s ease',
               }}
             >
               All ({keywords.length})
@@ -250,14 +261,16 @@ export const BranchSeoView: React.FC = () => {
             <button
               onClick={() => setFilterTab('top3')}
               style={{
-                padding: '4px 10px',
-                borderRadius: '4px',
+                padding: '6px 14px',
+                borderRadius: '8px',
                 border: 'none',
-                backgroundColor: filterTab === 'top3' ? '#059669' : '#F3F4F6',
-                color: filterTab === 'top3' ? '#FFFFFF' : '#4B5563',
-                fontSize: '0.75rem',
-                fontWeight: 600,
+                backgroundColor: filterTab === 'top3' ? '#059669' : '#f1f5f9',
+                color: filterTab === 'top3' ? '#ffffff' : '#475569',
+                fontSize: '0.82rem',
+                fontWeight: 800,
                 cursor: 'pointer',
+                boxShadow: filterTab === 'top3' ? '0 2px 6px rgba(5, 150, 105, 0.25)' : 'none',
+                transition: 'all 0.15s ease',
               }}
             >
               Top 3 ({keywords.filter((k) => (k.current_rank || 99) <= 3).length})

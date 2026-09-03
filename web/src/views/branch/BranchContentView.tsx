@@ -248,7 +248,7 @@ export const BranchContentView: React.FC = () => {
     return {
       channel,
       title: `${bizName} ${theme}`,
-      body: `🎉 Special Announcement: ${theme}! ${offerDetails}. Experience verified quality and attentive local service. Visit us today!`,
+      body: `Special Announcement: ${theme}! ${offerDetails}. Experience verified quality and attentive local service. Visit us today!`,
       hashtags: '#ShopLocal #SpecialOffer #Community',
       call_to_action: 'Learn More',
     };
@@ -281,7 +281,7 @@ export const BranchContentView: React.FC = () => {
       });
 
       await loadExistingPosts();
-      alert('✨ Post published successfully to your marketing channel!');
+      alert('Post published successfully to your marketing channel!');
     } catch (err: any) {
       alert(`Published locally: ${err.message || 'Saved draft successfully'}`);
     } finally {
@@ -312,21 +312,23 @@ export const BranchContentView: React.FC = () => {
         </div>
 
         {/* Step Indicator Pills */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 10px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 8px', borderRadius: '14px', border: '1.5px solid #e2e8f0' }}>
           <button
             onClick={() => setCurrentStep(0)}
             style={{
-              padding: '6px 12px',
+              padding: '8px 16px',
               borderRadius: '10px',
               border: 'none',
-              fontSize: '0.78rem',
+              fontSize: '0.84rem',
               fontWeight: currentStep === 0 ? 800 : 600,
-              backgroundColor: currentStep === 0 ? '#2563eb' : 'transparent',
+              backgroundColor: currentStep === 0 ? '#1255E6' : 'transparent',
               color: currentStep === 0 ? '#ffffff' : '#64748b',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
+              boxShadow: currentStep === 0 ? '0 2px 6px rgba(18, 85, 230, 0.25)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
             <span>1. Format</span>
@@ -334,14 +336,16 @@ export const BranchContentView: React.FC = () => {
           <button
             onClick={() => setCurrentStep(1)}
             style={{
-              padding: '6px 12px',
+              padding: '8px 16px',
               borderRadius: '10px',
               border: 'none',
-              fontSize: '0.78rem',
+              fontSize: '0.84rem',
               fontWeight: currentStep === 1 ? 800 : 600,
-              backgroundColor: currentStep === 1 ? '#2563eb' : 'transparent',
+              backgroundColor: currentStep === 1 ? '#1255E6' : 'transparent',
               color: currentStep === 1 ? '#ffffff' : '#64748b',
               cursor: 'pointer',
+              boxShadow: currentStep === 1 ? '0 2px 6px rgba(18, 85, 230, 0.25)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
             <span>2. Campaign</span>
@@ -355,14 +359,16 @@ export const BranchContentView: React.FC = () => {
               }
             }}
             style={{
-              padding: '6px 12px',
+              padding: '8px 16px',
               borderRadius: '10px',
               border: 'none',
-              fontSize: '0.78rem',
+              fontSize: '0.84rem',
               fontWeight: currentStep === 2 ? 800 : 600,
-              backgroundColor: currentStep === 2 ? '#2563eb' : 'transparent',
+              backgroundColor: currentStep === 2 ? '#1255E6' : 'transparent',
               color: currentStep === 2 ? '#ffffff' : '#64748b',
               cursor: 'pointer',
+              boxShadow: currentStep === 2 ? '0 2px 6px rgba(18, 85, 230, 0.25)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
             <span>3. Studio</span>
@@ -411,17 +417,19 @@ export const BranchContentView: React.FC = () => {
                       style={{
                         padding: '10px',
                         borderRadius: '12px',
-                        backgroundColor: fmt.iconBg,
-                        color: fmt.iconColor,
+                        backgroundColor: isSelected ? '#eff6ff' : '#f8fafc',
+                        color: isSelected ? '#2563eb' : '#64748b',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        opacity: isSelected ? 1 : 0.75,
+                        transition: 'all 0.15s ease',
                       }}
                     >
                       {fmt.icon}
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: isSelected ? '#1d4ed8' : '#0f172a' }}>
+                      <h3 style={{ fontSize: '0.98rem', fontWeight: 800, color: isSelected ? '#2563eb' : '#0f172a' }}>
                         {fmt.title}
                       </h3>
                       <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px', lineHeight: 1.4 }}>
@@ -522,9 +530,9 @@ export const BranchContentView: React.FC = () => {
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
               {[
-                { id: 'foot_traffic', label: '🚶 Store Foot Traffic', desc: 'Drive customers to your physical location' },
-                { id: 'online_orders', label: '💬 Direct Inquiries & Orders', desc: 'WhatsApp & phone call bookings' },
-                { id: 'brand_awareness', label: '📢 Brand Reach & Visibility', desc: 'Maximize local search impressions' },
+                { id: 'foot_traffic', label: 'Store Foot Traffic', desc: 'Drive customers to your physical location' },
+                { id: 'online_orders', label: 'Direct Inquiries & Orders', desc: 'WhatsApp & phone call bookings' },
+                { id: 'brand_awareness', label: 'Brand Reach & Visibility', desc: 'Maximize local search impressions' },
               ].map((g) => {
                 const isSelected = campaignGoal === g.id;
                 return (
@@ -797,9 +805,10 @@ export const BranchContentView: React.FC = () => {
                     zIndex: 1,
                   }}
                 >
-                  <span style={{ fontSize: '0.76rem', color: '#94a3b8', fontWeight: 600 }}>
-                    ✨ Verified Local Quality • Available Today
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 700, color: '#3b82f6', marginTop: '12px', backgroundColor: '#eff6ff', padding: '6px 12px', borderRadius: '12px', width: 'fit-content' }}>
+                    <Check size={14} />
+                    Verified Local Quality • Available Today
+                  </div>
                   <div
                     style={{
                       width: '28px',

@@ -10,10 +10,10 @@ import { TopBar } from './TopBar';
 // Franchise Views
 import { FranchiseOverviewView } from '../../views/franchise/FranchiseOverviewView';
 import { FranchiseLocationsView } from '../../views/franchise/FranchiseLocationsView';
-import { FranchiseBenchmarksView } from '../../views/franchise/FranchiseBenchmarksView';
+import { FranchiseInsightsView } from '../../views/franchise/FranchiseInsightsView';
+import { FranchiseAiAnalysisView } from '../../views/franchise/FranchiseAiAnalysisView';
 import { FranchiseRegionsView } from '../../views/franchise/FranchiseRegionsView';
 import { FranchiseAuditView } from '../../views/franchise/FranchiseAuditView';
-import { FranchiseAnalyticsView } from '../../views/franchise/FranchiseAnalyticsView';
 import { FranchiseTeamView } from '../../views/franchise/FranchiseTeamView';
 import { FranchiseReportsView } from '../../views/franchise/FranchiseReportsView';
 
@@ -39,10 +39,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     switch (activeFranchiseTab) {
       case 'overview': return <FranchiseOverviewView />;
       case 'locations': return <FranchiseLocationsView />;
-      case 'benchmarks': return <FranchiseBenchmarksView />;
+      case 'insights':
+      case 'benchmarks':
+      case 'analytics':
+        return <FranchiseInsightsView />;
+      case 'ai-analysis':
+      case 'advisor':
+        return <FranchiseAiAnalysisView />;
       case 'regions': return <FranchiseRegionsView />;
       case 'audit': return <FranchiseAuditView />;
-      case 'analytics': return <FranchiseAnalyticsView />;
       case 'team': return <FranchiseTeamView />;
       case 'reports': return <FranchiseReportsView />;
       default: return <FranchiseOverviewView />;

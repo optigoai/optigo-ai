@@ -15,6 +15,7 @@ interface LocationContextType {
   activeFranchiseTab: string;
   isLocationSwitcherOpen: boolean;
   isOnboardingOpen: boolean;
+  isSidebarCollapsed: boolean;
   setScope: (scope: ViewScope) => void;
   selectLocation: (locationId: string) => void;
   switchToFranchiseView: () => void;
@@ -22,6 +23,8 @@ interface LocationContextType {
   setActiveFranchiseTab: (tab: string) => void;
   setIsLocationSwitcherOpen: (isOpen: boolean) => void;
   setIsOnboardingOpen: (isOpen: boolean) => void;
+  setIsSidebarCollapsed: (collapsed: boolean) => void;
+  toggleSidebar: () => void;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -34,6 +37,23 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [activeBranchTab, setActiveBranchTab] = useState<string>('dashboard');
   const [isLocationSwitcherOpen, setIsLocationSwitcherOpen] = useState<boolean>(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('optigo_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('optigo_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   // Set active location if available
   useEffect(() => {
@@ -64,6 +84,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         activeFranchiseTab,
         isLocationSwitcherOpen,
         isOnboardingOpen,
+        isSidebarCollapsed,
         setScope,
         selectLocation,
         switchToFranchiseView,
@@ -71,6 +92,8 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setActiveFranchiseTab,
         setIsLocationSwitcherOpen,
         setIsOnboardingOpen,
+        setIsSidebarCollapsed,
+        toggleSidebar,
       }}
     >
       {children}

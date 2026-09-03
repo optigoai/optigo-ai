@@ -215,14 +215,14 @@ export const BranchWebsiteBuilderView: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="btn btn-secondary btn-sm"
-            style={{ gap: '6px' }}
+            className="btn btn-secondary"
+            style={{ gap: '8px', padding: '10px 18px', fontSize: '0.88rem', fontWeight: 800, borderRadius: '10px' }}
           >
-            <Sparkles size={14} color="#0284C7" />
+            <Sparkles size={16} color="#1255E6" />
             <span>{isGenerating ? 'Synthesizing Profile...' : 'AI Re-Generate'}</span>
           </button>
 
@@ -230,19 +230,19 @@ export const BranchWebsiteBuilderView: React.FC = () => {
             href={localPreviewUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-secondary btn-sm"
-            style={{ gap: '6px', textDecoration: 'none' }}
+            className="btn btn-secondary"
+            style={{ gap: '8px', padding: '10px 18px', fontSize: '0.88rem', fontWeight: 800, borderRadius: '10px', textDecoration: 'none' }}
           >
-            <ExternalLink size={14} />
+            <ExternalLink size={16} />
             <span>View Live</span>
           </a>
 
           <button
             onClick={handleTogglePublish}
-            className={`btn btn-sm ${website?.status === 'published' ? 'btn-secondary' : 'btn-coral'}`}
-            style={{ gap: '6px' }}
+            className={`btn ${website?.status === 'published' ? 'btn-secondary' : 'btn-primary'}`}
+            style={{ gap: '8px', padding: '10px 20px', fontSize: '0.88rem', fontWeight: 800, borderRadius: '10px' }}
           >
-            <CheckCircle2 size={14} />
+            <CheckCircle2 size={16} />
             <span>{website?.status === 'published' ? 'Unpublish' : 'Publish Live'}</span>
           </button>
         </div>
@@ -441,7 +441,7 @@ export const BranchWebsiteBuilderView: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button onClick={() => handleSave()} disabled={isSaving} className="btn btn-coral btn-sm" style={{ gap: '6px' }}>
+            <button onClick={() => handleSave()} disabled={isSaving} className="btn btn-primary btn-sm" style={{ gap: '6px' }}>
               <Save size={14} />
               <span>{isSaving ? 'Saving Changes...' : 'Save Content'}</span>
             </button>
@@ -507,7 +507,7 @@ export const BranchWebsiteBuilderView: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button onClick={() => handleSave()} disabled={isSaving} className="btn btn-coral btn-sm" style={{ gap: '6px' }}>
+            <button onClick={() => handleSave()} disabled={isSaving} className="btn btn-primary btn-sm" style={{ gap: '6px' }}>
               <Save size={14} />
               <span>{isSaving ? 'Saving...' : 'Save SEO & Slug'}</span>
             </button>
@@ -535,7 +535,7 @@ export const BranchWebsiteBuilderView: React.FC = () => {
                 <textarea
                   className="optigo-input"
                   rows={4}
-                  style={{ fontFamily: 'monospace', fontSize: '0.8rem', backgroundColor: '#1E293B', color: '#38BDF8' }}
+                  style={{ fontFamily: 'monospace', fontSize: '0.8rem', backgroundColor: '#F0F4F9', color: '#1255E6' }}
                   placeholder="/* Example: .public-nav-links { font-size: 0.9rem; } */"
                   value={customCss}
                   onChange={(e) => setCustomCss(e.target.value)}
@@ -547,7 +547,7 @@ export const BranchWebsiteBuilderView: React.FC = () => {
                 <textarea
                   className="optigo-input"
                   rows={4}
-                  style={{ fontFamily: 'monospace', fontSize: '0.8rem', backgroundColor: '#1E293B', color: '#A7F3D0' }}
+                  style={{ fontFamily: 'monospace', fontSize: '0.8rem', backgroundColor: '#F1F8F5', color: '#047857' }}
                   placeholder="<!-- Custom HTML snippets or external widget embeds -->"
                   value={customHtml}
                   onChange={(e) => setCustomHtml(e.target.value)}
@@ -559,7 +559,7 @@ export const BranchWebsiteBuilderView: React.FC = () => {
                 <textarea
                   className="optigo-input"
                   rows={3}
-                  style={{ fontFamily: 'monospace', fontSize: '0.8rem', backgroundColor: '#1E293B', color: '#FDE047' }}
+                  style={{ fontFamily: 'monospace', fontSize: '0.8rem', backgroundColor: '#F1F8F5', color: '#B45309' }}
                   placeholder="// Custom JS scripts"
                   value={customJs}
                   onChange={(e) => setCustomJs(e.target.value)}
@@ -569,7 +569,7 @@ export const BranchWebsiteBuilderView: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button onClick={() => handleSave()} disabled={isSaving} className="btn btn-coral btn-sm" style={{ gap: '6px' }}>
+            <button onClick={() => handleSave()} disabled={isSaving} className="btn btn-primary btn-sm" style={{ gap: '6px' }}>
               <Save size={14} />
               <span>{isSaving ? 'Saving Code...' : 'Save Custom Code'}</span>
             </button>
