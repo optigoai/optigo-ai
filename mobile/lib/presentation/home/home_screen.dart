@@ -15,10 +15,11 @@ import '../../data/repositories/seo_repository.dart';
 import '../auth/auth_provider.dart';
 import '../impact/impact_screen.dart';
 import '../shared/optigo_top_bar.dart';
-import '../shared/cmo_chat_drawer.dart';
 import '../shared/optigo_pill.dart';
+import 'widgets/animated_metric_card.dart';
 import 'widgets/bespoke_weekly_momentum_bar_chart.dart';
-import 'widgets/metric_summary_card.dart';
+import 'widgets/channel_breakdown_donut.dart';
+import 'widgets/quick_ai_action_row.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onNavigateToRecommendations;
@@ -36,7 +37,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with TickerProviderStateMixin {
   BusinessRepository? _bizRepo;
   RecommendationRepository? _recRepo;
   ReviewRepository? _reviewRepo;
@@ -51,6 +53,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool _initialized = false;
   bool _isLoading = false;
+
+  // Staggered entrance animation
+  late AnimationController _entranceController;
+  late Animation<double> _headerFade;
+  late Animation<Offset> _headerSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _headerFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
+    );
+    _headerSlide = Tween<Offset>(
+      begin: const Offset(0, -0.08),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOutCubic),
+    );
+    _entranceController.forward();
+  }
+
+  @override
+  void dispose() {
+    _entranceController.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -180,53 +212,68 @@ class _HomeScreenState extends State<HomeScreen> {
           child: RefreshIndicator(
             onRefresh: _loadData,
             color: const Color(0xFF2563EB),
+            backgroundColor: Colors.white,
+            strokeWidth: 2.5,
             child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Top Bar (Profile Avatar, Switcher, Live Sync, Notification)
-                  OptigoTopBar(
-                    onNotificationTap: widget.onNavigateToRecommendations,
-                    onRefreshTap: _loadData,
-                    onNavigateToTab: widget.onNavigateToTab,
-                    isRefreshing: _isLoading,
+                  // 1. Top Bar
+                  FadeTransition(
+                    opacity: _headerFade,
+                    child: SlideTransition(
+                      position: _headerSlide,
+                      child: OptigoTopBar(
+                        onNotificationTap: widget.onNavigateToRecommendations,
+                        onRefreshTap: _loadData,
+                        onNavigateToTab: widget.onNavigateToTab,
+                        isRefreshing: _isLoading,
+                      ),
+                    ),
                   ),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
 
-                  // 2. Editorial Greeting & Headline
+                  // 2. Editorial Greeting & Headline (animated)
                   _buildEditorialHeadline(bizName),
 
                   const SizedBox(height: 16),
 
-                  // 3. Smart Search & AI Prompt Bar with Action Chips
-                  _buildSmartCommandBar(),
+                  // 3. Quick AI Action Pills (replaces old full-width search bar)
+                  const QuickAiActionRow(),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 22),
 
-                  // 4. Today at a Glance (4 Compact KPI Cards)
+                  // 4. Today at a Glance — Premium Animated KPI Cards
                   _buildTodayGlanceSection(),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 22),
 
-                  // 5. OptigoAI Business Progress & Impact Summary (Links to ImpactScreen)
+                  // 5. OptigoAI Business Progress & Impact Banner
                   _buildImpactHeroBanner(),
 
                   const SizedBox(height: 22),
 
-                  // 6. What Changed: Customer Interaction Momentum Chart
+                  // 6. Channel Breakdown Donut Chart
+                  _buildChannelBreakdownSection(),
+
+                  const SizedBox(height: 22),
+
+                  // 7. Weekly Customer Reach Momentum Chart
                   _buildWeeklyCustomerReachSection(),
 
                   const SizedBox(height: 22),
 
-                  // 7. Recommended Next Step (One Clear Primary Action)
+                  // 8. Recommended Next Step
                   _buildPrimaryNextAction(),
 
                   const SizedBox(height: 22),
 
-                  // 8. Recent Live Updates Activity Stream
+                  // 9. Recent Activity Stream
                   _buildRecentActivityStream(),
 
                   const SizedBox(height: 30),
@@ -240,178 +287,74 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 2. Editorial Headline
+  // 2. Editorial Headline with staggered animation
   // ==========================================
   Widget _buildEditorialHeadline(String bizName) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return FadeTransition(
+      opacity: _headerFade,
+      child: SlideTransition(
+        position: _headerSlide,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Color(0xFF10B981),
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '${_getGreeting()}, $bizName',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF64748B),
-                letterSpacing: 0.1,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'How is your business\nperforming today?',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 27,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF0F172A),
-            height: 1.15,
-            letterSpacing: -0.9,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ==========================================
-  // 3. Smart Command Bar with Quick Chips
-  // ==========================================
-  Widget _buildSmartCommandBar() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () => CmoChatDrawer.show(context, currentScreen: 'home'),
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
+            Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 16,
-                    color: Color(0xFF2563EB),
-                  ),
+                // Animated pulse dot
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.6, end: 1.0),
+                  duration: const Duration(milliseconds: 1200),
+                  curve: Curves.easeInOut,
+                  builder: (context, value, child) {
+                    return Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Color.lerp(
+                          const Color(0xFF10B981).withValues(alpha: 0.5),
+                          const Color(0xFF10B981),
+                          value,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.3 * value),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Ask AI CMO to reply, write posts, or audit...',
+                    '${_getGreeting()}, $bizName',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13.5,
-                      color: const Color(0xFF94A3B8),
-                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF64748B),
+                      letterSpacing: 0.1,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 13,
-                  color: Color(0xFFCBD5E1),
                 ),
               ],
             ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        // Quick Action Shortcut Chips (Zero emoji in UI chrome, 100% responsive)
-        Row(
-          children: [
-            Expanded(
-              child: _buildPromptChip(
-                Icons.rate_review_rounded,
-                'Reply',
-                'Draft a response for my latest review',
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: _buildPromptChip(
-                Icons.campaign_rounded,
-                'Post',
-                'Write a high-converting promotional post',
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: _buildPromptChip(
-                Icons.pin_drop_rounded,
-                'SEO',
-                'How can I rank #1 on Google Maps in my area?',
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: _buildPromptChip(
-                Icons.groups_rounded,
-                'Rivals',
-                'Analyze my top local competitors',
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPromptChip(IconData icon, String label, String prompt) {
-    return InkWell(
-      onTap: () => CmoChatDrawer.show(
-        context,
-        currentScreen: 'home',
-        initialMessage: prompt,
-      ),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 13, color: const Color(0xFF2563EB)),
-            const SizedBox(width: 4),
-            Flexible(
+            const SizedBox(height: 6),
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Color(0xFF0F172A), Color(0xFF1E40AF)],
+              ).createShader(bounds),
               child: Text(
-                label,
+                'How is your business\nperforming today?',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF334155),
+                  fontSize: 27,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  height: 1.15,
+                  letterSpacing: -0.9,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -421,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 4. Today at a Glance (4 Compact KPI Cards)
+  // 4. Today at a Glance — Animated Metric Cards
   // ==========================================
   Widget _buildTodayGlanceSection() {
     final validRanks = _keywords.map((k) => k.currentRank).whereType<int>().toList();
@@ -444,60 +387,113 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section Header with animated badge
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Today at a Glance',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F172A),
-                letterSpacing: -0.3,
-              ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.dashboard_rounded,
+                    size: 14,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Today at a Glance',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Live Google Data',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2563EB),
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFECFDF5),
+                    const Color(0xFFD1FAE5).withValues(alpha: 0.7),
+                  ],
                 ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 5,
+                    height: 5,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF10B981),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Live Data',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF059669),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
+
+        // KPI Grid — 2x2 Animated Cards
         Row(
           children: [
             Expanded(
-              child: MetricSummaryCard(
+              child: AnimatedMetricCard(
                 title: 'Discovery Views',
-                value: totalViews >= 1000 ? '${(totalViews / 1000).toStringAsFixed(1)}K' : '$totalViews',
+                value: totalViews >= 1000
+                    ? '${(totalViews / 1000).toStringAsFixed(1)}K'
+                    : '$totalViews',
                 subtitle: 'Google Maps & Search',
                 trendText: '+18%',
                 icon: Icons.visibility_rounded,
-                iconColor: const Color(0xFF2563EB),
-                iconBgColor: const Color(0xFFEFF6FF),
-                onTap: () => widget.onNavigateToTab?.call(3), // Visibility
+                accentColor: const Color(0xFF2563EB),
+                accentBgColor: const Color(0xFFEFF6FF),
+                animationDelayMs: 100,
+                isLoading: _isLoading,
+                onTap: () => widget.onNavigateToTab?.call(3),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: MetricSummaryCard(
+              child: AnimatedMetricCard(
                 title: 'Customer Calls',
                 value: '321',
                 subtitle: 'Direct click-to-call',
                 trendText: '+24%',
                 icon: Icons.phone_in_talk_rounded,
-                iconColor: const Color(0xFF059669),
-                iconBgColor: const Color(0xFFECFDF5),
+                accentColor: const Color(0xFF059669),
+                accentBgColor: const Color(0xFFECFDF5),
+                animationDelayMs: 200,
+                isLoading: _isLoading,
                 onTap: () => Navigator.of(context).push(
                   ImpactScreen.route(onNavigateToTab: widget.onNavigateToTab),
                 ),
@@ -509,29 +505,37 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           children: [
             Expanded(
-              child: MetricSummaryCard(
+              child: AnimatedMetricCard(
                 title: 'Google Rating',
                 value: '${avgRating.toStringAsFixed(1)} ★',
                 subtitle: '$totalReviews Verified Reviews',
                 trendText: 'Rank #${avgRank.toStringAsFixed(1)}',
                 icon: Icons.star_rounded,
-                iconColor: const Color(0xFFF59E0B),
-                iconBgColor: const Color(0xFFFFFBEB),
-                onTap: () => widget.onNavigateToTab?.call(4), // Reviews
+                accentColor: const Color(0xFFF59E0B),
+                accentBgColor: const Color(0xFFFFFBEB),
+                animationDelayMs: 300,
+                isLoading: _isLoading,
+                onTap: () => widget.onNavigateToTab?.call(4),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: MetricSummaryCard(
+              child: AnimatedMetricCard(
                 title: 'Review Reply Rate',
-                value: unrepliedCount > 0 ? '$unrepliedCount Pending' : '100% Replied',
-                subtitle: unrepliedCount > 0 ? 'Requires attention' : 'Speed: 2.1 hours',
+                value: unrepliedCount > 0 ? '$unrepliedCount Pending' : '100%',
+                subtitle: unrepliedCount > 0 ? 'Requires attention' : 'Avg speed: 2.1h',
                 trendText: unrepliedCount > 0 ? 'Action Needed' : 'Caught Up',
                 isPositiveTrend: unrepliedCount == 0,
                 icon: Icons.mark_chat_unread_rounded,
-                iconColor: unrepliedCount > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981),
-                iconBgColor: unrepliedCount > 0 ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5),
-                onTap: () => widget.onNavigateToTab?.call(4), // Reviews
+                accentColor: unrepliedCount > 0
+                    ? const Color(0xFFEF4444)
+                    : const Color(0xFF10B981),
+                accentBgColor: unrepliedCount > 0
+                    ? const Color(0xFFFEF2F2)
+                    : const Color(0xFFECFDF5),
+                animationDelayMs: 400,
+                isLoading: _isLoading,
+                onTap: () => widget.onNavigateToTab?.call(4),
               ),
             ),
           ],
@@ -541,49 +545,64 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 5. OptigoAI Business Progress & Impact Summary
+  // 5. OptigoAI Business Progress & Impact Banner
   // ==========================================
   Widget _buildImpactHeroBanner() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF1E3A8A)],
+          colors: [
+            Color(0xFF0F172A),
+            Color(0xFF1E293B),
+            Color(0xFF1E3A8A),
+          ],
         ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.35), width: 1.2),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFF3B82F6).withValues(alpha: 0.35),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.22),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+            color: const Color(0xFF1E3A8A).withValues(alpha: 0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Top Tags Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Business Progress Pill
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.auto_graph_rounded, color: Color(0xFF93C5FD), size: 14),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 5),
                     Text(
                       'Business Progress',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF93C5FD),
                       ),
@@ -591,66 +610,130 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+              // Boost Badge with glow
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '+31% Inquiries Boost',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF34D399),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF10B981).withValues(alpha: 0.25),
+                      const Color(0xFF059669).withValues(alpha: 0.15),
+                    ],
                   ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: const Color(0xFF34D399).withValues(alpha: 0.3),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      spreadRadius: -2,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.trending_up_rounded, color: Color(0xFF34D399), size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      '+31% Inquiries',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF34D399),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+
+          const SizedBox(height: 18),
+
+          // Main headline
           Text(
-            'See How OptigoAI Enhanced Your Business',
+            'See How OptigoAI Enhanced\nYour Business',
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 16.5,
+              fontSize: 18,
               fontWeight: FontWeight.w900,
               color: Colors.white,
-              letterSpacing: -0.4,
+              letterSpacing: -0.5,
+              height: 1.2,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
-            'Compare measured calls, direction requests, and Google Maps discovery before vs. after joining.',
+            'Compare measured calls, views, and Google Maps discovery before vs. after joining.',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: const Color(0xFFCBD5E1),
-              height: 1.4,
+              height: 1.45,
             ),
           ),
+
+          const SizedBox(height: 18),
+
+          // Impact stats row
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildImpactMiniStat('Views', '+42%', const Color(0xFF93C5FD)),
+                Container(
+                  height: 28,
+                  width: 1,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+                _buildImpactMiniStat('Calls', '+31%', const Color(0xFF34D399)),
+                Container(
+                  height: 28,
+                  width: 1,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+                _buildImpactMiniStat('Rating', '4.8★', const Color(0xFFFBBF24)),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 16),
+
+          // CTA Button with premium styling
           InkWell(
             onTap: () => Navigator.of(context).push(
               ImpactScreen.route(onNavigateToTab: widget.onNavigateToTab),
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 11),
+              padding: const EdgeInsets.symmetric(vertical: 13),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                gradient: const LinearGradient(
+                  colors: [Colors.white, Color(0xFFF8FAFC)],
+                ),
+                borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const Icon(Icons.bar_chart_rounded, size: 16, color: Color(0xFF1E3A8A)),
+                  const SizedBox(width: 8),
                   Text(
                     'View Full Impact & Comparison Report',
                     style: GoogleFonts.plusJakartaSans(
@@ -660,7 +743,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.arrow_forward_rounded, size: 15, color: Color(0xFF1E3A8A)),
+                  const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF1E3A8A)),
                 ],
               ),
             ),
@@ -670,8 +753,41 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildImpactMiniStat(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+            color: color,
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF94A3B8),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ==========================================
-  // 6. What Changed: Customer Interaction Momentum Chart
+  // 6. Channel Breakdown Donut Chart
+  // ==========================================
+  Widget _buildChannelBreakdownSection() {
+    final channelData = _dashboardAnalytics?.channelBreakdown ?? {};
+    return ChannelBreakdownDonut(channelData: channelData);
+  }
+
+  // ==========================================
+  // 7. Weekly Customer Reach Momentum Chart
   // ==========================================
   Widget _buildWeeklyCustomerReachSection() {
     final totalReviews = _reviews.length;
@@ -701,26 +817,44 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 7. Recommended Next Step (One Clear Primary Action)
+  // 8. Recommended Next Step (One Clear Primary Action)
   // ==========================================
   Widget _buildPrimaryNextAction() {
     final topRecs = _recommendations.where((r) => r.status != 'completed' && r.status != 'done').toList();
 
     if (topRecs.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFFECFDF5),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
+          ),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: const Color(0xFFA7F3D0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF10B981).withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
-                color: Color(0xFF10B981),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF10B981), Color(0xFF059669)],
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    spreadRadius: -2,
+                  ),
+                ],
               ),
               child: const Icon(Icons.check_rounded, color: Colors.white, size: 20),
             ),
@@ -730,19 +864,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'All Caught Up!',
+                    'All Caught Up! 🎉',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14.5,
+                      fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF065F46),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 3),
                   Text(
                     'All high-priority marketing actions are complete. Your branch is performing optimally.',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       color: const Color(0xFF047857),
+                      height: 1.35,
                     ),
                   ),
                 ],
@@ -764,34 +899,51 @@ class _HomeScreenState extends State<HomeScreen> {
         : (topRec.priority == 'opportunity' ? OptigoPillVariant.success : OptigoPillVariant.neutral);
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: isUrgent ? const Color(0xFFFECACA) : const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isUrgent ? const Color(0xFFFECACA) : const Color(0xFFE2E8F0).withValues(alpha: 0.8),
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+            color: isUrgent
+                ? const Color(0xFFEF4444).withValues(alpha: 0.06)
+                : const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+            spreadRadius: -2,
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(8),
+                      gradient: isUrgent
+                          ? const LinearGradient(colors: [Color(0xFFFEF2F2), Color(0xFFFEE2E2)])
+                          : const LinearGradient(colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)]),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isUrgent
+                            ? const Color(0xFFEF4444).withValues(alpha: 0.15)
+                            : const Color(0xFF2563EB).withValues(alpha: 0.12),
+                      ),
                     ),
-                    child: const Icon(Icons.bolt_rounded, color: Color(0xFF2563EB), size: 16),
+                    child: Icon(
+                      isUrgent ? Icons.warning_amber_rounded : Icons.bolt_rounded,
+                      color: isUrgent ? const Color(0xFFEF4444) : const Color(0xFF2563EB),
+                      size: 16,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -811,7 +963,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+
+          // Title
           Text(
             topRec.title,
             style: GoogleFonts.plusJakartaSans(
@@ -833,44 +987,67 @@ class _HomeScreenState extends State<HomeScreen> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+
+          // Action Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               InkWell(
-                onTap: () => widget.onNavigateToTab?.call(1), // Grow
-                child: Text(
-                  'View all in Grow ›',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF2563EB),
+                onTap: () => widget.onNavigateToTab?.call(1),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  child: Text(
+                    'View all in Grow ›',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF2563EB),
+                    ),
                   ),
                 ),
               ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  if (topRec.relatedFeature == 'reviews') {
-                    widget.onNavigateToTab?.call(4); // Reviews
-                  } else if (topRec.relatedFeature == 'posts' || topRec.relatedFeature == 'campaigns') {
-                    widget.onNavigateToTab?.call(2); // Studio
-                  } else if (topRec.relatedFeature == 'seo') {
-                    widget.onNavigateToTab?.call(3); // Visibility
-                  } else {
-                    widget.onNavigateToTab?.call(1); // Grow
-                  }
-                },
-                icon: const Icon(Icons.bolt_rounded, size: 14, color: Colors.white),
-                label: Text(
-                  'Execute in 1 Tap',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 12),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                      spreadRadius: -2,
+                    ),
+                  ],
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    if (topRec.relatedFeature == 'reviews') {
+                      widget.onNavigateToTab?.call(4);
+                    } else if (topRec.relatedFeature == 'posts' || topRec.relatedFeature == 'campaigns') {
+                      widget.onNavigateToTab?.call(2);
+                    } else if (topRec.relatedFeature == 'seo') {
+                      widget.onNavigateToTab?.call(3);
+                    } else {
+                      widget.onNavigateToTab?.call(1);
+                    }
+                  },
+                  icon: const Icon(Icons.bolt_rounded, size: 14, color: Colors.white),
+                  label: Text(
+                    'Execute in 1 Tap',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 12),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                  ),
                 ),
               ),
             ],
@@ -881,7 +1058,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // 8. Recent Live Updates Activity Stream
+  // 9. Recent Live Updates Activity Stream
   // ==========================================
   Widget _buildRecentActivityStream() {
     final activities = _dashboardAnalytics?.recentActivity ?? [];
@@ -890,45 +1067,90 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0).withValues(alpha: 0.8)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+            spreadRadius: -2,
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Recent Live Activity',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F172A),
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.timeline_rounded,
+                      size: 14,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Recent Live Activity',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF10B981),
-                  shape: BoxShape.circle,
-                ),
+              // Animated pulse dot
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.4, end: 1.0),
+                duration: const Duration(milliseconds: 1500),
+                curve: Curves.easeInOut,
+                builder: (context, value, child) {
+                  return Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.4 * value),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          ...activities.take(3).map((act) {
+          const SizedBox(height: 16),
+
+          // Activity items with timeline connector
+          ...activities.take(3).toList().asMap().entries.map((entry) {
+            final idx = entry.key;
+            final act = entry.value;
+            final isLast = idx == 2 || idx == activities.length - 1;
+
             IconData icon;
             Color iconColor;
             if (act.type == 'review') {
@@ -943,14 +1165,23 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
               child: Row(
                 children: [
+                  // Icon with subtle glow
                   Container(
-                    padding: const EdgeInsets.all(7),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(9),
+                      gradient: LinearGradient(
+                        colors: [
+                          iconColor.withValues(alpha: 0.12),
+                          iconColor.withValues(alpha: 0.06),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: iconColor.withValues(alpha: 0.08),
+                      ),
                     ),
                     child: Icon(icon, color: iconColor, size: 15),
                   ),
@@ -962,13 +1193,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           act.title,
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF0F172A),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: 1),
                         Text(
                           act.subtitle,
                           style: GoogleFonts.plusJakartaSans(
@@ -983,14 +1215,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: act.badgeStatus == 'success'
-                          ? const Color(0xFFECFDF5)
-                          : (act.badgeStatus == 'warning'
-                              ? const Color(0xFFFFFBEB)
-                              : const Color(0xFFEFF6FF)),
-                      borderRadius: BorderRadius.circular(6),
+                      gradient: LinearGradient(
+                        colors: act.badgeStatus == 'success'
+                            ? [const Color(0xFFECFDF5), const Color(0xFFD1FAE5)]
+                            : (act.badgeStatus == 'warning'
+                                ? [const Color(0xFFFFFBEB), const Color(0xFFFEF3C7)]
+                                : [const Color(0xFFEFF6FF), const Color(0xFFDBEAFE)]),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: act.badgeStatus == 'success'
+                            ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                            : (act.badgeStatus == 'warning'
+                                ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                                : const Color(0xFF2563EB).withValues(alpha: 0.15)),
+                      ),
                     ),
                     child: Text(
                       act.badgeText,
