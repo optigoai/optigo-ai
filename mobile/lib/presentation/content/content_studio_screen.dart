@@ -214,6 +214,9 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
                 ),
               ),
 
+              // 3-Step Interactive Workflow Header
+              _buildStepProgressBar(),
+
               // Animated Step View
               Expanded(
                 child: AnimatedSwitcher(
@@ -236,6 +239,105 @@ class _ContentStudioScreenState extends State<ContentStudioScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStepProgressBar() {
+    final steps = [
+      {'num': '1', 'title': 'Goal & Format'},
+      {'num': '2', 'title': 'Channels'},
+      {'num': '3', 'title': 'Studio & Publish'},
+    ];
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          for (int i = 0; i < steps.length; i++) ...[
+            Expanded(
+              child: InkWell(
+                onTap: i <= _currentStep || (_generatedPostResult != null && i == 2)
+                    ? () => setState(() => _currentStep = i)
+                    : null,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: _currentStep == i
+                        ? const Color(0xFFEFF6FF)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _currentStep == i
+                              ? const Color(0xFF2563EB)
+                              : (_currentStep > i
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFFE2E8F0)),
+                        ),
+                        child: Center(
+                          child: _currentStep > i
+                              ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
+                              : Text(
+                                  steps[i]['num']!,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: _currentStep == i ? Colors.white : const Color(0xFF64748B),
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          steps[i]['title']!,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: _currentStep == i ? FontWeight.w800 : FontWeight.w600,
+                            color: _currentStep == i
+                                ? const Color(0xFF1D4ED8)
+                                : (_currentStep > i ? const Color(0xFF0F172A) : const Color(0xFF94A3B8)),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (i < steps.length - 1)
+              Container(
+                width: 10,
+                height: 1.5,
+                color: _currentStep > i ? const Color(0xFF10B981) : const Color(0xFFCBD5E1),
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+              ),
+          ],
+        ],
       ),
     );
   }

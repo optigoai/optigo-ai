@@ -67,7 +67,7 @@ class _CmoChatDrawerState extends State<CmoChatDrawer> {
         id: 'welcome',
         role: 'assistant',
         content:
-            "Hello! I am your AI CMO for $bizName. I track your customer reviews, Google Maps ranking, and marketing health in real-time. How can I help you grow today?",
+            "Hello! I am your AI CMO for $bizName. I track your customer reviews, Google Maps ranking, and local business impact in real-time. How can I help you grow today?",
         suggestedActions: [
           CmoSuggestedAction(
             label: "What's my top priority today?",

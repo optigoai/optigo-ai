@@ -636,81 +636,10 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
 
                   const SizedBox(height: 18),
 
-                  // 3. Hero Bento Grid (Local Map Score + Avg Position)
+                  // 3. Hero Bento Grid (Position Discovery + Local Map Score)
                   Row(
                     children: [
-                      // Left Card: Distinct Local Map Score (Sub-Score)
-                      Expanded(
-                        child: Container(
-                          height: 195,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F172A)],
-                              stops: [0.0, 0.55, 1.0],
-                            ),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: const Color(0xFF334155), width: 1),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0F172A).withValues(alpha: 0.25),
-                                blurRadius: 18,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Icon(Icons.pin_drop_rounded, color: Color(0xFF60A5FA), size: 16),
-                                  ),
-                                  OptigoPill(
-                                    label: isOptimal ? 'Optimal' : (isGood ? 'Good' : 'Needs Boost'),
-                                    variant: isOptimal ? OptigoPillVariant.success : (isGood ? OptigoPillVariant.neutral : OptigoPillVariant.warning),
-                                    fontSize: 10,
-                                  ),
-                                ],
-                              ),
-                              Center(
-                                child: BespokeCircularScoreGauge(
-                                  score: mapPackScore,
-                                  size: 96,
-                                  isDarkCard: true,
-                                ),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Local Map Score',
-                                    style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w700, color: const Color(0xFF94A3B8)),
-                                  ),
-                                  Text(
-                                    'Sub-score',
-                                    style: GoogleFonts.plusJakartaSans(fontSize: 9.5, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 14),
-
-                      // Right Card: Position & Momentum
+                      // Left Card: Position & Discovery (Primary)
                       Expanded(
                         child: Container(
                           height: 195,
@@ -743,8 +672,8 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                                     child: const Icon(Icons.trending_up_rounded, color: Color(0xFF2563EB), size: 16),
                                   ),
                                   OptigoPill(
-                                    label: 'Top 3 ($top3Count)',
-                                    variant: OptigoPillVariant.success,
+                                    label: top3Count > 0 ? '$top3Count in Top 3' : 'Tracking',
+                                    variant: top3Count > 0 ? OptigoPillVariant.success : OptigoPillVariant.neutral,
                                     fontSize: 10,
                                   ),
                                 ],
@@ -766,14 +695,84 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                                       letterSpacing: -0.8,
                                     ),
                                   ),
+                                  Text(
+                                    '$top10Count in striking distance (#4-#10)',
+                                    style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                                  ),
                                 ],
                               ),
                               BespokeTrendSparkline(
                                 dataPoints: _keywords.isNotEmpty
                                     ? _keywords.take(6).map((k) => (k.currentRank ?? 5).toDouble()).toList()
                                     : const [3.0, 2.5, 2.0],
-                                height: 28,
+                                height: 24,
                                 lineColor: const Color(0xFF2563EB),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 14),
+
+                      // Right Card: Local Map Score (Secondary)
+                      Expanded(
+                        child: Container(
+                          height: 195,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEFF6FF),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(Icons.pin_drop_rounded, color: Color(0xFF2563EB), size: 16),
+                                  ),
+                                  OptigoPill(
+                                    label: isOptimal ? 'Optimal' : (isGood ? 'Good' : 'Needs Boost'),
+                                    variant: isOptimal ? OptigoPillVariant.success : (isGood ? OptigoPillVariant.neutral : OptigoPillVariant.warning),
+                                    fontSize: 10,
+                                  ),
+                                ],
+                              ),
+                              Center(
+                                child: BespokeCircularScoreGauge(
+                                  score: mapPackScore,
+                                  size: 88,
+                                  isDarkCard: false,
+                                ),
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Local Map Score',
+                                    style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w700, color: const Color(0xFF334155)),
+                                  ),
+                                  Text(
+                                    'Profile Quality',
+                                    style: GoogleFonts.plusJakartaSans(fontSize: 9.5, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -826,6 +825,13 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                         ),
                       ],
                     ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // 4.2 Striking Distance Opportunities (#4-#10 Rank)
+                  _buildStrikingDistanceSection(
+                    _keywords.where((k) => (k.currentRank ?? 99) > 3 && (k.currentRank ?? 99) <= 10).toList(),
                   ),
 
                   const SizedBox(height: 20),
@@ -934,6 +940,169 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
     );
   }
 
+  Widget _buildStrikingDistanceSection(List<SeoKeywordModel> strikingKeywords) {
+    if (strikingKeywords.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF16A34A),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 16),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Keywords to Improve (#4 - #10)',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF14532D),
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${strikingKeywords.length} Near 3-Pack',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF15803D),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'These search queries rank right outside the Google Maps 3-Pack. Creating an update or review reply with these terms can push them into the top tier.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              color: const Color(0xFF166534),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...strikingKeywords.take(3).map((kw) {
+            final rank = kw.currentRank ?? 5;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFDCFCE7)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '#$rank',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF16A34A),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          kw.keyword,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          kw.targetLocation ?? 'Local area',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            color: const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      if (widget.onNavigateToRecommendations != null) {
+                        widget.onNavigateToRecommendations!();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Targeting "${kw.keyword}" in your next post.'),
+                            backgroundColor: const Color(0xFF16A34A),
+                          ),
+                        );
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF16A34A),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Optimize',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFilterPill(String id, String label, OptigoPillVariant variant) {
     final isSelected = _keywordFilter == id;
     return OptigoPill(
@@ -956,33 +1125,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
         ? OptigoPillVariant.success
         : (isTop3 ? OptigoPillVariant.neutral : OptigoPillVariant.warning);
 
-    // Extract real competitor names from backend analytics / audit insights
-    String comp1Name = 'Premier Local Rival';
-    int comp1Rank = 2;
-    double comp1Progress = 0.72;
-
-    String comp2Name = 'Prime Market Competitor';
-    int comp2Rank = 4;
-    double comp2Progress = 0.50;
-
-    if (_competitors.isNotEmpty) {
-      comp1Name = _competitors[0]['name'] ?? comp1Name;
-      comp1Rank = _competitors[0]['rank'] ?? 2;
-      comp1Progress = ((_competitors[0]['visibility_score'] ?? 72) / 100.0).clamp(0.2, 0.95);
-
-      if (_competitors.length > 1) {
-        comp2Name = _competitors[1]['name'] ?? comp2Name;
-        comp2Rank = _competitors[1]['rank'] ?? 4;
-        comp2Progress = ((_competitors[1]['visibility_score'] ?? 50) / 100.0).clamp(0.2, 0.95);
-      }
-    } else if (_audit != null && _audit!.competitorInsights.isNotEmpty) {
-      final raw1 = _audit!.competitorInsights[0];
-      comp1Name = raw1.split('(').first.trim();
-      if (_audit!.competitorInsights.length > 1) {
-        final raw2 = _audit!.competitorInsights[1];
-        comp2Name = raw2.split('(').first.trim();
-      }
-    }
+    final hasRealCompetitors = _competitors.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -1025,6 +1168,17 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.verified_outlined, size: 12, color: Color(0xFF64748B)),
+              const SizedBox(width: 4),
+              Text(
+                'Google Maps Public Data • Local Category',
+                style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
           const SizedBox(height: 14),
           _buildCompetitorBar(
             bizName,
@@ -1032,20 +1186,36 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
             (1.0 - (myRank / 20.0)).clamp(0.2, 0.95),
             const Color(0xFF2563EB),
           ),
-          const SizedBox(height: 10),
-          _buildCompetitorBar(
-            comp1Name,
-            comp1Rank,
-            comp1Progress,
-            const Color(0xFF64748B),
-          ),
-          const SizedBox(height: 10),
-          _buildCompetitorBar(
-            comp2Name,
-            comp2Rank,
-            comp2Progress,
-            const Color(0xFF94A3B8),
-          ),
+          if (hasRealCompetitors) ...[
+            const SizedBox(height: 10),
+            ..._competitors.take(2).map((comp) {
+              final cName = (comp['name'] ?? 'Local Competitor').toString();
+              final cRank = (comp['rank'] as num?)?.toInt() ?? 3;
+              final cProgress = (((comp['visibility_score'] as num?) ?? 60) / 100.0).clamp(0.2, 0.95);
+              return Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: _buildCompetitorBar(
+                  cName,
+                  cRank,
+                  cProgress,
+                  const Color(0xFF64748B),
+                ),
+              );
+            }),
+          ] else ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Competitor benchmark updates automatically as nearby business rankings are indexed by Google Maps.',
+                style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: const Color(0xFF64748B)),
+              ),
+            ),
+          ],
         ],
       ),
     );

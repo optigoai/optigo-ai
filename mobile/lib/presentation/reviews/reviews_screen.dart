@@ -125,8 +125,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     final totalCount = _allReviews.length;
     final pendingCount = _allReviews.where((r) => !r.isReplied).length;
     final repliedCount = totalCount - pendingCount;
-    final repliedPct = totalCount > 0 ? ((repliedCount / totalCount) * 100).toStringAsFixed(2) : '70.29';
-    final notRepliedPct = totalCount > 0 ? ((pendingCount / totalCount) * 100).toStringAsFixed(2) : '29.71';
+    final repliedPct = totalCount > 0 ? ((repliedCount / totalCount) * 100).toStringAsFixed(1) : '0.0';
+    final notRepliedPct = totalCount > 0 ? ((pendingCount / totalCount) * 100).toStringAsFixed(1) : '0.0';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -155,81 +155,77 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   decoration: const BoxDecoration(
                     border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.5)),
                   ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    child: Row(
-                      children: [
-                        // Tab 0: Dashboard & Sentiment Analysis
-                        InkWell(
-                          onTap: () => setState(() => _activeTabIndex = 0),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: _activeTabIndex == 0 ? const Color(0xFF4F46E5) : Colors.transparent,
-                                  width: 3,
-                                ),
-                              ),
-                            ),
-                            child: Text(
-                              'Dashboard & Sentiment Analysis',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: _activeTabIndex == 0 ? FontWeight.w800 : FontWeight.w600,
-                                color: _activeTabIndex == 0 ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                  child: Row(
+                    children: [
+                      // Tab 0: Overview
+                      InkWell(
+                        onTap: () => setState(() => _activeTabIndex = 0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: _activeTabIndex == 0 ? const Color(0xFF4F46E5) : Colors.transparent,
+                                width: 3,
                               ),
                             ),
                           ),
+                          child: Text(
+                            'Overview',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: _activeTabIndex == 0 ? FontWeight.w800 : FontWeight.w600,
+                              color: _activeTabIndex == 0 ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 12),
+                      ),
+                      const SizedBox(width: 12),
 
-                        // Tab 1: Review Management
-                        InkWell(
-                          onTap: () => setState(() => _activeTabIndex = 1),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: _activeTabIndex == 1 ? const Color(0xFF4F46E5) : Colors.transparent,
-                                  width: 3,
-                                ),
+                      // Tab 1: Manage Reviews
+                      InkWell(
+                        onTap: () => setState(() => _activeTabIndex = 1),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: _activeTabIndex == 1 ? const Color(0xFF4F46E5) : Colors.transparent,
+                                width: 3,
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Review Management',
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Manage Reviews',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: _activeTabIndex == 1 ? FontWeight.w800 : FontWeight.w600,
+                                  color: _activeTabIndex == 1 ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF4F46E5),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  totalCount > 1000 ? '${(totalCount / 1000).toStringAsFixed(1)}K' : '$totalCount',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
-                                    fontWeight: _activeTabIndex == 1 ? FontWeight.w800 : FontWeight.w600,
-                                    color: _activeTabIndex == 1 ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF4F46E5),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    totalCount > 1000 ? '${(totalCount / 1000).toStringAsFixed(1)}K' : '$totalCount',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -242,6 +238,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                       child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
                     ),
                   )
+                else if (_allReviews.isEmpty)
+                  _buildEmptyReviewsState()
                 else if (_activeTabIndex == 0)
                   _buildDashboardSentimentTab(repliedPct, notRepliedPct, repliedCount, pendingCount)
                 else
@@ -255,45 +253,90 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   }
 
   // ========================================================
-  // TAB 1: DASHBOARD & SENTIMENT ANALYSIS
+  // EMPTY REVIEWS STATE
+  // ========================================================
+  Widget _buildEmptyReviewsState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEF2FF),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.rate_review_outlined,
+              size: 36,
+              color: Color(0xFF4F46E5),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Reviews Recorded Yet',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Connect and sync your Google Business Profile to monitor live reviews, generate AI responses, and track customer sentiment trends.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: _isSyncing ? null : _handleSyncGbp,
+            icon: _isSyncing
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.sync_rounded, size: 18),
+            label: Text(
+              _isSyncing ? 'Syncing...' : 'Sync Google Reviews',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4F46E5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========================================================
+  // TAB 1: OVERVIEW & SENTIMENT ANALYSIS
   // ========================================================
   Widget _buildDashboardSentimentTab(String repliedPct, String notRepliedPct, int repliedCount, int pendingCount) {
-    final posKw = (_managementAnalytics['positive_keywords'] as List?) ?? [
-      {'keyword': 'Service', 'count': 340},
-      {'keyword': 'Food', 'count': 283},
-      {'keyword': 'Taste', 'count': 145},
-      {'keyword': 'Staff', 'count': 140},
-      {'keyword': 'Atmosphere', 'count': 121},
-    ];
+    final posKw = (_managementAnalytics['positive_keywords'] as List?) ?? [];
+    final negKw = (_managementAnalytics['negative_keywords'] as List?) ?? [];
+    final trendingKw = (_managementAnalytics['trending_keywords_7d'] as List?) ?? [];
 
-    final negKw = (_managementAnalytics['negative_keywords'] as List?) ?? [
-      {'keyword': 'Waiting Time', 'count': 8},
-      {'keyword': 'Parking Space', 'count': 9},
-      {'keyword': 'AC Cooling', 'count': 9},
-      {'keyword': 'Seating', 'count': 5},
-    ];
-
-    final trendingKw = (_managementAnalytics['trending_keywords_7d'] as List?) ?? [
-      {'keyword': 'Biryani', 'count': 4},
-      {'keyword': 'Service', 'count': 4},
-      {'keyword': 'Ambience', 'count': 3},
-    ];
-
-    final kwSentiment = (_managementAnalytics['keyword_sentiment'] as Map?) ?? {
-      'positive_pct': 69.67,
-      'negative_pct': 30.33,
-      'positive_count': 875,
-      'negative_count': 381,
-    };
-
-    final monthlyData = (_managementAnalytics['monthly_rating_analysis'] as List?) ?? [
-      {'month': 'Aug', 'reviews_count': 62, 'rating': 4.8},
-      {'month': 'Sep', 'reviews_count': 69, 'rating': 4.9},
-      {'month': 'Oct', 'reviews_count': 71, 'rating': 4.8},
-      {'month': 'Nov', 'reviews_count': 75, 'rating': 4.8},
-      {'month': 'Dec', 'reviews_count': 119, 'rating': 4.7},
-      {'month': 'Jan', 'reviews_count': 124, 'rating': 4.8},
-    ];
+    final monthlyData = (_managementAnalytics['monthly_rating_analysis'] as List?) ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,7 +383,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                           color: Color(0xFFEF4444),
                         ),
                         CircularProgressIndicator(
-                          value: (double.tryParse(repliedPct) ?? 70.0) / 100.0,
+                          value: (double.tryParse(repliedPct) ?? 0.0) / 100.0,
                           strokeWidth: 9,
                           color: const Color(0xFF22C55E),
                         ),
@@ -404,6 +447,37 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   ),
                 ],
               ),
+              if (pendingCount > 0) ...[
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _activeTabIndex = 1;
+                        _selectedFilter = 'pending';
+                      });
+                    },
+                    icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFF4F46E5)),
+                    label: Text(
+                      'Reply to $pendingCount Pending Review${pendingCount > 1 ? 's' : ''}',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF4F46E5),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFC7D2FE)),
+                      backgroundColor: const Color(0xFFEEF2FF),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -447,141 +521,70 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 }).toList(),
               ),
               const SizedBox(height: 16),
-              // Rating Nodes + Volume Columns
-              SizedBox(
-                height: 160,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: monthlyData.map((d) {
-                    final rating = d['rating'] ?? 4.8;
-                    final count = d['reviews_count'] ?? 50;
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF6D28D9),
-                            shape: BoxShape.circle,
+              if (monthlyData.isEmpty)
+                Container(
+                  height: 100,
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Monthly review trends will appear as customer ratings accumulate.',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF64748B)),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 160,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: monthlyData.map((d) {
+                      final rating = d['rating'] ?? 5.0;
+                      final count = d['reviews_count'] ?? 1;
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF6D28D9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '$rating',
+                              style: GoogleFonts.plusJakartaSans(fontSize: 8.5, color: Colors.white, fontWeight: FontWeight.w800),
+                            ),
                           ),
-                          child: Text(
-                            '$rating',
-                            style: GoogleFonts.plusJakartaSans(fontSize: 8.5, color: Colors.white, fontWeight: FontWeight.w800),
+                          const SizedBox(height: 8),
+                          Text('$count', style: GoogleFonts.plusJakartaSans(fontSize: 9, color: const Color(0xFF64748B))),
+                          const SizedBox(height: 4),
+                          Container(
+                            width: 24,
+                            height: ((count as num) / 50).clamp(0.1, 1.0) * 80 + 10,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF16A34A),
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text('$count', style: GoogleFonts.plusJakartaSans(fontSize: 9, color: const Color(0xFF64748B))),
-                        const SizedBox(height: 4),
-                        Container(
-                          width: 24,
-                          height: ((count as num) / 130) * 80 + 10,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF16A34A),
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+                          const SizedBox(height: 6),
+                          Text(
+                            d['month'] ?? 'Mo',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 9.5, color: const Color(0xFF64748B), fontWeight: FontWeight.w600),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          d['month'] ?? 'Mo',
-                          style: GoogleFonts.plusJakartaSans(fontSize: 9.5, color: const Color(0xFF64748B), fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
 
         const SizedBox(height: 18),
 
-        // 3. Keyword Sentiment Analysis Donut Card
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Keyword Sentiment Analysis',
-                style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  SizedBox(
-                    width: 70,
-                    height: 70,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const CircularProgressIndicator(
-                          value: 1.0,
-                          strokeWidth: 8,
-                          color: Color(0xFFEF4444),
-                        ),
-                        CircularProgressIndicator(
-                          value: ((kwSentiment['positive_pct'] as num?)?.toDouble() ?? 69.67) / 100.0,
-                          strokeWidth: 8,
-                          color: const Color(0xFF22C55E),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.circle, color: Color(0xFF22C55E), size: 9),
-                                const SizedBox(width: 5),
-                                Text('Positive', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
-                              ],
-                            ),
-                            Text('${kwSentiment['positive_pct']}%', style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w800, color: const Color(0xFF2563EB))),
-                            Text('${kwSentiment['positive_count']} Keywords', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B))),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.circle, color: Color(0xFFEF4444), size: 9),
-                                const SizedBox(width: 5),
-                                Text('Negative', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700)),
-                              ],
-                            ),
-                            Text('${kwSentiment['negative_pct']}%', style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.w800, color: const Color(0xFF2563EB))),
-                            Text('${kwSentiment['negative_count']} Keywords', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: const Color(0xFF64748B))),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 18),
-
-        // 4. Sentiment & Real Analyzed Keywords
+        // 3. Customer Themes & Mention Share
         Text(
-          'Sentiment Analysis',
-          style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A)),
+          'Customer Themes & Mention Share',
+          style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFF0F172A)),
         ),
         const SizedBox(height: 12),
 
@@ -589,7 +592,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         TextField(
           onChanged: (val) => setState(() => _keywordSearch = val),
           decoration: InputDecoration(
-            hintText: 'Search Keyword',
+            hintText: 'Search Mentions & Themes',
             prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF94A3B8)),
             filled: true,
             fillColor: Colors.white,
@@ -613,27 +616,33 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Trending Sentiment For Last 7 days',
+                'Trending Themes (Last 7 Days)',
                 style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
               ),
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: trendingKw.map((item) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6D28D9),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${item['keyword']} • ${item['count']}',
-                      style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
-                    ),
-                  );
-                }).toList(),
-              ),
+              if (trendingKw.isEmpty)
+                Text(
+                  'No specific spike in themes over the past 7 days.',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF64748B)),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: trendingKw.map((item) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6D28D9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${item['keyword']} • ${item['count']}',
+                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
+                      ),
+                    );
+                  }).toList(),
+                ),
             ],
           ),
         ),
@@ -657,25 +666,31 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
               ),
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: posKw
-                    .where((item) => _keywordSearch.isEmpty || item['keyword'].toString().toLowerCase().contains(_keywordSearch.toLowerCase()))
-                    .map((item) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF15803D),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${item['keyword']} • ${item['count']}',
-                      style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
-                    ),
-                  );
-                }).toList(),
-              ),
+              if (posKw.isEmpty)
+                Text(
+                  'Positive customer themes will appear here once identified.',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF15803D)),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: posKw
+                      .where((item) => _keywordSearch.isEmpty || item['keyword'].toString().toLowerCase().contains(_keywordSearch.toLowerCase()))
+                      .map((item) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF15803D),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${item['keyword']} • ${item['count']}',
+                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
+                      ),
+                    );
+                  }).toList(),
+                ),
             ],
           ),
         ),
@@ -699,25 +714,31 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
               ),
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: negKw
-                    .where((item) => _keywordSearch.isEmpty || item['keyword'].toString().toLowerCase().contains(_keywordSearch.toLowerCase()))
-                    .map((item) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${item['keyword']} • ${item['count']}',
-                      style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
-                    ),
-                  );
-                }).toList(),
-              ),
+              if (negKw.isEmpty)
+                Text(
+                  'No recurring negative themes detected.',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 12, color: const Color(0xFF991B1B)),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: negKw
+                      .where((item) => _keywordSearch.isEmpty || item['keyword'].toString().toLowerCase().contains(_keywordSearch.toLowerCase()))
+                      .map((item) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDC2626),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${item['keyword']} • ${item['count']}',
+                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
+                      ),
+                    );
+                  }).toList(),
+                ),
             ],
           ),
         ),

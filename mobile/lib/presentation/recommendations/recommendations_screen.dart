@@ -211,7 +211,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                 children: [
                   // 1. Top Navigation Bar
                   OptigoTopBar(
-                    subtitle: 'Grow & Action Hub',
+                    subtitle: 'Your Next Best Actions',
                     onNotificationTap: widget.onNavigateToReviews,
                     onRefreshTap: _handleGenerateFresh,
                     isRefreshing: _isGenerating,
@@ -596,7 +596,8 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               Switch.adaptive(
                 value: _masterAutomationEnabled,
                 onChanged: (val) => setState(() => _masterAutomationEnabled = val),
-                activeColor: const Color(0xFF10B981),
+                activeThumbColor: const Color(0xFF10B981),
+                activeTrackColor: const Color(0xFF10B981).withValues(alpha: 0.4),
               ),
             ],
           ),
@@ -719,7 +720,8 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                 onChanged: _masterAutomationEnabled
                     ? (val) => setState(() => _automationRules[ruleKey] = val)
                     : null,
-                activeColor: const Color(0xFF2563EB),
+                activeThumbColor: const Color(0xFF2563EB),
+                activeTrackColor: const Color(0xFF2563EB).withValues(alpha: 0.4),
               ),
             ],
           ),

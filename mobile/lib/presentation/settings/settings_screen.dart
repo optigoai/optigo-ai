@@ -657,7 +657,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   value: _dailyBriefingEnabled,
-                  activeColor: const Color(0xFF2563EB),
+                  activeThumbColor: const Color(0xFF2563EB),
+                  activeTrackColor: const Color(0xFF2563EB).withValues(alpha: 0.4),
                   onChanged: (val) {
                     setState(() => _dailyBriefingEnabled = val);
                     setModalState(() => _dailyBriefingEnabled = val);
@@ -681,7 +682,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   value: _reviewAlertsEnabled,
-                  activeColor: const Color(0xFF2563EB),
+                  activeThumbColor: const Color(0xFF2563EB),
+                  activeTrackColor: const Color(0xFF2563EB).withValues(alpha: 0.4),
                   onChanged: (val) {
                     setState(() => _reviewAlertsEnabled = val);
                     setModalState(() => _reviewAlertsEnabled = val);
@@ -705,7 +707,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   value: _seoRankAlertsEnabled,
-                  activeColor: const Color(0xFF2563EB),
+                  activeThumbColor: const Color(0xFF2563EB),
+                  activeTrackColor: const Color(0xFF2563EB).withValues(alpha: 0.4),
                   onChanged: (val) {
                     setState(() => _seoRankAlertsEnabled = val);
                     setModalState(() => _seoRankAlertsEnabled = val);
