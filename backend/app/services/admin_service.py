@@ -16,6 +16,8 @@ from app.models.ai_log import AIRequestLog
 from app.models.review import Review
 from app.models.campaign import Campaign
 from app.models.content import Content
+from app.models.lead import Lead
+from app.repositories.lead_repo import LeadRepository
 from app.core.redis import get_redis_client
 
 logger = get_logger("app.services.admin")
@@ -788,3 +790,167 @@ class AdminService:
                 "ai_providers": {"openai": "configured", "google_gemini": "configured"},
             },
         }
+
+    async def get_leads_stats(self) -> Dict[str, Any]:
+        """Aggregate lead generation and onboarding funnel KPIs."""
+        repo = LeadRepository(self.db)
+        return await repo.get_stats()
+
+    async def list_leads(
+        self,
+        status: Optional[str] = None,
+        priority: Optional[str] = None,
+        search: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> Dict[str, Any]:
+        """List leads with filtering and pagination."""
+        repo = LeadRepository(self.db)
+        leads = await repo.list_leads(
+            status=status, priority=priority, search=search, limit=limit, offset=offset
+        )
+        total = await repo.count_leads(status=status, priority=priority, search=search)
+
+        return {
+            "total": total,
+            "leads": [
+                {
+                    "id": l.id,
+                    "business_name": l.business_name,
+                    "phone": l.phone,
+                    "country_code": l.country_code,
+                    "address": l.address,
+                    "category": l.category,
+                    "rating": l.rating,
+                    "review_count": l.review_count,
+                    "status": l.status,
+                    "priority": l.priority,
+                    "report_score": l.report_score,
+                    "report_generated_at": l.report_generated_at.isoformat() if l.report_generated_at else None,
+                    "report_viewed_at": l.report_viewed_at.isoformat() if l.report_viewed_at else None,
+                    "selected_plan": l.selected_plan,
+                    "payment_status": l.payment_status,
+                    "payment_amount": l.payment_amount,
+                    "user_id": l.user_id,
+                    "business_id": l.business_id,
+                    "notes": l.notes,
+                    "created_at": l.created_at.isoformat() if l.created_at else None,
+                    "last_activity_at": l.last_activity_at.isoformat() if l.last_activity_at else None,
+                }
+                for l in leads
+            ],
+        }
+
+    async def get_lead_detail(self, lead_id: str) -> Dict[str, Any]:
+        """Get 360-degree lead detail including report analysis and timeline."""
+        repo = LeadRepository(self.db)
+        lead = await repo.get_by_id(lead_id)
+        if not lead:
+            raise ValueError(f"Lead not found with id {lead_id}")
+
+        return {
+            "id": lead.id,
+            "business_name": lead.business_name,
+            "place_id": lead.place_id,
+            "google_location_id": lead.google_location_id,
+            "address": lead.address,
+            "latitude": lead.latitude,
+            "longitude": lead.longitude,
+            "category": lead.category,
+            "rating": lead.rating,
+            "review_count": lead.review_count,
+            "website": lead.website,
+            "photo_url": lead.photo_url,
+            "phone": lead.phone,
+            "country_code": lead.country_code,
+            "email": lead.email,
+            "status": lead.status,
+            "priority": lead.priority,
+            "report_data": lead.report_data,
+            "report_score": lead.report_score,
+            "report_generated_at": lead.report_generated_at.isoformat() if lead.report_generated_at else None,
+            "report_viewed_at": lead.report_viewed_at.isoformat() if lead.report_viewed_at else None,
+            "selected_plan": lead.selected_plan,
+            "plan_duration": lead.plan_duration,
+            "payment_status": lead.payment_status,
+            "payment_id": lead.payment_id,
+            "payment_amount": lead.payment_amount,
+            "payment_currency": lead.payment_currency,
+            "user_id": lead.user_id,
+            "business_id": lead.business_id,
+            "organization_id": lead.organization_id,
+            "notes": lead.notes,
+            "timeline": lead.timeline or [],
+            "created_at": lead.created_at.isoformat() if lead.created_at else None,
+            "last_activity_at": lead.last_activity_at.isoformat() if lead.last_activity_at else None,
+        }
+
+    async def update_lead_status(
+        self,
+        lead_id: str,
+        status: Optional[str] = None,
+        priority: Optional[str] = None,
+        notes: Optional[str] = None,
+        admin_email: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Update lead status, priority, or notes with timeline audit tracking."""
+        repo = LeadRepository(self.db)
+        lead = await repo.get_by_id(lead_id)
+        if not lead:
+            raise ValueError(f"Lead not found with id {lead_id}")
+
+        timeline_entries = list(lead.timeline or [])
+        now_iso = datetime.utcnow().isoformat()
+
+        if status and status != lead.status:
+            timeline_entries.append({
+                "stage": status,
+                "timestamp": now_iso,
+                "title": f"Status updated to {status.replace('_', ' ').title()}",
+                "description": f"Admin ({admin_email or 'admin'}) updated lead stage.",
+            })
+            lead.status = status
+
+        if priority:
+            lead.priority = priority
+
+        if notes is not None:
+            lead.notes = notes
+
+        lead.timeline = timeline_entries
+        lead.last_activity_at = datetime.utcnow()
+        await repo.save(lead)
+        return await self.get_lead_detail(lead_id)
+
+    async def add_lead_note(
+        self,
+        lead_id: str,
+        note_text: str,
+        admin_email: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Append an admin note and log to lead timeline."""
+        repo = LeadRepository(self.db)
+        lead = await repo.get_by_id(lead_id)
+        if not lead:
+            raise ValueError(f"Lead not found with id {lead_id}")
+
+        existing_notes = lead.notes or ""
+        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+        new_note_entry = f"[{timestamp} - {admin_email or 'Admin'}]: {note_text.strip()}"
+        if existing_notes:
+            lead.notes = f"{existing_notes}\n{new_note_entry}"
+        else:
+            lead.notes = new_note_entry
+
+        timeline_entries = list(lead.timeline or [])
+        timeline_entries.append({
+            "stage": "note_added",
+            "timestamp": datetime.utcnow().isoformat(),
+            "title": "Admin Note Added",
+            "description": note_text.strip(),
+        })
+        lead.timeline = timeline_entries
+        lead.last_activity_at = datetime.utcnow()
+        await repo.save(lead)
+        return await self.get_lead_detail(lead_id)
+

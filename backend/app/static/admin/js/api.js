@@ -123,6 +123,39 @@ class AdminAPI {
     return await this.request('/admin/system-health');
   }
 
+  // --- Leads API Methods ---
+  async getLeadsStats() {
+    return await this.request('/admin/leads/stats');
+  }
+
+  async getLeads(status = null, priority = null, search = null, limit = 50, offset = 0) {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (priority) params.append('priority', priority);
+    if (search) params.append('search', search);
+    params.append('limit', limit);
+    params.append('offset', offset);
+    return await this.request(`/admin/leads?${params.toString()}`);
+  }
+
+  async getLeadDetail(leadId) {
+    return await this.request(`/admin/leads/${leadId}`);
+  }
+
+  async updateLead(leadId, data) {
+    return await this.request(`/admin/leads/${leadId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async addLeadNote(leadId, note) {
+    return await this.request(`/admin/leads/${leadId}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({ note }),
+    });
+  }
+
   // --- Admin Auth ---
   async login(email, password) {
     const res = await this.request('/auth/login', {

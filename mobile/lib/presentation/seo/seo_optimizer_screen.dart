@@ -698,6 +698,8 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                                   Text(
                                     '$top10Count in striking distance (#4-#10)',
                                     style: GoogleFonts.plusJakartaSans(fontSize: 10.5, color: const Color(0xFF2563EB), fontWeight: FontWeight.w600),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
@@ -719,7 +721,7 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                       Expanded(
                         child: Container(
                           height: 195,
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(24),
@@ -764,13 +766,27 @@ class _SeoOptimizerScreenState extends State<SeoOptimizerScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'Local Map Score',
-                                    style: GoogleFonts.plusJakartaSans(fontSize: 10.5, fontWeight: FontWeight.w700, color: const Color(0xFF334155)),
+                                  Flexible(
+                                    child: Text(
+                                      'Local Map Score',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF334155),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
+                                  const SizedBox(width: 4),
                                   Text(
                                     'Profile Quality',
-                                    style: GoogleFonts.plusJakartaSans(fontSize: 9.5, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                    maxLines: 1,
                                   ),
                                 ],
                               ),

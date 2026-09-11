@@ -55,6 +55,14 @@
           </div>
           <span>All Businesses</span>
         </li>
+        <li class="nav-item" data-tab="leads">
+          <div class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+          </div>
+          <span>Leads & Onboarding</span>
+        </li>
         <li class="nav-item" data-tab="features">
           <div class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -270,6 +278,140 @@
                 </tr>
               </thead>
               <tbody id="businesses-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: LEADS & ONBOARDING FUNNEL -->
+      <div class="tab-view" id="view-leads" style="display:none;">
+        <!-- Leads Funnel KPI Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Total Leads</span>
+              <div class="stat-icon-wrapper stat-icon-blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-total">--</div>
+            <div class="stat-footer">All onboarding attempts</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">New Inquiries</span>
+              <div class="stat-icon-wrapper stat-icon-amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-new">--</div>
+            <div class="stat-footer">Search & form initiated</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Active Onboarding</span>
+              <div class="stat-icon-wrapper stat-icon-cyan">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-active">--</div>
+            <div class="stat-footer">In analysis or review</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Reports Generated</span>
+              <div class="stat-icon-wrapper stat-icon-violet">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-ready">--</div>
+            <div class="stat-footer">Audit ready & delivered</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Converted Paying</span>
+              <div class="stat-icon-wrapper stat-icon-emerald">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-converted">--</div>
+            <div class="stat-footer"><span id="stat-leads-rate" class="stat-trend-up">--%</span> Conv. Rate</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Stuck / Drop-off</span>
+              <div class="stat-icon-wrapper stat-icon-rose" style="background:rgba(239, 68, 68, 0.15); color:#F87171;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-stuck">--</div>
+            <div class="stat-footer">Needs admin follow-up</div>
+          </div>
+        </div>
+
+        <!-- Leads Table Card -->
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap; gap:16px;">
+            <div>
+              <div class="card-title">Onboarding Pipeline & Leads</div>
+              <div class="card-subtitle">Real-time lead tracking from single-page audits to paid activation</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <!-- Search Input -->
+              <div style="display:flex; align-items:center; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:6px 12px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="leads-search-input" placeholder="Search name or phone..." style="background:transparent; border:none; color:var(--text-primary); font-size:0.85rem; outline:none; width:180px;">
+              </div>
+
+              <!-- Status Filter Dropdown -->
+              <select id="leads-filter-status" class="form-input" style="padding:6px 10px; font-size:0.85rem; width:auto;">
+                <option value="">All Stages</option>
+                <option value="new_lead">New Lead</option>
+                <option value="form_submitted">Audit Requested</option>
+                <option value="analysis_started">Analysis Running</option>
+                <option value="report_ready">Report Ready</option>
+                <option value="report_viewed">Report Viewed</option>
+                <option value="plan_selected">Plan Selected</option>
+                <option value="converted">Converted Customer</option>
+                <option value="abandoned">Stuck / Abandoned</option>
+              </select>
+
+              <!-- Priority Filter Dropdown -->
+              <select id="leads-filter-priority" class="form-input" style="padding:6px 10px; font-size:0.85rem; width:auto;">
+                <option value="">All Priorities</option>
+                <option value="hot">Hot Priority</option>
+                <option value="warm">Warm Priority</option>
+                <option value="cold">Cold Priority</option>
+              </select>
+
+              <button class="btn btn-secondary" id="btn-refresh-leads" style="padding:6px 12px; font-size:0.85rem;">
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Business / Storefront</th>
+                  <th>Phone Contact</th>
+                  <th>Funnel Stage</th>
+                  <th>Priority</th>
+                  <th>Audit Score</th>
+                  <th>Plan & Payment</th>
+                  <th>Last Activity</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="leads-tbody">
                 <!-- Dynamically populated -->
               </tbody>
             </table>
@@ -741,6 +883,157 @@
         <div style="display:flex; gap:10px;">
           <button type="button" class="btn btn-secondary" onclick="closeBusinessDetailModal()">Close</button>
           <button type="button" class="btn btn-primary" onclick="handleSaveBusinessModal()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lead Deep-Dive & Follow-up Modal -->
+  <div class="modal-overlay" id="lead-detail-modal" style="display:none;">
+    <div class="detail-modal-card" style="max-width:880px;">
+      <!-- Modal Header -->
+      <div class="modal-header-bar">
+        <div class="modal-header-info">
+          <div class="brand-logo" style="width:40px; height:40px; background:rgba(37, 99, 235, 0.2);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h2 id="lead-modal-biz-name" style="margin:0; font-size:1.25rem;">Lead Details</h2>
+              <span id="lead-modal-stage-badge" class="badge badge-active">New Lead</span>
+              <span id="lead-modal-priority-badge" class="badge" style="background:rgba(239, 68, 68, 0.2); color:#F87171;">Hot</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">
+              Phone: <strong id="lead-modal-phone" style="color:var(--text-primary);">-</strong> • Category: <span id="lead-modal-category">-</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <a id="lead-modal-public-link" href="#" target="_blank" class="btn btn-secondary" style="font-size:0.85rem; text-decoration:none;">
+            Open Public Report ↗
+          </a>
+          <button type="button" class="btn btn-secondary" onclick="closeLeadDetailModal()" style="padding:8px 12px;">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Nav Tabs -->
+      <div class="modal-nav-tabs">
+        <button class="modal-tab-btn active" id="btn-leadtab-overview" onclick="switchLeadModalTab('overview')">Audit & Competitor Findings</button>
+        <button class="modal-tab-btn" id="btn-leadtab-timeline" onclick="switchLeadModalTab('timeline')">Funnel Timeline</button>
+        <button class="modal-tab-btn" id="btn-leadtab-actions" onclick="switchLeadModalTab('actions')">Status & Notes</button>
+      </div>
+
+      <!-- Modal Body Content -->
+      <div class="modal-body-content" style="max-height: calc(85vh - 180px); overflow-y: auto; padding: 22px 26px;">
+        <!-- TAB 1: OVERVIEW & AUDIT FINDINGS -->
+        <div class="modal-tab-pane" id="leadmodaltab-overview">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:20px;">
+            <div class="stat-card" style="padding:14px;">
+              <span class="stat-title">Profile Score</span>
+              <div class="stat-value" id="lead-detail-score" style="font-size:1.6rem; color:#60A5FA;">--</div>
+              <div class="stat-footer" id="lead-detail-verdict">Google Map Pack</div>
+            </div>
+            <div class="stat-card" style="padding:14px;">
+              <span class="stat-title">Selected Plan</span>
+              <div class="stat-value" id="lead-detail-plan" style="font-size:1.4rem; text-transform:capitalize;">None</div>
+              <div class="stat-footer" id="lead-detail-payment-status">Payment: Unpaid</div>
+            </div>
+            <div class="stat-card" style="padding:14px;">
+              <span class="stat-title">Estimated Missed Calls</span>
+              <div class="stat-value" id="lead-detail-missed-calls" style="font-size:1.4rem; color:#F87171;">--</div>
+              <div class="stat-footer">Monthly to competitors</div>
+            </div>
+          </div>
+
+          <!-- Identified Issues Section -->
+          <div style="margin-bottom:24px;">
+            <h4 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:12px;">Discovered Issues & Fix Requirements</h4>
+            <div id="lead-detail-issues-list" style="display:flex; flex-direction:column; gap:10px;">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Competitors Benchmark -->
+          <div>
+            <h4 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:12px;">Competitor Comparison</h4>
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Competitor Name</th>
+                    <th>Rank</th>
+                    <th>Rating & Reviews</th>
+                    <th>Advantage</th>
+                  </tr>
+                </thead>
+                <tbody id="lead-detail-competitors-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: TIMELINE -->
+        <div class="modal-tab-pane" id="leadmodaltab-timeline" style="display:none;">
+          <div id="lead-detail-timeline-container" style="display:flex; flex-direction:column; gap:16px; padding:10px 0;">
+            <!-- Dynamically populated timeline entries -->
+          </div>
+        </div>
+
+        <!-- TAB 3: STATUS & NOTES -->
+        <div class="modal-tab-pane" id="leadmodaltab-actions" style="display:none;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px;">
+            <div class="form-group">
+              <label>Update Funnel Stage</label>
+              <select id="lead-action-status" class="form-input">
+                <option value="new_lead">New Lead</option>
+                <option value="form_submitted">Audit Requested</option>
+                <option value="analysis_started">Analysis Running</option>
+                <option value="report_ready">Report Ready</option>
+                <option value="report_viewed">Report Viewed</option>
+                <option value="plan_selected">Plan Selected</option>
+                <option value="payment_pending">Payment Pending</option>
+                <option value="converted">Converted Customer</option>
+                <option value="abandoned">Abandoned / Dropped</option>
+                <option value="stuck">Stuck / Needs Intervention</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Priority Level</label>
+              <select id="lead-action-priority" class="form-input">
+                <option value="hot">Hot (High intent)</option>
+                <option value="warm">Warm (Standard)</option>
+                <option value="cold">Cold (Low responsiveness)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; margin-bottom:24px;">
+            <button type="button" class="btn btn-primary" onclick="handleUpdateLeadStatus()">
+              Update Stage & Priority
+            </button>
+          </div>
+
+          <!-- Notes History & Add Note -->
+          <div style="border-top:1px solid var(--border-color); padding-top:20px;">
+            <h4 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:12px;">Admin Notes & Follow-up Log</h4>
+            <div id="lead-notes-display" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:14px; min-height:100px; max-height:220px; overflow-y:auto; font-size:0.85rem; line-height:1.6; white-space:pre-wrap; color:var(--text-secondary); margin-bottom:14px;">
+              No notes logged yet.
+            </div>
+
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="lead-new-note-input" class="form-input" placeholder="Add follow-up note or call summary..." style="flex:1;">
+              <button type="button" class="btn btn-secondary" onclick="handleAddLeadNote()">
+                Add Note
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

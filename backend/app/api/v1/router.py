@@ -23,9 +23,13 @@ from app.api.v1.endpoints import (
     features,
     websites,
     public_sites,
+    leads,
 )
 
 api_router = APIRouter(prefix="/api/v1")
+
+# Single-Page Onboarding, Places Search & Lead Generation (Public)
+api_router.include_router(leads.router, prefix="/leads", tags=["Leads & Onboarding"])
 
 # Public Website Engine (Unauthenticated public business pages & sitemaps)
 api_router.include_router(public_sites.router)

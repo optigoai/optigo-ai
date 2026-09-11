@@ -4,10 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OptigoAI — Executive Admin Web Portal</title>
+  
+  <!-- Modern Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/admin.css">
+  
+  <link rel="stylesheet" href="/admin-static/css/admin.css?v=5.0">
 </head>
 <body>
 
@@ -22,49 +25,83 @@
         </div>
         <div>
           <div class="brand-title">OptigoAI</div>
-          <span class="badge-admin">Admin Portal</span>
+          <span class="brand-badge">Admin Portal</span>
         </div>
       </div>
 
       <!-- Navigation Links -->
-      <ul class="nav-menu">
+      <ul class="admin-nav">
         <li class="nav-item active" data-tab="dashboard">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <div class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>
+            </svg>
+          </div>
           <span>Executive Overview</span>
         </li>
         <li class="nav-item" data-tab="organizations">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 0 1 2 2v2H4V5a2 2 0 0 1 2-2zM9 10h2v2H9zM13 10h2v2h-2zM9 14h2v2H9zM13 14h2v2h-2z"/></svg>
+          <div class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 0 1 2 2v2H4V5a2 2 0 0 1 2-2zM9 10h2v2H9zM13 10h2v2h-2zM9 14h2v2H9zM13 14h2v2h-2z"/>
+            </svg>
+          </div>
           <span>Organizations & Tenants</span>
         </li>
         <li class="nav-item" data-tab="businesses">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <div class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
           <span>All Businesses</span>
         </li>
+        <li class="nav-item" data-tab="leads">
+          <div class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+          </div>
+          <span>Leads & Onboarding</span>
+        </li>
         <li class="nav-item" data-tab="features">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <div class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
           <span>Feature Flags & Controls</span>
         </li>
         <li class="nav-item" data-tab="usage">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <div class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+          </div>
           <span>AI Usage & Cost Monitoring</span>
         </li>
         <li class="nav-item" data-tab="health">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <div class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
           <span>System Health Radar</span>
         </li>
       </ul>
 
       <!-- Sidebar Footer User Card -->
-      <div class="sidebar-footer">
-        <div class="admin-profile">
-          <div class="admin-avatar">AD</div>
-          <div class="admin-info">
-            <span class="admin-name" id="admin-display-name">Super Administrator</span>
-            <span class="admin-role" id="admin-display-email">admin@optigoai.com</span>
+      <div class="admin-profile">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="user-avatar">AD</div>
+          <div class="user-info">
+            <span class="user-name" id="admin-display-name">Super Administrator</span>
+            <span class="user-role" id="admin-display-email">admin@optigoai.com</span>
           </div>
         </div>
-        <button class="btn btn-secondary" style="padding:6px 10px; font-size:0.75rem;" title="Sign Out" onclick="window.handleLogout()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <button class="btn-logout" title="Sign Out" onclick="window.handleLogout()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
         </button>
       </div>
     </aside>
@@ -72,8 +109,8 @@
     <!-- MAIN CONTENT -->
     <main class="admin-main">
       <!-- Top Bar -->
-      <div class="top-bar">
-        <div class="page-title-group">
+      <div class="admin-header">
+        <div class="page-title">
           <h1 id="page-main-title">Executive Overview</h1>
           <p id="page-sub-title">Real-time platform metrics, active tenants, and AI consumption</p>
         </div>
@@ -83,7 +120,7 @@
             <span>Live Auto-Sync</span>
           </div>
           <button class="btn btn-secondary" id="btn-refresh-data">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             <span>Synchronize</span>
           </button>
         </div>
@@ -96,25 +133,31 @@
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">Organizations</span>
-              <div class="stat-icon">🏢</div>
+              <div class="stat-icon-wrapper stat-icon-blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 0 1 2 2v2H4V5a2 2 0 0 1 2-2zM9 10h2v2H9zM13 10h2v2h-2zM9 14h2v2H9zM13 14h2v2h-2z"/></svg>
+              </div>
             </div>
             <div class="stat-value" id="stat-orgs">--</div>
-            <div class="stat-footer"><span class="stat-trend-up">↑ 100%</span> Active tenants</div>
+            <div class="stat-footer"><span class="stat-trend-up">+100%</span> Active tenants</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">SMB Businesses</span>
-              <div class="stat-icon">🏪</div>
+              <div class="stat-icon-wrapper stat-icon-emerald">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </div>
             </div>
             <div class="stat-value" id="stat-businesses">--</div>
-            <div class="stat-footer"><span class="stat-trend-up">↑ 12%</span> Month over month</div>
+            <div class="stat-footer"><span class="stat-trend-up">+12%</span> Month over month</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">Registered Users</span>
-              <div class="stat-icon">👥</div>
+              <div class="stat-icon-wrapper stat-icon-violet">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
             </div>
             <div class="stat-value" id="stat-users">--</div>
             <div class="stat-footer">Business owners & managers</div>
@@ -123,7 +166,9 @@
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">AI Invocations</span>
-              <div class="stat-icon">⚡</div>
+              <div class="stat-icon-wrapper stat-icon-amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
             </div>
             <div class="stat-value" id="stat-ai-calls">--</div>
             <div class="stat-footer">CMO, Copy & SEO calls</div>
@@ -132,16 +177,20 @@
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">Tokens Consumed</span>
-              <div class="stat-icon">🧠</div>
+              <div class="stat-icon-wrapper stat-icon-cyan">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              </div>
             </div>
             <div class="stat-value" id="stat-tokens">--</div>
-            <div class="stat-footer">GPT-4o & Gemini 1.5</div>
+            <div class="stat-footer">GPT-4o & Gemini 2.5</div>
           </div>
 
           <div class="stat-card">
             <div class="stat-header">
               <span class="stat-title">AI Cost (USD)</span>
-              <div class="stat-icon">💳</div>
+              <div class="stat-icon-wrapper stat-icon-emerald">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+              </div>
             </div>
             <div class="stat-value" id="stat-cost">--</div>
             <div class="stat-footer">Estimated provider usage</div>
@@ -149,7 +198,7 @@
         </div>
 
         <!-- Quick Summary Cards -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap:24px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap:20px;">
           <div class="card">
             <div class="card-header">
               <div>
@@ -157,10 +206,10 @@
                 <div class="card-subtitle">Instant feature control over all connected mobile clients</div>
               </div>
             </div>
-            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:16px;">
+            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:18px;">
               Admin feature flags allow instant enablement or emergency shutdown of AI Chat, Content Studio, Crawlers, and Auto-reply modules without redeploying mobile apps.
             </p>
-            <button class="btn btn-primary" onclick="switchTab('features')">Configure Feature Flags →</button>
+            <button class="btn btn-primary" onclick="switchTab('features')">Configure Feature Flags</button>
           </div>
 
           <div class="card">
@@ -170,21 +219,21 @@
                 <div class="card-subtitle">Row-level security and strict organization isolation</div>
               </div>
             </div>
-            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:16px;">
+            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:18px;">
               Every business record, review, content piece, and SEO analysis is strictly bound to its parent organization ID with zero cross-tenant data leaks.
             </p>
-            <button class="btn btn-secondary" onclick="switchTab('organizations')">Manage Organizations →</button>
+            <button class="btn btn-secondary" onclick="switchTab('organizations')">Manage Organizations</button>
           </div>
         </div>
       </div>
 
-      <!-- TAB 2: ORGANIZATIONS -->
+      <!-- TAB 2: ORGANIZATIONS & TENANTS -->
       <div class="tab-view" id="view-organizations" style="display:none;">
         <div class="card">
           <div class="card-header">
             <div>
-              <div class="card-title">Tenant Organizations</div>
-              <div class="card-subtitle">All active client organizations and access states</div>
+              <div class="card-title">Registered Organizations</div>
+              <div class="card-subtitle">Manage customer tenants, user quotas, and active status</div>
             </div>
           </div>
           <div class="table-container">
@@ -199,7 +248,9 @@
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody id="orgs-tbody"></tbody>
+              <tbody id="orgs-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
             </table>
           </div>
         </div>
@@ -223,9 +274,146 @@
                   <th>Location</th>
                   <th>Website URL</th>
                   <th>Onboarding</th>
+                  <th>Action</th>
                 </tr>
               </thead>
-              <tbody id="businesses-tbody"></tbody>
+              <tbody id="businesses-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: LEADS & ONBOARDING FUNNEL -->
+      <div class="tab-view" id="view-leads" style="display:none;">
+        <!-- Leads Funnel KPI Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Total Leads</span>
+              <div class="stat-icon-wrapper stat-icon-blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-total">--</div>
+            <div class="stat-footer">All onboarding attempts</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">New Inquiries</span>
+              <div class="stat-icon-wrapper stat-icon-amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-new">--</div>
+            <div class="stat-footer">Search & form initiated</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Active Onboarding</span>
+              <div class="stat-icon-wrapper stat-icon-cyan">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-active">--</div>
+            <div class="stat-footer">In analysis or review</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Reports Generated</span>
+              <div class="stat-icon-wrapper stat-icon-violet">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-ready">--</div>
+            <div class="stat-footer">Audit ready & delivered</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Converted Paying</span>
+              <div class="stat-icon-wrapper stat-icon-emerald">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-converted">--</div>
+            <div class="stat-footer"><span id="stat-leads-rate" class="stat-trend-up">--%</span> Conv. Rate</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Stuck / Drop-off</span>
+              <div class="stat-icon-wrapper stat-icon-rose" style="background:rgba(239, 68, 68, 0.15); color:#F87171;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-leads-stuck">--</div>
+            <div class="stat-footer">Needs admin follow-up</div>
+          </div>
+        </div>
+
+        <!-- Leads Table Card -->
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap; gap:16px;">
+            <div>
+              <div class="card-title">Onboarding Pipeline & Leads</div>
+              <div class="card-subtitle">Real-time lead tracking from single-page audits to paid activation</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <!-- Search Input -->
+              <div style="display:flex; align-items:center; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:6px 12px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="leads-search-input" placeholder="Search name or phone..." style="background:transparent; border:none; color:var(--text-primary); font-size:0.85rem; outline:none; width:180px;">
+              </div>
+
+              <!-- Status Filter Dropdown -->
+              <select id="leads-filter-status" class="form-input" style="padding:6px 10px; font-size:0.85rem; width:auto;">
+                <option value="">All Stages</option>
+                <option value="new_lead">New Lead</option>
+                <option value="form_submitted">Audit Requested</option>
+                <option value="analysis_started">Analysis Running</option>
+                <option value="report_ready">Report Ready</option>
+                <option value="report_viewed">Report Viewed</option>
+                <option value="plan_selected">Plan Selected</option>
+                <option value="converted">Converted Customer</option>
+                <option value="abandoned">Stuck / Abandoned</option>
+              </select>
+
+              <!-- Priority Filter Dropdown -->
+              <select id="leads-filter-priority" class="form-input" style="padding:6px 10px; font-size:0.85rem; width:auto;">
+                <option value="">All Priorities</option>
+                <option value="hot">Hot Priority</option>
+                <option value="warm">Warm Priority</option>
+                <option value="cold">Cold Priority</option>
+              </select>
+
+              <button class="btn btn-secondary" id="btn-refresh-leads" style="padding:6px 12px; font-size:0.85rem;">
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Business / Storefront</th>
+                  <th>Phone Contact</th>
+                  <th>Funnel Stage</th>
+                  <th>Priority</th>
+                  <th>Audit Score</th>
+                  <th>Plan & Payment</th>
+                  <th>Last Activity</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="leads-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
             </table>
           </div>
         </div>
@@ -240,7 +428,9 @@
               <div class="card-subtitle">Changes take effect immediately across all active mobile clients</div>
             </div>
           </div>
-          <div class="features-grid" id="features-container"></div>
+          <div class="features-grid" id="features-container">
+            <!-- Dynamically populated feature switches -->
+          </div>
         </div>
       </div>
 
@@ -250,48 +440,54 @@
         <div class="card" style="margin-bottom: 24px;">
           <div class="card-header">
             <div>
-              <div class="card-title">AI Consumption & Cost per User / Tenant</div>
-              <div class="card-subtitle">Real-time breakdown of model invocations, tokens, and estimated cost per registered user</div>
+              <div class="card-title">AI Token & Request Attribution by User</div>
+              <div class="card-subtitle">Transparent tracking linked to businesses, organizations, and models</div>
             </div>
           </div>
           <div class="table-container">
             <table class="admin-table">
               <thead>
                 <tr>
-                  <th>User / Business Owner</th>
-                  <th>Email</th>
-                  <th>Business / Storefront</th>
-                  <th>Organization / Tenant</th>
-                  <th>Invocations</th>
-                  <th>Tokens Consumed</th>
-                  <th>Est. Cost (USD)</th>
+                  <th>User Profile</th>
+                  <th>Business</th>
+                  <th>Organization</th>
+                  <th>Model</th>
+                  <th>Total Tokens</th>
+                  <th>Requests</th>
+                  <th>Est. Cost</th>
                   <th>Last Active</th>
                 </tr>
               </thead>
-              <tbody id="usage-users-tbody"></tbody>
+              <tbody id="usage-users-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
             </table>
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap:24px;">
+        <!-- 2 Column Grid for Features and Latency -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap:20px;">
           <div class="card">
             <div class="card-header">
               <div>
-                <div class="card-title">Usage by Marketing Feature</div>
+                <div class="card-title">AI Consumption by Feature</div>
                 <div class="card-subtitle">Token distribution across OptigoAI modules</div>
               </div>
             </div>
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Feature</th>
-                  <th>Invocations</th>
-                  <th>Tokens</th>
-                  <th>Est. Cost</th>
-                </tr>
-              </thead>
-              <tbody id="usage-feature-tbody"></tbody>
-            </table>
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Feature</th>
+                    <th>Tokens</th>
+                    <th>Est. Cost</th>
+                  </tr>
+                </thead>
+                <tbody id="usage-feature-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div class="card">
@@ -301,17 +497,21 @@
                 <div class="card-subtitle">Performance across OpenAI and Google Gemini models</div>
               </div>
             </div>
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Provider</th>
-                  <th>Model</th>
-                  <th>Calls</th>
-                  <th>Avg. Latency</th>
-                </tr>
-              </thead>
-              <tbody id="usage-model-tbody"></tbody>
-            </table>
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Provider</th>
+                    <th>Model</th>
+                    <th>Calls</th>
+                    <th>Avg. Latency</th>
+                  </tr>
+                </thead>
+                <tbody id="usage-model-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -325,7 +525,9 @@
               <div class="card-subtitle">Live health status of databases, queues, and AI microservices</div>
             </div>
           </div>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;" id="health-components-container"></div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;" id="health-components-container">
+            <!-- Dynamically populated -->
+          </div>
         </div>
       </div>
 
@@ -335,17 +537,519 @@
   <!-- Live Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
+  <!-- Business Deep-Dive & Edit Modal -->
+  <div class="modal-overlay" id="business-detail-modal" style="display:none;">
+    <div class="detail-modal-card">
+      <!-- Modal Header -->
+      <div class="modal-header-bar">
+        <div class="modal-header-info">
+          <div class="brand-logo" style="width:40px; height:40px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h2 id="modal-biz-title">Business Profile</h2>
+              <span id="modal-biz-onboard-badge" class="badge badge-active">Onboarded</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">
+              ID: <code id="modal-biz-id">...</code> • Org: <strong id="modal-biz-org-name" style="color:var(--text-primary);">...</strong>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button type="button" class="btn btn-primary" id="btn-save-biz-modal" onclick="handleSaveBusinessModal()">
+            Save Changes
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeBusinessDetailModal()" style="padding:8px 12px;">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Nav Tabs -->
+      <div class="modal-nav-tabs">
+        <button class="modal-tab-btn active" data-modaltab="profile" onclick="switchModalTab('profile')">Profile & Storefront</button>
+        <button class="modal-tab-btn" data-modaltab="onboarding" onclick="switchModalTab('onboarding')">Onboarding & Strategy</button>
+        <button class="modal-tab-btn" data-modaltab="organization" onclick="switchModalTab('organization')">Tenant & Org</button>
+        <button class="modal-tab-btn" data-modaltab="users" onclick="switchModalTab('users')">Users & Owners</button>
+        <button class="modal-tab-btn" data-modaltab="reviews" onclick="switchModalTab('reviews')">Reviews in DB</button>
+        <button class="modal-tab-btn" data-modaltab="seo" onclick="switchModalTab('seo')">SEO, Keywords & Crawl</button>
+        <button class="modal-tab-btn" data-modaltab="marketing" onclick="switchModalTab('marketing')">Campaigns & Content</button>
+        <button class="modal-tab-btn" data-modaltab="rawjson" onclick="switchModalTab('rawjson')">Raw JSON</button>
+      </div>
+
+      <!-- Modal Body Tabs -->
+      <div class="modal-body-content" style="max-height: calc(88vh - 180px); overflow-y: auto; padding: 22px 26px;">
+        <!-- TAB 1: PROFILE & STOREFRONT -->
+        <div class="modal-tab-pane" id="modaltab-profile">
+          <form id="biz-edit-form-profile" onsubmit="event.preventDefault();">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Business Name</label>
+                <input type="text" id="edit-biz-name" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label>Primary Category</label>
+                <input type="text" id="edit-biz-category" class="form-input" placeholder="e.g. Restaurant / Cafe">
+              </div>
+              <div class="form-group">
+                <label>Location / Address</label>
+                <input type="text" id="edit-biz-location" class="form-input" placeholder="e.g. Ponnani, Kerala, India">
+              </div>
+              <div class="form-group">
+                <label>Official Website URL</label>
+                <input type="url" id="edit-biz-website" class="form-input" placeholder="https://example.com">
+              </div>
+              <div class="form-group">
+                <label>Contact Phone Number</label>
+                <input type="text" id="edit-biz-phone" class="form-input" placeholder="+91 ...">
+              </div>
+              <div class="form-group">
+                <label>Onboarding Completed Status</label>
+                <select id="edit-biz-onboard-status" class="form-select">
+                  <option value="true">Completed (Onboarded)</option>
+                  <option value="false">Pending (Not Completed)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Health Score (0 - 100)</label>
+                <input type="number" id="edit-biz-health-score" class="form-input" min="0" max="100" placeholder="e.g. 85">
+              </div>
+              <div class="form-group">
+                <label>Google Business Profile Account ID</label>
+                <input type="text" id="edit-biz-gbp-acc" class="form-input" placeholder="accounts/...">
+              </div>
+              <div class="form-group">
+                <label>Google Business Profile Location ID</label>
+                <input type="text" id="edit-biz-gbp-loc" class="form-input" placeholder="locations/...">
+              </div>
+              <div class="form-group">
+                <label>Business Database UUID</label>
+                <input type="text" id="edit-biz-uuid-readonly" class="form-input" readonly style="background:#F1F5F9; color:#64748B; cursor:not-allowed;">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:16px;">
+              <label>Business Description</label>
+              <textarea id="edit-biz-description" class="form-textarea" rows="3" placeholder="Describe the business offerings..."></textarea>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 2: ONBOARDING & STRATEGY -->
+        <div class="modal-tab-pane" id="modaltab-onboarding" style="display:none;">
+          <div class="form-group">
+            <label>Target Customers & Audience (Provided at Onboarding)</label>
+            <textarea id="edit-biz-target-customers" class="form-textarea" rows="2" placeholder="e.g. Families, travelers, local foodies"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>Services & Special Offerings</label>
+            <textarea id="edit-biz-services" class="form-textarea" rows="2" placeholder="e.g. Dine-in, Catering, Outdoor seating"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>Primary Business Goals</label>
+            <textarea id="edit-biz-goals" class="form-textarea" rows="2" placeholder="e.g. Increase local walk-ins by 30%"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>Marketing Channels (Comma-separated)</label>
+            <input type="text" id="edit-biz-channels" class="form-input" placeholder="e.g. google_maps, instagram, meta_ads">
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>AI Synthesized Business Profile (JSON Object)</label>
+            <textarea id="edit-biz-ai-profile" class="form-textarea" style="font-family:ui-monospace, monospace; font-size:0.8rem;" rows="5" placeholder="{ ... }"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:14px;">
+            <label>AI Health Analysis (JSON Object)</label>
+            <textarea id="edit-biz-health-analysis" class="form-textarea" style="font-family:ui-monospace, monospace; font-size:0.8rem;" rows="4" placeholder="{ ... }"></textarea>
+          </div>
+        </div>
+
+        <!-- TAB 3: TENANT & ORGANIZATION -->
+        <div class="modal-tab-pane" id="modaltab-organization" style="display:none;">
+          <div style="background:#F8FAFC; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px; margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h4 style="font-size:0.95rem; font-weight:800; color:var(--text-primary);">Tenant Organization Parameters</h4>
+              <span id="org-tab-badge" class="badge badge-active">Active</span>
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Organization Name</label>
+                <input type="text" id="edit-org-name" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Organization Slug (URL Key)</label>
+                <input type="text" id="edit-org-slug" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Organization UUID</label>
+                <input type="text" id="edit-org-id" class="form-input" readonly style="background:#F1F5F9; color:#64748B; cursor:not-allowed;">
+              </div>
+              <div class="form-group">
+                <label>Status & Access</label>
+                <select id="edit-org-status" class="form-select">
+                  <option value="true">Active (Normal Access)</option>
+                  <option value="false">Suspended (Access Blocked)</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:0.8rem; color:var(--text-secondary);" id="org-meta-dates">
+                Created: - • Updated: -
+              </div>
+              <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.82rem;" onclick="handleSaveOrganizationModal()">
+                Save Organization Details
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: USERS & OWNERS -->
+        <div class="modal-tab-pane" id="modaltab-users" style="display:none;">
+          <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:14px;">
+            Users and business owners registered under organization <code id="userstab-org-slug">...</code>:
+          </div>
+          <div id="modal-users-list-container">
+            <!-- Dynamically populated user editor cards -->
+          </div>
+        </div>
+
+        <!-- TAB 5: REVIEWS IN DB -->
+        <div class="modal-tab-pane" id="modaltab-reviews" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div style="font-size:0.9rem; font-weight:800; color:var(--text-primary);" id="reviews-tab-title">Customer Reviews (0)</div>
+            <div style="font-size:0.82rem; color:var(--text-secondary);" id="reviews-tab-avg">Average Rating: 0.0</div>
+          </div>
+          <div class="table-container" style="max-height:400px; overflow-y:auto;">
+            <table class="table" style="font-size:0.82rem;">
+              <thead>
+                <tr>
+                  <th>Rating</th>
+                  <th>Author</th>
+                  <th>Review Text</th>
+                  <th>Sentiment</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="modal-reviews-tbody">
+                <!-- Dynamically populated reviews -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 6: SEO, KEYWORDS & CRAWL -->
+        <div class="modal-tab-pane" id="modaltab-seo" style="display:none;">
+          <!-- Sub-metrics Grid -->
+          <div class="form-grid-3" style="margin-bottom:16px;">
+            <div class="stats-card-mini">
+              <div class="stats-icon-mini stat-icon-blue">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              </div>
+              <div>
+                <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">LOCAL VISIBILITY / MAP PACK</div>
+                <div style="font-size:1.15rem; font-weight:800; color:var(--text-primary);" id="seo-tab-map-score">-</div>
+              </div>
+            </div>
+            <div class="stats-card-mini">
+              <div class="stats-icon-mini stat-icon-emerald">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+              </div>
+              <div>
+                <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">WEBSITE CRAWL HEALTH</div>
+                <div style="font-size:1.15rem; font-weight:800; color:var(--text-primary);" id="seo-tab-crawl-score">-</div>
+              </div>
+            </div>
+            <div class="stats-card-mini">
+              <div class="stats-icon-mini stat-icon-violet">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div>
+                <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">SEARCH CONSOLE STATUS</div>
+                <div style="font-size:1.15rem; font-weight:800; color:var(--text-primary);" id="seo-tab-gsc-status">Disconnected</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tracked Keywords Table -->
+          <div style="margin-bottom:16px;">
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Tracked Google Search Keywords</h4>
+            <div class="table-container" style="max-height:220px; overflow-y:auto;">
+              <table class="table" style="font-size:0.8rem;">
+                <thead>
+                  <tr>
+                    <th>Keyword Phrase</th>
+                    <th>Current Rank</th>
+                    <th>Best Rank</th>
+                    <th>Volume</th>
+                    <th>Difficulty</th>
+                    <th>Location</th>
+                  </tr>
+                </thead>
+                <tbody id="modal-keywords-tbody">
+                  <!-- Dynamically populated keywords -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Website Findings List -->
+          <div>
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Latest On-Page Technical Crawl Findings</h4>
+            <div id="modal-crawl-findings-list" style="display:flex; flex-direction:column; gap:8px;">
+              <!-- Dynamically populated crawl findings -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 7: CAMPAIGNS, CONTENT & COMPETITORS -->
+        <div class="modal-tab-pane" id="modaltab-marketing" style="display:none;">
+          <!-- Campaigns Table -->
+          <div style="margin-bottom:16px;">
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Marketing Campaigns</h4>
+            <div class="table-container" style="max-height:180px; overflow-y:auto;">
+              <table class="table" style="font-size:0.8rem;">
+                <thead>
+                  <tr>
+                    <th>Campaign Name</th>
+                    <th>Objective</th>
+                    <th>Audience</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="modal-campaigns-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Contents Table -->
+          <div style="margin-bottom:16px;">
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">AI-Generated Marketing Content</h4>
+            <div class="table-container" style="max-height:180px; overflow-y:auto;">
+              <table class="table" style="font-size:0.8rem;">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Preview</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="modal-contents-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Competitors Table -->
+          <div style="margin-bottom:16px;">
+            <h4 style="font-size:0.88rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">Tracked Local Competitors</h4>
+            <div class="table-container" style="max-height:180px; overflow-y:auto;">
+              <table class="table" style="font-size:0.8rem;">
+                <thead>
+                  <tr>
+                    <th>Competitor Name</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Rating</th>
+                    <th>Reviews</th>
+                  </tr>
+                </thead>
+                <tbody id="modal-competitors-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 8: RAW JSON DOCUMENT -->
+        <div class="modal-tab-pane" id="modaltab-rawjson" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:0.82rem; color:var(--text-secondary);">Complete 100% database entity dump (all relational tables, timestamps & metadata):</span>
+            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.78rem;" onclick="copyRawBusinessJson()">
+              Copy Complete JSON
+            </button>
+          </div>
+          <pre id="modal-raw-json-viewer" style="background:#0F172A; color:#38BDF8; padding:16px; border-radius:var(--radius-md); font-family:ui-monospace, monospace; font-size:0.78rem; line-height:1.5; max-height:420px; overflow:auto; border:1px solid #1E293B;"></pre>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-bar">
+        <span style="font-size:0.8rem; color:var(--text-muted);">Edits made here take effect immediately in the database and mobile client.</span>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeBusinessDetailModal()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="handleSaveBusinessModal()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lead Deep-Dive & Follow-up Modal -->
+  <div class="modal-overlay" id="lead-detail-modal" style="display:none;">
+    <div class="detail-modal-card" style="max-width:880px;">
+      <!-- Modal Header -->
+      <div class="modal-header-bar">
+        <div class="modal-header-info">
+          <div class="brand-logo" style="width:40px; height:40px; background:rgba(37, 99, 235, 0.2);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h2 id="lead-modal-biz-name" style="margin:0; font-size:1.25rem;">Lead Details</h2>
+              <span id="lead-modal-stage-badge" class="badge badge-active">New Lead</span>
+              <span id="lead-modal-priority-badge" class="badge" style="background:rgba(239, 68, 68, 0.2); color:#F87171;">Hot</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">
+              Phone: <strong id="lead-modal-phone" style="color:var(--text-primary);">-</strong> • Category: <span id="lead-modal-category">-</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <a id="lead-modal-public-link" href="#" target="_blank" class="btn btn-secondary" style="font-size:0.85rem; text-decoration:none;">
+            Open Public Report ↗
+          </a>
+          <button type="button" class="btn btn-secondary" onclick="closeLeadDetailModal()" style="padding:8px 12px;">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Nav Tabs -->
+      <div class="modal-nav-tabs">
+        <button class="modal-tab-btn active" id="btn-leadtab-overview" onclick="switchLeadModalTab('overview')">Audit & Competitor Findings</button>
+        <button class="modal-tab-btn" id="btn-leadtab-timeline" onclick="switchLeadModalTab('timeline')">Funnel Timeline</button>
+        <button class="modal-tab-btn" id="btn-leadtab-actions" onclick="switchLeadModalTab('actions')">Status & Notes</button>
+      </div>
+
+      <!-- Modal Body Content -->
+      <div class="modal-body-content" style="max-height: calc(85vh - 180px); overflow-y: auto; padding: 22px 26px;">
+        <!-- TAB 1: OVERVIEW & AUDIT FINDINGS -->
+        <div class="modal-tab-pane" id="leadmodaltab-overview">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:20px;">
+            <div class="stat-card" style="padding:14px;">
+              <span class="stat-title">Profile Score</span>
+              <div class="stat-value" id="lead-detail-score" style="font-size:1.6rem; color:#60A5FA;">--</div>
+              <div class="stat-footer" id="lead-detail-verdict">Google Map Pack</div>
+            </div>
+            <div class="stat-card" style="padding:14px;">
+              <span class="stat-title">Selected Plan</span>
+              <div class="stat-value" id="lead-detail-plan" style="font-size:1.4rem; text-transform:capitalize;">None</div>
+              <div class="stat-footer" id="lead-detail-payment-status">Payment: Unpaid</div>
+            </div>
+            <div class="stat-card" style="padding:14px;">
+              <span class="stat-title">Estimated Missed Calls</span>
+              <div class="stat-value" id="lead-detail-missed-calls" style="font-size:1.4rem; color:#F87171;">--</div>
+              <div class="stat-footer">Monthly to competitors</div>
+            </div>
+          </div>
+
+          <!-- Identified Issues Section -->
+          <div style="margin-bottom:24px;">
+            <h4 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:12px;">Discovered Issues & Fix Requirements</h4>
+            <div id="lead-detail-issues-list" style="display:flex; flex-direction:column; gap:10px;">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Competitors Benchmark -->
+          <div>
+            <h4 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:12px;">Competitor Comparison</h4>
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Competitor Name</th>
+                    <th>Rank</th>
+                    <th>Rating & Reviews</th>
+                    <th>Advantage</th>
+                  </tr>
+                </thead>
+                <tbody id="lead-detail-competitors-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: TIMELINE -->
+        <div class="modal-tab-pane" id="leadmodaltab-timeline" style="display:none;">
+          <div id="lead-detail-timeline-container" style="display:flex; flex-direction:column; gap:16px; padding:10px 0;">
+            <!-- Dynamically populated timeline entries -->
+          </div>
+        </div>
+
+        <!-- TAB 3: STATUS & NOTES -->
+        <div class="modal-tab-pane" id="leadmodaltab-actions" style="display:none;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px;">
+            <div class="form-group">
+              <label>Update Funnel Stage</label>
+              <select id="lead-action-status" class="form-input">
+                <option value="new_lead">New Lead</option>
+                <option value="form_submitted">Audit Requested</option>
+                <option value="analysis_started">Analysis Running</option>
+                <option value="report_ready">Report Ready</option>
+                <option value="report_viewed">Report Viewed</option>
+                <option value="plan_selected">Plan Selected</option>
+                <option value="payment_pending">Payment Pending</option>
+                <option value="converted">Converted Customer</option>
+                <option value="abandoned">Abandoned / Dropped</option>
+                <option value="stuck">Stuck / Needs Intervention</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Priority Level</label>
+              <select id="lead-action-priority" class="form-input">
+                <option value="hot">Hot (High intent)</option>
+                <option value="warm">Warm (Standard)</option>
+                <option value="cold">Cold (Low responsiveness)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; margin-bottom:24px;">
+            <button type="button" class="btn btn-primary" onclick="handleUpdateLeadStatus()">
+              Update Stage & Priority
+            </button>
+          </div>
+
+          <!-- Notes History & Add Note -->
+          <div style="border-top:1px solid var(--border-color); padding-top:20px;">
+            <h4 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:12px;">Admin Notes & Follow-up Log</h4>
+            <div id="lead-notes-display" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:14px; min-height:100px; max-height:220px; overflow-y:auto; font-size:0.85rem; line-height:1.6; white-space:pre-wrap; color:var(--text-secondary); margin-bottom:14px;">
+              No notes logged yet.
+            </div>
+
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="lead-new-note-input" class="form-input" placeholder="Add follow-up note or call summary..." style="flex:1;">
+              <button type="button" class="btn btn-secondary" onclick="handleAddLeadNote()">
+                Add Note
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Admin Login Modal -->
   <div class="modal-overlay" id="auth-modal" style="display:none;">
     <div class="auth-card">
       <div class="auth-header">
-        <div class="brand-logo" style="width:48px; height:48px; margin-bottom:8px;">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <div class="brand-logo" style="width:44px; height:44px; margin-bottom:8px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
           </svg>
         </div>
         <h2>Admin Authentication</h2>
-        <p>Enter your administrator credentials to access platform controls and data.</p>
+        <p>Enter administrator credentials to access platform controls.</p>
       </div>
 
       <form class="auth-form" id="admin-login-form">
@@ -363,12 +1067,12 @@
       </form>
 
       <div class="auth-hint">
-        💡 Default Super Admin: <code>admin@optigoai.com</code> / <code>Admin@Optigo123!</code>
+        Default Super Admin: <code>admin@optigoai.com</code> / <code>Admin@Optigo123!</code>
       </div>
     </div>
   </div>
 
-  <script src="./js/api.js"></script>
-  <script src="./js/app.js"></script>
+  <script src="/admin-static/js/api.js?v=5.0"></script>
+  <script src="/admin-static/js/app.js?v=5.0"></script>
 </body>
 </html>

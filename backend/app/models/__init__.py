@@ -27,6 +27,7 @@ from app.models.feature_toggle import FeatureToggle
 from app.models.gsc import GoogleSearchConsoleConnection, SearchConsoleMetric
 from app.models.website_audit import WebsiteAudit
 from app.models.business_website import BusinessWebsite
+from app.models.lead import Lead
 
 __all__ = [
     "Organization",
@@ -34,6 +35,7 @@ __all__ = [
     "UserRole",
     "Business",
     "BusinessWebsite",
+    "Lead",
     "Review",
     "ReviewSentiment",
     "Recommendation",

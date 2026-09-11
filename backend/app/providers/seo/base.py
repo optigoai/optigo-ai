@@ -40,6 +40,7 @@ class BaseSEOProvider(ABC):
         keyword: str,
         location: Optional[str] = None,
         limit: int = 5,
+        **kwargs,
     ) -> List[Dict[str, Any]]:
         """Fetch top ranking local competitors on Google Maps / SERP."""
         ...

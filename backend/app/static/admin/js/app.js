@@ -16,6 +16,7 @@ let autoRefreshTimer = null;
 
 function initApp() {
   setupNavigation();
+  setupLeadsControls();
   setupAuthHandling();
   setupRefreshButton();
   startAutoRefresh();
@@ -123,6 +124,7 @@ function switchTab(tabId) {
     dashboard: { title: 'Executive Overview', sub: 'Real-time platform metrics, active tenants, and AI consumption' },
     organizations: { title: 'Organizations & Tenants', sub: 'Multi-tenant organization management, user access, and status' },
     businesses: { title: 'Registered Businesses', sub: 'All onboarded businesses across categories and locations' },
+    leads: { title: 'Leads & Onboarding Funnel', sub: 'Single-page business audit leads, progression timeline, and conversions' },
     features: { title: 'Feature Toggles & App Controls', sub: 'Dynamically toggle capabilities across the OptigoAI ecosystem' },
     usage: { title: 'AI Usage & Cost Monitoring', sub: 'Token consumption, provider breakdown, and estimated costs' },
     health: { title: 'System Health & Infrastructure', sub: 'PostgreSQL, Redis, and background worker status radar' },
@@ -153,6 +155,8 @@ async function loadAllData() {
       loadFeatures(),
       loadOrganizations(),
       loadBusinesses(),
+      loadLeadsStats(),
+      loadLeads(),
       loadUsage(),
       loadHealth(),
     ]);
@@ -168,6 +172,8 @@ async function loadAllDataSilently() {
       loadFeatures(),
       loadOrganizations(),
       loadBusinesses(),
+      loadLeadsStats(),
+      loadLeads(),
       loadUsage(),
       loadHealth(),
     ]);
@@ -993,3 +999,335 @@ window.closeBusinessDetailModal = closeBusinessDetailModal;
 window.switchModalTab = switchModalTab;
 window.handleSaveBusinessModal = handleSaveBusinessModal;
 window.handleSaveUserModal = handleSaveUserModal;
+
+// ==================================================
+// Leads & Onboarding Funnel Management
+// ==================================================
+
+let leadsData = [];
+let leadsStatsData = null;
+let activeLeadDetailId = null;
+let leadsSearchTimeout = null;
+
+function setupLeadsControls() {
+  const searchInput = document.getElementById('leads-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      if (leadsSearchTimeout) clearTimeout(leadsSearchTimeout);
+      leadsSearchTimeout = setTimeout(() => {
+        loadLeads();
+      }, 300);
+    });
+  }
+
+  const statusFilter = document.getElementById('leads-filter-status');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', () => loadLeads());
+  }
+
+  const priorityFilter = document.getElementById('leads-filter-priority');
+  if (priorityFilter) {
+    priorityFilter.addEventListener('change', () => loadLeads());
+  }
+
+  const refreshBtn = document.getElementById('btn-refresh-leads');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      loadLeadsStats();
+      loadLeads();
+      showToast('Leads data refreshed', 'success');
+    });
+  }
+}
+
+async function loadLeadsStats() {
+  try {
+    const stats = await window.api.getLeadsStats();
+    leadsStatsData = stats;
+    renderLeadsStats(stats);
+  } catch (err) {
+    console.error('Failed to load lead stats:', err);
+  }
+}
+
+function renderLeadsStats(stats) {
+  if (!stats) return;
+  const setEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = val;
+  };
+  setEl('stat-leads-total', stats.total_leads || 0);
+  setEl('stat-leads-new', stats.new_leads || 0);
+  setEl('stat-leads-active', stats.active_onboarding || 0);
+  setEl('stat-leads-ready', stats.report_ready || 0);
+  setEl('stat-leads-converted', stats.converted_leads || 0);
+  setEl('stat-leads-rate', `${stats.conversion_rate || 0}%`);
+  setEl('stat-leads-stuck', stats.stuck_abandoned || 0);
+}
+
+async function loadLeads() {
+  try {
+    const status = document.getElementById('leads-filter-status')?.value || null;
+    const priority = document.getElementById('leads-filter-priority')?.value || null;
+    const search = document.getElementById('leads-search-input')?.value?.trim() || null;
+
+    const res = await window.api.getLeads(status, priority, search);
+    leadsData = res.leads || [];
+    renderLeadsTable(leadsData);
+  } catch (err) {
+    console.error('Failed to load leads:', err);
+    leadsData = [];
+    renderLeadsTable([]);
+  }
+}
+
+function getStageBadge(stage) {
+  const stageMap = {
+    new_lead: { label: 'New Lead', cls: 'badge-pill' },
+    search_started: { label: 'Search Started', cls: 'badge-pill' },
+    business_selected: { label: 'Business Selected', cls: 'badge-pill' },
+    form_submitted: { label: 'Audit Requested', cls: 'badge-active' },
+    analysis_started: { label: 'Analyzing', cls: 'badge-active' },
+    report_processing: { label: 'Generating Report', cls: 'badge-active' },
+    report_ready: { label: 'Report Ready', cls: 'badge-active' },
+    report_viewed: { label: 'Report Viewed', cls: 'badge-active' },
+    plan_selected: { label: 'Plan Selected', cls: 'badge-active' },
+    payment_pending: { label: 'Payment Pending', cls: 'badge-active' },
+    converted: { label: 'Converted Customer', cls: 'badge-active' },
+    abandoned: { label: 'Abandoned', cls: 'badge-suspended' },
+    stuck: { label: 'Stuck / Intervention', cls: 'badge-suspended' },
+  };
+
+  const info = stageMap[stage] || { label: (stage || '').replace('_', ' ').toUpperCase(), cls: 'badge-pill' };
+  return `<span class="badge ${info.cls}">${info.label}</span>`;
+}
+
+function getPriorityBadge(priority) {
+  // Clean badges without hardcoded emojis
+  if (priority === 'hot') {
+    return `<span class="badge" style="background:rgba(239, 68, 68, 0.15); color:#F87171; border:1px solid rgba(239, 68, 68, 0.3); font-weight:700;">Hot</span>`;
+  }
+  if (priority === 'warm') {
+    return `<span class="badge" style="background:rgba(245, 158, 11, 0.15); color:#FBBF24; border:1px solid rgba(245, 158, 11, 0.3); font-weight:700;">Warm</span>`;
+  }
+  return `<span class="badge" style="background:rgba(100, 116, 139, 0.15); color:#94A3B8; border:1px solid rgba(100, 116, 139, 0.3); font-weight:700;">Cold</span>`;
+}
+
+function renderLeadsTable(leads) {
+  const tbody = document.getElementById('leads-tbody');
+  if (!tbody) return;
+
+  if (!leads || leads.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:32px; color:var(--text-muted);">No onboarding leads found matching filters.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = leads.map(l => {
+    const formattedPhone = `${l.country_code || ''} ${l.phone || ''}`.trim();
+    const cleanDigits = (l.phone || '').replace(/[^0-9]/g, '');
+    const lastActive = l.last_activity_at ? new Date(l.last_activity_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently';
+
+    return `
+      <tr class="clickable-row" onclick="openLeadDetail('${l.id}')">
+        <td>
+          <div style="font-weight:700; color:var(--text-primary); font-size:0.95rem;">
+            ${escapeHtml(l.business_name)}
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">
+            ${escapeHtml(l.category || 'Local Business')} • ${escapeHtml(l.address || 'Address unlisted')}
+          </div>
+        </td>
+        <td>
+          <div style="font-weight:600; color:var(--text-primary);">${escapeHtml(formattedPhone)}</div>
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <a href="tel:${cleanDigits}" onclick="event.stopPropagation();" style="font-size:0.75rem; color:var(--primary); text-decoration:none; font-weight:600;">Call</a>
+          </div>
+        </td>
+        <td>${getStageBadge(l.status)}</td>
+        <td>${getPriorityBadge(l.priority)}</td>
+        <td>
+          <span style="font-weight:700; color:#60A5FA;">
+            ${l.report_score !== null && l.report_score !== undefined ? `${l.report_score}/100` : '--'}
+          </span>
+        </td>
+        <td>
+          <div style="font-size:0.85rem; font-weight:600; text-transform:capitalize; color:var(--text-primary);">
+            ${l.selected_plan || 'None'}
+          </div>
+          <span class="badge ${l.payment_status === 'paid' ? 'badge-active' : 'badge-suspended'}" style="font-size:0.7rem; padding:1px 6px;">
+            ${l.payment_status || 'unpaid'}
+          </span>
+        </td>
+        <td style="font-size:0.8rem; color:var(--text-secondary);">${lastActive}</td>
+        <td>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem; font-weight:700; color:var(--primary); background:var(--primary-light);" onclick="event.stopPropagation(); openLeadDetail('${l.id}')">
+              Inspect
+            </button>
+            <a href="/report/${l.id}" target="_blank" onclick="event.stopPropagation();" class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; text-decoration:none;" title="Open Public Report">
+              ↗
+            </a>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function openLeadDetail(leadId) {
+  activeLeadDetailId = leadId;
+  const modal = document.getElementById('lead-detail-modal');
+  if (!modal) return;
+
+  switchLeadModalTab('overview');
+  modal.style.display = 'flex';
+
+  try {
+    const lead = await window.api.getLeadDetail(leadId);
+
+    // Header
+    document.getElementById('lead-modal-biz-name').innerText = lead.business_name || 'Lead';
+    document.getElementById('lead-modal-stage-badge').innerHTML = getStageBadge(lead.status);
+    document.getElementById('lead-modal-priority-badge').innerHTML = getPriorityBadge(lead.priority);
+    document.getElementById('lead-modal-phone').innerText = `${lead.country_code || ''} ${lead.phone || ''}`.trim();
+    document.getElementById('lead-modal-category').innerText = lead.category || 'Local Business';
+
+    const publicLink = document.getElementById('lead-modal-public-link');
+    if (publicLink) publicLink.href = `/report/${lead.id}`;
+
+    // Overview Stats
+    document.getElementById('lead-detail-score').innerText = lead.report_score !== null && lead.report_score !== undefined ? `${lead.report_score}/100` : '--';
+    document.getElementById('lead-detail-plan').innerText = lead.selected_plan || 'None';
+    document.getElementById('lead-detail-payment-status').innerText = `Payment: ${lead.payment_status || 'unpaid'}`;
+
+    const reportData = lead.report_data || {};
+    const impact = reportData.business_impact || {};
+    document.getElementById('lead-detail-missed-calls').innerText = impact.estimated_missed_calls_monthly ? `~${impact.estimated_missed_calls_monthly}` : '--';
+
+    // Issues List
+    const issuesListEl = document.getElementById('lead-detail-issues-list');
+    if (issuesListEl) {
+      const issues = reportData.issues || [];
+      if (issues.length === 0) {
+        issuesListEl.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;">No critical issues logged in report.</div>`;
+      } else {
+        issuesListEl.innerHTML = issues.map(iss => `
+          <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:12px 14px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+              <strong style="color:var(--text-primary); font-size:0.9rem;">${escapeHtml(iss.title)}</strong>
+              <span class="badge ${iss.severity === 'critical' ? 'badge-suspended' : 'badge-pill'}" style="font-size:0.7rem; text-transform:uppercase;">${iss.severity}</span>
+            </div>
+            <p style="font-size:0.82rem; color:var(--text-secondary); margin:0 0 6px 0;">${escapeHtml(iss.summary)}</p>
+            <div style="font-size:0.8rem; color:#60A5FA;"><strong>Required Fix:</strong> ${escapeHtml(iss.action)}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Competitors Table
+    const compTbody = document.getElementById('lead-detail-competitors-tbody');
+    if (compTbody) {
+      const comps = reportData.competitors || [];
+      if (comps.length === 0) {
+        compTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:14px; color:var(--text-muted);">No competitors analyzed yet.</td></tr>`;
+      } else {
+        compTbody.innerHTML = comps.map(c => `
+          <tr>
+            <td style="font-weight:600; color:var(--text-primary);">${escapeHtml(c.name)}</td>
+            <td style="color:#10B981; font-weight:700;">Rank #${c.rank}</td>
+            <td>${c.rating} (${c.review_count})</td>
+            <td style="color:var(--text-secondary);">${escapeHtml(c.advantage)}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // Timeline
+    const timelineEl = document.getElementById('lead-detail-timeline-container');
+    if (timelineEl) {
+      const timeline = lead.timeline || [];
+      if (timeline.length === 0) {
+        timelineEl.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;">No timeline events recorded.</div>`;
+      } else {
+        timelineEl.innerHTML = timeline.map(evt => `
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <div style="width:10px; height:10px; border-radius:50%; background:#3B82F6; margin-top:5px; flex-shrink:0;"></div>
+            <div>
+              <div style="font-weight:700; color:var(--text-primary); font-size:0.88rem;">${escapeHtml(evt.title || evt.label || evt.stage)}</div>
+              <div style="font-size:0.8rem; color:var(--text-secondary);">${escapeHtml(evt.description || '')}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${evt.timestamp ? new Date(evt.timestamp).toLocaleString() : ''}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Status Actions
+    const statusSelect = document.getElementById('lead-action-status');
+    if (statusSelect) statusSelect.value = lead.status;
+
+    const prioritySelect = document.getElementById('lead-action-priority');
+    if (prioritySelect) prioritySelect.value = lead.priority;
+
+    const notesDisplay = document.getElementById('lead-notes-display');
+    if (notesDisplay) {
+      notesDisplay.innerText = lead.notes || 'No admin notes recorded yet.';
+    }
+  } catch (err) {
+    showToast(`Failed to load lead: ${err.message}`, 'error');
+  }
+}
+
+function closeLeadDetailModal() {
+  const modal = document.getElementById('lead-detail-modal');
+  if (modal) modal.style.display = 'none';
+  activeLeadDetailId = null;
+}
+
+function switchLeadModalTab(tabId) {
+  ['overview', 'timeline', 'actions'].forEach(t => {
+    const pane = document.getElementById(`leadmodaltab-${t}`);
+    const btn = document.getElementById(`btn-leadtab-${t}`);
+    if (pane) pane.style.display = t === tabId ? 'block' : 'none';
+    if (btn) btn.classList.toggle('active', t === tabId);
+  });
+}
+
+async function handleUpdateLeadStatus() {
+  if (!activeLeadDetailId) return;
+  const status = document.getElementById('lead-action-status')?.value;
+  const priority = document.getElementById('lead-action-priority')?.value;
+
+  try {
+    await window.api.updateLead(activeLeadDetailId, { status, priority });
+    showToast('Lead status updated successfully', 'success');
+    loadLeads();
+    loadLeadsStats();
+    openLeadDetail(activeLeadDetailId);
+  } catch (err) {
+    showToast(`Failed to update lead: ${err.message}`, 'error');
+  }
+}
+
+async function handleAddLeadNote() {
+  if (!activeLeadDetailId) return;
+  const input = document.getElementById('lead-new-note-input');
+  if (!input || !input.value.trim()) return;
+
+  const noteText = input.value.trim();
+  try {
+    await window.api.addLeadNote(activeLeadDetailId, noteText);
+    input.value = '';
+    showToast('Note appended to lead history', 'success');
+    openLeadDetail(activeLeadDetailId);
+  } catch (err) {
+    showToast(`Failed to add note: ${err.message}`, 'error');
+  }
+}
+
+window.openLeadDetail = openLeadDetail;
+window.closeLeadDetailModal = closeLeadDetailModal;
+window.switchLeadModalTab = switchLeadModalTab;
+window.handleUpdateLeadStatus = handleUpdateLeadStatus;
+window.handleAddLeadNote = handleAddLeadNote;
+

@@ -34,6 +34,8 @@ import { BranchCmoChatView } from './views/branch/BranchCmoChatView';
 import { BranchSettingsView } from './views/branch/BranchSettingsView';
 import { BranchWebsiteBuilderView } from './views/branch/BranchWebsiteBuilderView';
 import { PublicBusinessPageView } from './views/public/PublicBusinessPageView';
+import { SinglePageOnboardingView } from './views/lead-gen/SinglePageOnboardingView';
+import { AiBusinessReportView } from './views/lead-gen/AiBusinessReportView';
 
 const MainRouter: React.FC = () => {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
@@ -41,10 +43,29 @@ const MainRouter: React.FC = () => {
   const { scope, activeFranchiseTab, activeBranchTab, isOnboardingOpen, setIsOnboardingOpen } = useLocation();
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
-  // Check if current URL path is a public business page (e.g. optigoai.com/casaraza-restaurant)
+  // Check URL path
   const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
-  const internalReserved = ['', 'login', 'signup', 'onboarding', 'app', 'admin', 'dashboard'];
-  const isPublicBusinessSlug = cleanPath.length > 0 && !internalReserved.includes(cleanPath.toLowerCase());
+  const internalReserved = ['', 'login', 'signup', 'onboarding', 'audit', 'onboard', 'report', 'app', 'admin', 'dashboard'];
+
+  // Public Lead-Gen Single-Page Onboarding (/audit or /onboard)
+  if (cleanPath === 'audit' || cleanPath === 'onboard') {
+    return (
+      <SinglePageOnboardingView
+        onReportReady={(leadId) => {
+          window.location.href = `/report/${leadId}`;
+        }}
+      />
+    );
+  }
+
+  // Public AI Business Audit Report (/report/:leadId)
+  if (cleanPath.startsWith('report/')) {
+    const leadId = cleanPath.replace(/^report\//, '');
+    return <AiBusinessReportView leadId={leadId} />;
+  }
+
+  // Check if current URL path is a public business site (e.g. optigoai.com/casaraza-restaurant)
+  const isPublicBusinessSlug = cleanPath.length > 0 && !internalReserved.includes(cleanPath.toLowerCase().split('/')[0]);
 
   if (isPublicBusinessSlug) {
     return <PublicBusinessPageView slug={cleanPath.replace(/^site\//, '')} />;

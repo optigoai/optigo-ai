@@ -146,6 +146,7 @@ class DataForSEOProvider(BaseSEOProvider):
         keyword: str,
         location: Optional[str] = None,
         limit: int = 5,
+        **kwargs,
     ) -> List[Dict[str, Any]]:
         clean_kw = keyword.replace("near me", "").strip().title()
         if not self.is_configured():

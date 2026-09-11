@@ -98,12 +98,14 @@ class SerpAPIProvider(BaseSEOProvider):
         keyword: str,
         location: Optional[str] = None,
         limit: int = 5,
+        **kwargs,
     ) -> List[Dict[str, Any]]:
         clean_kw = keyword.replace("near me", "").strip().title()
         if not self.is_configured():
+            loc_label = location or "Local Area"
             return [
-                {"name": f"Top Rated {clean_kw}", "rating": 4.6, "reviews_count": 92, "rank": 1, "address": location or "Local Street"},
-                {"name": f"Premier {clean_kw} Hub", "rating": 4.5, "reviews_count": 78, "rank": 2, "address": location or "Market Square"},
+                {"name": f"Top Rated {clean_kw}", "rating": 4.6, "reviews_count": 92, "rank": 1, "address": loc_label},
+                {"name": f"Premier {clean_kw} Hub", "rating": 4.5, "reviews_count": 78, "rank": 2, "address": loc_label},
             ][:limit]
 
         params = {
