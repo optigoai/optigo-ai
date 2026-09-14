@@ -1413,7 +1413,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                 {!isGenerating && auditReady && animationStage < 99 && (
                   <div className="audit-live-ready-badge">
                     <CheckCircle2 size={13} color="#059669" />
-                    <span>Audit Complete · Real Data Verified</span>
+                    <span>Audit Complete</span>
                   </div>
                 )}
               </div>
