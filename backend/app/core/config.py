@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     google_token_encryption_key: str = "OPTIGOAI_SECRET_KEY_FOR_OAUTH_TOKEN_ENCRYPTION_32B"
 
     # ---- SEO & SERP Providers ----
-    seo_provider: str = "dataforseo"  # dataforseo, serper, serpapi
+    seo_provider: str = "serper"  # serper, dataforseo, serpapi
     dataforseo_login: str = ""
     dataforseo_password: str = ""
     serper_api_key: str = ""

@@ -17,14 +17,35 @@ class SEOProviderFactory:
 
     @staticmethod
     def get_provider() -> BaseSEOProvider:
-        provider_name = (settings.seo_provider or "dataforseo").lower().strip()
+        provider_name = (settings.seo_provider or "").lower().strip()
 
+        # If explicitly set and configured
         if provider_name == "serper":
             return SerperProvider()
         elif provider_name == "serpapi":
             return SerpAPIProvider()
         elif provider_name == "dataforseo":
-            return DataForSEOProvider()
-        else:
-            logger.warning(f"Unknown SEO provider '{provider_name}', defaulting to DataForSEO")
-            return DataForSEOProvider()
+            dfs = DataForSEOProvider()
+            if dfs.is_configured():
+                return dfs
+            # If DataForSEO credentials are missing, check Serper
+            serper = SerperProvider()
+            if serper.is_configured():
+                return serper
+            return dfs
+
+        # Auto-detect best configured provider
+        serper = SerperProvider()
+        if serper.is_configured():
+            return serper
+
+        dfs = DataForSEOProvider()
+        if dfs.is_configured():
+            return dfs
+
+        serpapi = SerpAPIProvider()
+        if serpapi.is_configured():
+            return serpapi
+
+        # Default fallback
+        return SerperProvider()
