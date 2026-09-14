@@ -52,7 +52,7 @@ const MainRouter: React.FC = () => {
     return (
       <SinglePageOnboardingView
         onReportReady={(leadId) => {
-          window.location.href = `/report/${leadId}`;
+          window.location.href = `/report/${leadId}?generating=true`;
         }}
       />
     );

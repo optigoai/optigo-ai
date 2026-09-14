@@ -89,12 +89,70 @@ const WhatsAppIcon: React.FC<{ size?: number }> = ({ size = 18 }) => (
   </svg>
 );
 
+// ChatGPT-Style Character-by-Character Typewriter Component
+const TypewriterText: React.FC<{
+  text: string;
+  speed?: number;
+  startDelay?: number;
+  onComplete?: () => void;
+  cursor?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}> = ({ text, speed = 14, startDelay = 0, onComplete, cursor = true, className, style }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isDone, setIsDone] = useState(false);
+
+  useEffect(() => {
+    let timeout: any;
+    let interval: any;
+    let idx = 0;
+    setDisplayedText('');
+    setIsDone(false);
+
+    timeout = setTimeout(() => {
+      interval = setInterval(() => {
+        idx++;
+        setDisplayedText(text.slice(0, idx));
+        if (idx >= text.length) {
+          clearInterval(interval);
+          setIsDone(true);
+          onComplete?.();
+        }
+      }, speed);
+    }, startDelay);
+
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, [text, speed, startDelay]);
+
+  return (
+    <span className={className} style={style}>
+      {displayedText}
+      {cursor && !isDone && <span className="ai-typing-cursor">▍</span>}
+    </span>
+  );
+};
+
 export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ leadId }) => {
   // === ALL HOOKS DECLARED UNCONDITIONALLY AT THE TOP ===
   const [report, setReport] = useState<BusinessReportData | null>(null);
   const [leadMeta, setLeadMeta] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Live generation & authentic AI typewriter states
+  const isGeneratingQuery = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('generating') === 'true';
+  const isAlreadyDone = typeof window !== 'undefined' && sessionStorage.getItem(`optigo_audit_done_${leadId}`) === 'true';
+  const shouldAnimate = isGeneratingQuery && !isAlreadyDone;
+
+  const [isGenerating, setIsGenerating] = useState(shouldAnimate);
+  const [generationPhase, setGenerationPhase] = useState('Scanning Google Maps & Local Pack rankings...');
+  const [generationProgress, setGenerationProgress] = useState(24);
+  const [animationStage, setAnimationStage] = useState(shouldAnimate ? 0 : 99);
+  const [auditReady, setAuditReady] = useState(isAlreadyDone);
+
   const [activeSection, setActiveSection] = useState<string>('section-wound');
   const [showAllIssues, setShowAllIssues] = useState(false);
   const [showAllSearches, setShowAllSearches] = useState(false);
@@ -114,36 +172,119 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
     setTimeout(() => setToastMessage(null), 3200);
   };
 
+  // Scroll-to-skip typewriter animation if user is scrolling down
+  useEffect(() => {
+    const handleScrollToSkip = () => {
+      if (window.scrollY > 80 && animationStage < 99) {
+        setAnimationStage(99);
+      }
+    };
+    window.addEventListener('scroll', handleScrollToSkip, { passive: true });
+    return () => window.removeEventListener('scroll', handleScrollToSkip);
+  }, [animationStage]);
+
+  // Progressive section entrance cascade
+  useEffect(() => {
+    if (animationStage === 2) {
+      const t = setTimeout(() => setAnimationStage(3), 550);
+      return () => clearTimeout(t);
+    } else if (animationStage === 3) {
+      const t = setTimeout(() => setAnimationStage(4), 500);
+      return () => clearTimeout(t);
+    } else if (animationStage === 4) {
+      const t = setTimeout(() => setAnimationStage(99), 500);
+      return () => clearTimeout(t);
+    }
+  }, [animationStage]);
+
   // Load Lead & Report Data
   useEffect(() => {
     let isMounted = true;
+    let phaseInterval: any;
+
+    if (shouldAnimate) {
+      const phases = [
+        'Scanning Google Maps & Local Pack rankings...',
+        'Analyzing nearby competitor reviews & rating gaps...',
+        'Calculating monthly search volume & revenue leakage...',
+        'Synthesizing personalized growth strategy...',
+        'Finalizing executive audit report...',
+      ];
+      let pIdx = 0;
+      phaseInterval = setInterval(() => {
+        pIdx = (pIdx + 1) % phases.length;
+        setGenerationPhase(phases[pIdx]);
+        setGenerationProgress((prev) => Math.min(88, prev + 14));
+      }, 1500);
+    }
+
     async function loadReport() {
       try {
         setIsLoading(true);
+        // Fast lead metadata retrieval (~100ms) to display business card immediately
         const lead = await leadService.getLead(leadId);
         if (!isMounted) return;
         setLeadMeta(lead);
+        setIsLoading(false);
 
+        let finalReport: BusinessReportData | null = null;
         if (lead.report_data && lead.report_data.ai_generated && lead.report_data.health_score) {
+          // Report is already stored in the database. Load immediately without regenerating!
+          finalReport = lead.report_data;
           setReport(lead.report_data);
           leadService.recordLeadViewed(leadId);
+          setIsGenerating(false);
+          setGenerationProgress(100);
+          setAuditReady(true);
+          setAnimationStage(99);
+          if (phaseInterval) clearInterval(phaseInterval);
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(`optigo_audit_done_${leadId}`, 'true');
+            if (window.history.replaceState) {
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          }
         } else {
+          // Fresh lead from onboarding — generate new report in background
+          setIsGenerating(true);
           const analyzed: any = await leadService.analyzeLead(leadId);
           if (!isMounted) return;
-          setReport(analyzed?.report || (analyzed as BusinessReportData));
+          finalReport = analyzed?.report || (analyzed as BusinessReportData);
+          setReport(finalReport);
           leadService.recordLeadViewed(leadId);
+
+          if (phaseInterval) clearInterval(phaseInterval);
+          setGenerationProgress(100);
+          setAuditReady(true);
+          setIsGenerating(false);
+
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(`optigo_audit_done_${leadId}`, 'true');
+            if (window.history.replaceState) {
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          }
+
+          if (shouldAnimate) {
+            setTimeout(() => {
+              if (isMounted) setAnimationStage(1);
+            }, 450);
+          } else {
+            setAnimationStage(99);
+          }
         }
       } catch (err: any) {
         if (!isMounted) return;
         setErrorMessage(err?.message || 'Unable to load your business audit report.');
-      } finally {
-        if (isMounted) setIsLoading(false);
+        setIsLoading(false);
+        setIsGenerating(false);
       }
     }
 
     loadReport();
     return () => {
       isMounted = false;
+      if (phaseInterval) clearInterval(phaseInterval);
     };
   }, [leadId]);
 
@@ -298,8 +439,8 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  // Loading State
-  if (isLoading) {
+  // Loading State — ONLY during initial ~100ms before lead metadata arrives
+  if (isLoading && !leadMeta) {
     return (
       <div
         className="report-page-wrapper"
@@ -339,18 +480,18 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
             <Loader2 size={32} color="#7C3AED" className="animate-spin" />
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '0 0 8px' }}>
-            Generating Business Growth Report
+            Locating Business Profile
           </h2>
           <p style={{ fontSize: '0.88rem', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
-            Evaluating real Google search data, nearby competitors, and growth opportunities...
+            Connecting to Google Places API...
           </p>
         </div>
       </div>
     );
   }
 
-  // Error State
-  if (errorMessage || !report) {
+  // Error State — Only if error occurred, or neither report nor leadMeta exist and not generating
+  if (errorMessage || (!report && !isGenerating && !leadMeta)) {
     return (
       <div
         className="report-page-wrapper"
@@ -402,31 +543,44 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
   // ========================================
   // DATA EXTRACTION (100% data-driven)
   // ========================================
-  const business = report.business;
-  const issuesList: AuditIssue[] = report.issues || [];
-  const competitorsList = report.competitors || [];
+  const business: BusinessReportData['business'] = report?.business || {
+    name: leadMeta?.business_name || 'Your Business',
+    address: leadMeta?.address || '',
+    category: leadMeta?.category || '',
+    rating: leadMeta?.rating ?? 4.0,
+    review_count: leadMeta?.review_count ?? 0,
+    photo_url: leadMeta?.photo_url || leadMeta?.photo,
+    open_now: undefined,
+    price_range: undefined,
+    price_level: undefined,
+    website: undefined,
+    phone: leadMeta?.phone || undefined,
+  };
+  const issuesList: AuditIssue[] = report?.issues || [];
+  const competitorsList = report?.competitors || [];
 
   // Authentic rank determination from live Google search audit
   const userRank = Math.round(
-    report.user_rank ??
-    (report.audit_summary as any)?.user_rank ??
-    (report.business_impact as any)?.user_rank ??
+    report?.user_rank ??
+    (report?.audit_summary as any)?.user_rank ??
+    (report?.business_impact as any)?.user_rank ??
+    leadMeta?.rank ??
     2
   );
   const isInTop3 = userRank <= 3;
-  const competitorsAheadCount = report.competitors_ahead_count !== undefined
+  const competitorsAheadCount = report?.competitors_ahead_count !== undefined
     ? report.competitors_ahead_count
-    : (report.quick_stats?.competitors_ahead_count ?? Math.max(0, userRank - 1));
+    : (report?.quick_stats?.competitors_ahead_count ?? Math.max(0, userRank - 1));
 
   // Authentic local call modeling
-  const totalLocalCalls = report.total_local_calls_monthly ?? 190;
-  const userCallSharePct = report.user_call_share_pct ?? (
+  const totalLocalCalls = report?.total_local_calls_monthly ?? 190;
+  const userCallSharePct = report?.user_call_share_pct ?? (
     userRank === 1 ? 42 : userRank === 2 ? 26 : userRank === 3 ? 16 : userRank === 4 ? 5 : userRank === 5 ? 4 : 2
   );
-  const userEstimatedCalls = report.user_estimated_calls ?? Math.max(1, Math.round(totalLocalCalls * (userCallSharePct / 100)));
+  const userEstimatedCalls = report?.user_estimated_calls ?? Math.max(1, Math.round(totalLocalCalls * (userCallSharePct / 100)));
   const rank1Calls = Math.round(totalLocalCalls * 0.42);
 
-  const estimatedMissedCalls = report.estimated_missed_calls ?? (
+  const estimatedMissedCalls = report?.estimated_missed_calls ?? (
     userRank === 1 ? 0 : Math.max(1, rank1Calls - userEstimatedCalls)
   );
 
@@ -446,11 +600,11 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
   })();
 
   // Clean address & location label
-  const rawAddr = (business.address || '').trim();
+  const rawAddr = (business?.address || '').trim();
   const isGenericAddr = !rawAddr || rawAddr.toLowerCase().includes('local street') || rawAddr.toLowerCase().includes('market road') || rawAddr.toLowerCase() === 'registered location';
 
   let nameLocality = '';
-  if (business.name && business.name.includes(',')) {
+  if (business?.name && business.name.includes(',')) {
     const parts = business.name.split(',').map((p: string) => p.trim());
     if (parts.length > 1 && parts[parts.length - 1].length > 2) {
       nameLocality = parts[parts.length - 1];
@@ -460,7 +614,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
   const cleanDisplayAddress = (!isGenericAddr ? rawAddr : (nameLocality || 'Local Area'));
   const locationLabel = (nameLocality || (!isGenericAddr ? rawAddr.split(',').slice(-2).join(',').trim() : 'Local Area'));
 
-  const inactionConsequences: InactionConsequence[] = report.inaction_consequences || [
+  const inactionConsequences: InactionConsequence[] = report?.inaction_consequences || [
     { icon_type: 'down_trend', text: 'Competitors will continue to get more visibility and customers.' },
     { icon_type: 'lost_customers', text: "You'll miss out on potential calls, visits and revenue." },
     { icon_type: 'time_lag', text: 'It will get harder to catch up as competitors keep improving.' },
@@ -504,17 +658,17 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
 
   // Health Score — strict red for C and below
   const rawHealthScore =
-    typeof report.health_score === 'object' && report.health_score !== null
+    typeof report?.health_score === 'object' && report?.health_score !== null
       ? (report.health_score as any).score
-      : typeof report.health_score === 'number'
+      : typeof report?.health_score === 'number'
         ? report.health_score
-        : typeof (report as any).report_score === 'number'
+        : typeof (report as any)?.report_score === 'number'
           ? (report as any).report_score
           : undefined;
 
   // Profile Completeness — 100% real checklist calculation
   const profileCompleteness = (() => {
-    if (report.profile_completion && Array.isArray(report.profile_completion.items) && report.profile_completion.items.length > 0) {
+    if (report?.profile_completion && Array.isArray(report.profile_completion.items) && report.profile_completion.items.length > 0) {
       const items = report.profile_completion.items;
       const total = items.length;
       const missing = items.filter((it) => it.status === 'missing');
@@ -558,8 +712,8 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
 
   // 100% Genuine Unit Economics & Revenue Modeling
   const revenueBreakdown: RevenueBreakdown = (() => {
-    if (report.revenue_breakdown) return report.revenue_breakdown;
-    if (report.business_impact?.revenue_breakdown) return report.business_impact.revenue_breakdown;
+    if (report?.revenue_breakdown) return report.revenue_breakdown;
+    if (report?.business_impact?.revenue_breakdown) return report.business_impact.revenue_breakdown;
 
     // Fallback derivation if not provided directly in older report records
     const cat = (business.category || '').toLowerCase();
@@ -636,7 +790,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
     const mHigh = Math.round(lostCust * ticketHigh);
 
     return {
-      search_volume_est: (report as any).total_local_category_searches ?? 3400,
+      search_volume_est: (report as any)?.total_local_category_searches ?? 3400,
       local_pack_ctr: 0.052,
       total_pack_calls: totalLocalCalls,
       rank1_share: 0.42,
@@ -1009,7 +1163,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
   // Real Local Customer Searches (from AI audit or derived from real category + locality)
   const realSearchesList: RealSearchQuery[] = (() => {
     let rawList: RealSearchQuery[] = [];
-    if (report.real_searches && Array.isArray(report.real_searches) && report.real_searches.length > 0) {
+    if (report?.real_searches && Array.isArray(report.real_searches) && report.real_searches.length > 0) {
       rawList = report.real_searches;
     } else {
       const cat = (business.category || 'Local Business').trim();
@@ -1085,7 +1239,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
 
   // Timestamp for "Live · audited just now"
   const auditTimestamp = (() => {
-    const genAt = report.generated_at;
+    const genAt = report?.generated_at;
     if (!genAt) return 'just now';
     try {
       const d = new Date(genAt);
@@ -1169,6 +1323,19 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
               </span>
             </div>
           </div>
+
+          {/* Quick Instant View button if typewriter animation is running */}
+          {animationStage < 99 && (
+            <button
+              type="button"
+              className="skip-typewriter-btn"
+              onClick={() => setAnimationStage(99)}
+              title="Show full report immediately"
+            >
+              <Zap size={13} />
+              <span>Instant View</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -1192,7 +1359,6 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
               <div className="masthead-info">
                 <div className="masthead-title-row">
                   <h2 className="masthead-name">{cleanBusinessName}</h2>
-
                 </div>
                 <div className="masthead-meta">
                   {business.category && <span>{business.category}</span>}
@@ -1228,748 +1394,862 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                     </span>
                   )}
                 </div>
+
+                {/* Live In-Page Generating Progress Indicator */}
+                {isGenerating && (
+                  <div className="audit-live-generating-block">
+                    <div className="audit-generating-pulse-row">
+                      <div className="audit-pulse-dot" />
+                      <span className="audit-generating-title">Generating Real-Time Audit Report</span>
+                    </div>
+                    <p className="audit-generating-phase-text">{generationPhase}</p>
+                    <div className="audit-generating-track">
+                      <div className="audit-generating-bar" style={{ width: `${generationProgress}%` }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Live Ready Badge when generation completes */}
+                {!isGenerating && auditReady && animationStage < 99 && (
+                  <div className="audit-live-ready-badge">
+                    <CheckCircle2 size={13} color="#059669" />
+                    <span>Audit Complete · Real Data Verified</span>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Shimmer skeleton cards while AI analysis is running */}
+            {(isGenerating || !report) && (
+              <div className="generating-shimmer-container">
+                <div className="generating-shimmer-card">
+                  <div className="generating-shimmer-bar" style={{ width: '42%', height: '26px' }} />
+                  <div className="generating-shimmer-bar" style={{ width: '75%', height: '14px' }} />
+                </div>
+                <div className="generating-shimmer-card" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div className="generating-shimmer-bar" style={{ height: '64px' }} />
+                  <div className="generating-shimmer-bar" style={{ height: '64px' }} />
+                  <div className="generating-shimmer-bar" style={{ height: '64px' }} />
+                </div>
+              </div>
+            )}
 
             {/* Revenue Loss Statement */}
-            <div className="wound-hero-statement">
-              {userRank === 1 ? (
-                <>
-                  <div className="wound-money-stat" style={{ color: '#059669' }}>
-                    ~{userEstimatedCalls} calls/mo captured
-                  </div>
-                  <p className="wound-money-label" style={{ color: '#047857' }}>
-                    You hold the #1 spot — but competitors are closing the gap
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="wound-money-stat">
-                    ₹{estimatedLowRevenue.toLocaleString('en-IN')}–₹{estimatedHighRevenue.toLocaleString('en-IN')}/mo
-                  </div>
-                  <p className="wound-money-label">
-                    <span className="editorial-serif">going to competitors</span> because you're ranked #{userRank} on Google Maps
-                  </p>
-                </>
-              )}
+            {animationStage >= 1 && report && !isGenerating && (
+              <div className="wound-hero-statement">
+                {userRank === 1 ? (
+                  <>
+                    <div className="wound-money-stat" style={{ color: '#059669' }}>
+                      {animationStage === 1 ? (
+                        <TypewriterText
+                          text={`~${userEstimatedCalls} calls/mo captured`}
+                          speed={16}
+                          onComplete={() => {
+                            setTimeout(() => setAnimationStage(2), 200);
+                          }}
+                        />
+                      ) : (
+                        `~${userEstimatedCalls} calls/mo captured`
+                      )}
+                    </div>
+                    <p className="wound-money-label" style={{ color: '#047857' }}>
+                      {animationStage === 1 ? (
+                        <TypewriterText
+                          text="You hold the #1 spot — but competitors are closing the gap"
+                          speed={12}
+                          startDelay={200}
+                        />
+                      ) : (
+                        "You hold the #1 spot — but competitors are closing the gap"
+                      )}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="wound-money-stat">
+                      {animationStage === 1 ? (
+                        <TypewriterText
+                          text={`₹${estimatedLowRevenue.toLocaleString('en-IN')}–₹${estimatedHighRevenue.toLocaleString('en-IN')}/mo`}
+                          speed={16}
+                          onComplete={() => {
+                            setTimeout(() => setAnimationStage(2), 200);
+                          }}
+                        />
+                      ) : (
+                        `₹${estimatedLowRevenue.toLocaleString('en-IN')}–₹${estimatedHighRevenue.toLocaleString('en-IN')}/mo`
+                      )}
+                    </div>
+                    <p className="wound-money-label">
+                      {animationStage === 1 ? (
+                        <TypewriterText
+                          text={`going to competitors because you're ranked #${userRank} on Google Maps`}
+                          speed={12}
+                          startDelay={200}
+                        />
+                      ) : (
+                        <>
+                          <span className="editorial-serif">going to competitors</span> because you're ranked #{userRank} on Google Maps
+                        </>
+                      )}
+                    </p>
+                  </>
+                )}
 
-              {/* Transparent Math Breakdown Toggle */}
-              <div className="wound-math-toggle-wrap">
-                <button
-                  type="button"
-                  className="wound-math-toggle-btn"
-                  onClick={() => setIsMathBreakdownOpen(!isMathBreakdownOpen)}
-                  aria-expanded={isMathBreakdownOpen}
-                >
-                  <HelpCircle size={14} color="#7C3AED" />
-                  <span>How is this calculated?</span>
-                  {isMathBreakdownOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </button>
+                {/* Transparent Math Breakdown Toggle */}
+                {animationStage >= 2 && (
+                  <div className="wound-math-toggle-wrap typewriter-section-enter">
+                    <button
+                      type="button"
+                      className="wound-math-toggle-btn"
+                      onClick={() => setIsMathBreakdownOpen(!isMathBreakdownOpen)}
+                      aria-expanded={isMathBreakdownOpen}
+                    >
+                      <HelpCircle size={14} color="#7C3AED" />
+                      <span>How is this calculated?</span>
+                      {isMathBreakdownOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+                  </div>
+                )}
+
+                {/* Expandable Transparent Breakdown Card */}
+                {isMathBreakdownOpen && (
+                  <div className="wound-math-breakdown-card">
+                    <div className="math-card-header">
+                      <div className="math-card-badge">
+                        <Sparkles size={13} color="#7C3AED" />
+                        <span>Live Unit Economics & Local Search Math</span>
+                      </div>
+                      <span className="math-card-source">
+                        Data Source: {revenueBreakdown.price_source}
+                      </span>
+                    </div>
+
+                    <div className="math-steps-grid">
+                      {/* Step 1: Search Demand */}
+                      <div className="math-step-item">
+                        <div className="math-step-num">Step 1</div>
+                        <div className="math-step-title">Local Search Demand</div>
+                        <div className="math-step-val">
+                          ~{revenueBreakdown.search_volume_est.toLocaleString('en-IN')} searches/mo
+                        </div>
+                        <p className="math-step-desc">
+                          Local {business.category || 'industry'} demand in {locationLabel}. At Google's verified 5.2% Local 3-Pack CTR, that generates ~{revenueBreakdown.total_pack_calls} monthly calls.
+                        </p>
+                      </div>
+
+                      {/* Step 2: Position Share Gap */}
+                      <div className="math-step-item">
+                        <div className="math-step-num">Step 2</div>
+                        <div className="math-step-title">3-Pack Ranking Call Share</div>
+                        <div className="math-step-val">
+                          {userRank === 1 ? 'Rank #1 (42% Share)' : `Rank #${userRank} (${Math.round(revenueBreakdown.business_share * 100)}%) vs #1 (42%)`}
+                        </div>
+                        <p className="math-step-desc">
+                          {userRank === 1
+                            ? `You capture ~${revenueBreakdown.business_calls} calls/mo at #1. Top rivals are actively closing the review gap.`
+                            : `The #1 spot captures ~${revenueBreakdown.rank1_calls} calls/mo. Your #${userRank} spot captures ~${revenueBreakdown.business_calls} calls. Difference: ~${revenueBreakdown.missed_calls} calls/mo lost to leader.`
+                          }
+                        </p>
+                      </div>
+
+                      {/* Step 3: Verified Pricing & Conversion */}
+                      <div className="math-step-item">
+                        <div className="math-step-num">Step 3</div>
+                        <div className="math-step-title">Pricing & Phone Conversion</div>
+                        <div className="math-step-val">
+                          ₹{revenueBreakdown.avg_ticket_low.toLocaleString('en-IN')}–₹{revenueBreakdown.avg_ticket_high.toLocaleString('en-IN')} avg spend
+                        </div>
+                        <p className="math-step-desc">
+                          {revenueBreakdown.google_price_range
+                            ? `Verified from Google Places API (${revenueBreakdown.currency} ${revenueBreakdown.google_price_range.start_price}–${revenueBreakdown.google_price_range.end_price}/person). Party dining order: ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high}.`
+                            : `Standard ${business.category || 'category'} benchmark ticket. Phone conversion rate: ${Math.round(revenueBreakdown.conversion_rate * 100)}%.`
+                          }
+                          {userRank !== 1 && ` (${revenueBreakdown.missed_calls} missed calls × ${Math.round(revenueBreakdown.conversion_rate * 100)}% = ~${revenueBreakdown.lost_customers_monthly} lost customers/mo)`}
+                        </p>
+                      </div>
+
+                      {/* Step 4: Net Impact */}
+                      <div className="math-step-item math-step-highlight">
+                        <div className="math-step-num">Result</div>
+                        <div className="math-step-title">{userRank === 1 ? 'Monthly Captured Value' : 'Net Monthly & Annual Loss'}</div>
+                        <div className="math-step-val math-val-loss" style={{ color: userRank === 1 ? '#059669' : '#DC2626' }}>
+                          ₹{revenueBreakdown.monthly_loss_low.toLocaleString('en-IN')}–₹{revenueBreakdown.monthly_loss_high.toLocaleString('en-IN')}/mo
+                        </div>
+                        <p className="math-step-desc">
+                          {userRank === 1
+                            ? `Capturing ~₹${(revenueBreakdown.annual_loss_low).toLocaleString('en-IN')}–₹${(revenueBreakdown.annual_loss_high).toLocaleString('en-IN')}/yr in local revenue at #1.`
+                            : `~${revenueBreakdown.lost_customers_monthly} lost customers/mo × ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high} = ₹${revenueBreakdown.monthly_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.monthly_loss_high.toLocaleString('en-IN')}/mo (annualized: ₹${revenueBreakdown.annual_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.annual_loss_high.toLocaleString('en-IN')}/yr).`
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {/* Expandable Transparent Breakdown Card */}
-              {isMathBreakdownOpen && (
-                <div className="wound-math-breakdown-card">
-                  <div className="math-card-header">
-                    <div className="math-card-badge">
-                      <Sparkles size={13} color="#7C3AED" />
-                      <span>Live Unit Economics & Local Search Math</span>
-                    </div>
-                    <span className="math-card-source">
-                      Data Source: {revenueBreakdown.price_source}
-                    </span>
-                  </div>
-
-                  <div className="math-steps-grid">
-                    {/* Step 1: Search Demand */}
-                    <div className="math-step-item">
-                      <div className="math-step-num">Step 1</div>
-                      <div className="math-step-title">Local Search Demand</div>
-                      <div className="math-step-val">
-                        ~{revenueBreakdown.search_volume_est.toLocaleString('en-IN')} searches/mo
-                      </div>
-                      <p className="math-step-desc">
-                        Local {business.category || 'industry'} demand in {locationLabel}. At Google's verified 5.2% Local 3-Pack CTR, that generates ~{revenueBreakdown.total_pack_calls} monthly calls.
-                      </p>
-                    </div>
-
-                    {/* Step 2: Position Share Gap */}
-                    <div className="math-step-item">
-                      <div className="math-step-num">Step 2</div>
-                      <div className="math-step-title">3-Pack Ranking Call Share</div>
-                      <div className="math-step-val">
-                        {userRank === 1 ? 'Rank #1 (42% Share)' : `Rank #${userRank} (${Math.round(revenueBreakdown.business_share * 100)}%) vs #1 (42%)`}
-                      </div>
-                      <p className="math-step-desc">
-                        {userRank === 1
-                          ? `You capture ~${revenueBreakdown.business_calls} calls/mo at #1. Top rivals are actively closing the review gap.`
-                          : `The #1 spot captures ~${revenueBreakdown.rank1_calls} calls/mo. Your #${userRank} spot captures ~${revenueBreakdown.business_calls} calls. Difference: ~${revenueBreakdown.missed_calls} calls/mo lost to leader.`
-                        }
-                      </p>
-                    </div>
-
-                    {/* Step 3: Verified Pricing & Conversion */}
-                    <div className="math-step-item">
-                      <div className="math-step-num">Step 3</div>
-                      <div className="math-step-title">Pricing & Phone Conversion</div>
-                      <div className="math-step-val">
-                        ₹{revenueBreakdown.avg_ticket_low.toLocaleString('en-IN')}–₹{revenueBreakdown.avg_ticket_high.toLocaleString('en-IN')} avg spend
-                      </div>
-                      <p className="math-step-desc">
-                        {revenueBreakdown.google_price_range
-                          ? `Verified from Google Places API (${revenueBreakdown.currency} ${revenueBreakdown.google_price_range.start_price}–${revenueBreakdown.google_price_range.end_price}/person). Party dining order: ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high}.`
-                          : `Standard ${business.category || 'category'} benchmark ticket. Phone conversion rate: ${Math.round(revenueBreakdown.conversion_rate * 100)}%.`
-                        }
-                        {userRank !== 1 && ` (${revenueBreakdown.missed_calls} missed calls × ${Math.round(revenueBreakdown.conversion_rate * 100)}% = ~${revenueBreakdown.lost_customers_monthly} lost customers/mo)`}
-                      </p>
-                    </div>
-
-                    {/* Step 4: Net Impact */}
-                    <div className="math-step-item math-step-highlight">
-                      <div className="math-step-num">Result</div>
-                      <div className="math-step-title">{userRank === 1 ? 'Monthly Captured Value' : 'Net Monthly & Annual Loss'}</div>
-                      <div className="math-step-val math-val-loss" style={{ color: userRank === 1 ? '#059669' : '#DC2626' }}>
-                        ₹{revenueBreakdown.monthly_loss_low.toLocaleString('en-IN')}–₹{revenueBreakdown.monthly_loss_high.toLocaleString('en-IN')}/mo
-                      </div>
-                      <p className="math-step-desc">
-                        {userRank === 1
-                          ? `Capturing ~₹${(revenueBreakdown.annual_loss_low).toLocaleString('en-IN')}–₹${(revenueBreakdown.annual_loss_high).toLocaleString('en-IN')}/yr in local revenue at #1.`
-                          : `~${revenueBreakdown.lost_customers_monthly} lost customers/mo × ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high} = ₹${revenueBreakdown.monthly_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.monthly_loss_high.toLocaleString('en-IN')}/mo (annualized: ₹${revenueBreakdown.annual_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.annual_loss_high.toLocaleString('en-IN')}/yr).`
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
 
             {/* 3 Executive KPI Stat Cards */}
-            <div className="wound-kpi-grid">
-              {/* Card 1: Google Maps Position */}
-              <div className={`kpi-card ${userRank <= 3 ? 'kpi-card-good' : 'kpi-card-alert'}`}>
-                <div className="kpi-card-header">
-                  <div className={`kpi-card-icon-wrap ${userRank <= 3 ? 'rank-icon-good' : 'rank-icon-alert'}`}>
-                    {userRank <= 3 ? <Trophy size={13} /> : <MapPin size={13} />}
+            {animationStage >= 2 && report && !isGenerating && (
+              <div className="wound-kpi-grid typewriter-section-enter">
+                {/* Card 1: Google Maps Position */}
+                <div className={`kpi-card ${userRank <= 3 ? 'kpi-card-good' : 'kpi-card-alert'}`}>
+                  <div className="kpi-card-header">
+                    <div className={`kpi-card-icon-wrap ${userRank <= 3 ? 'rank-icon-good' : 'rank-icon-alert'}`}>
+                      {userRank <= 3 ? <Trophy size={13} /> : <MapPin size={13} />}
+                    </div>
+                    <span className="kpi-card-label">Google Maps</span>
                   </div>
-                  <span className="kpi-card-label">Google Maps</span>
+                  <div className="kpi-card-val" style={{ color: userRank <= 3 ? '#059669' : '#DC2626' }}>
+                    #{userRank}
+                  </div>
+                  <div className={`kpi-card-badge ${userRank <= 3 ? 'badge-good' : 'badge-alert'}`}>
+                    {userRank === 1 ? 'Market Leader' : userRank <= 3 ? 'In Top 3 Pack' : 'Below Top 3'}
+                  </div>
                 </div>
-                <div className="kpi-card-val" style={{ color: userRank <= 3 ? '#059669' : '#DC2626' }}>
-                  #{userRank}
-                </div>
-                <div className={`kpi-card-badge ${userRank <= 3 ? 'badge-good' : 'badge-alert'}`}>
-                  {userRank === 1 ? 'Market Leader' : userRank <= 3 ? 'In Top 3 Pack' : 'Below Top 3'}
-                </div>
-              </div>
 
-              {/* Card 2: Local Call Share */}
-              <div className="kpi-card kpi-card-purple">
-                <div className="kpi-card-header">
-                  <div className="kpi-card-icon-wrap share-icon">
-                    <Phone size={13} />
+                {/* Card 2: Local Call Share */}
+                <div className="kpi-card kpi-card-purple">
+                  <div className="kpi-card-header">
+                    <div className="kpi-card-icon-wrap share-icon">
+                      <Phone size={13} />
+                    </div>
+                    <span className="kpi-card-label">Calls You Get</span>
                   </div>
-                  <span className="kpi-card-label">Calls You Get</span>
+                  <div className="kpi-card-val" style={{ color: '#7C3AED' }}>
+                    ~{userCallSharePct}%
+                  </div>
+                  <div className="kpi-card-badge badge-purple">
+                    {userRank === 1 ? 'Top 42% Share' : 'Top 3 take 84%'}
+                  </div>
                 </div>
-                <div className="kpi-card-val" style={{ color: '#7C3AED' }}>
-                  ~{userCallSharePct}%
-                </div>
-                <div className="kpi-card-badge badge-purple">
-                  {userRank === 1 ? 'Top 42% Share' : 'Top 3 take 84%'}
-                </div>
-              </div>
 
-              {/* Card 3: Calls Lost to Competitors */}
-              <div className={`kpi-card ${userRank === 1 ? 'kpi-card-good' : 'kpi-card-loss'}`}>
-                <div className="kpi-card-header">
-                  <div className={`kpi-card-icon-wrap ${userRank === 1 ? 'loss-icon-good' : 'loss-icon-alert'}`}>
-                    {userRank === 1 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                {/* Card 3: Calls Lost to Competitors */}
+                <div className={`kpi-card ${userRank === 1 ? 'kpi-card-good' : 'kpi-card-loss'}`}>
+                  <div className="kpi-card-header">
+                    <div className={`kpi-card-icon-wrap ${userRank === 1 ? 'loss-icon-good' : 'loss-icon-alert'}`}>
+                      {userRank === 1 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                    </div>
+                    <span className="kpi-card-label">
+                      {userRank === 1 ? 'Calls Won' : 'Calls Lost'}
+                    </span>
                   </div>
-                  <span className="kpi-card-label">
-                    {userRank === 1 ? 'Calls Won' : 'Calls Lost'}
-                  </span>
-                </div>
-                <div className="kpi-card-val" style={{ color: userRank === 1 ? '#059669' : '#DC2626' }}>
-                  ~{userRank === 1 ? userEstimatedCalls : estimatedMissedCalls}
-                  <span className="kpi-card-unit">/mo</span>
-                </div>
-                <div className={`kpi-card-badge ${userRank === 1 ? 'badge-good' : 'badge-loss'}`}>
-                  {userRank === 1 ? 'Defending #1' : 'Going to Rivals'}
+                  <div className="kpi-card-val" style={{ color: userRank === 1 ? '#059669' : '#DC2626' }}>
+                    ~{userRank === 1 ? userEstimatedCalls : estimatedMissedCalls}
+                    <span className="kpi-card-unit">/mo</span>
+                  </div>
+                  <div className={`kpi-card-badge ${userRank === 1 ? 'badge-good' : 'badge-loss'}`}>
+                    {userRank === 1 ? 'Defending #1' : 'Going to Rivals'}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Profile Completeness — Integrated horizontal banner */}
-            <div className="wound-completeness-banner">
-              <div className="completeness-bar-header">
-                <div className="completeness-bar-title-wrap">
-                  <span className="completeness-bar-label">Profile Completeness:</span>
-                  <strong
-                    className="completeness-bar-pct"
+            {animationStage >= 3 && report && !isGenerating && (
+              <div className="wound-completeness-banner typewriter-section-enter">
+                <div className="completeness-bar-header">
+                  <div className="completeness-bar-title-wrap">
+                    <span className="completeness-bar-label">Profile Completeness:</span>
+                    <strong
+                      className="completeness-bar-pct"
+                      style={{
+                        color:
+                          profileCompleteness.percentage >= 75
+                            ? '#10B981'
+                            : profileCompleteness.percentage >= 60
+                              ? '#D97706'
+                              : '#DC2626',
+                      }}
+                    >
+                      {animatedScore}% Setup
+                    </strong>
+                  </div>
+                  <span
+                    className="completeness-bar-badge"
                     style={{
-                      color:
+                      color: profileCompleteness.missingCount > 4 ? '#DC2626' : '#D97706',
+                      background: profileCompleteness.missingCount > 4 ? '#FEF2F2' : '#FFFBEB',
+                      border: `1px solid ${profileCompleteness.missingCount > 4 ? '#FECACA' : '#FDE68A'}`,
+                    }}
+                  >
+                    {profileCompleteness.missingCount} Gaps Found
+                  </span>
+                </div>
+                <div className="completeness-track">
+                  <div
+                    className="completeness-fill"
+                    style={{
+                      width: `${animatedScore}%`,
+                      background:
                         profileCompleteness.percentage >= 75
                           ? '#10B981'
                           : profileCompleteness.percentage >= 60
-                            ? '#D97706'
+                            ? '#F59E0B'
                             : '#DC2626',
                     }}
-                  >
-                    {animatedScore}% Setup
-                  </strong>
+                  />
                 </div>
-                <span
-                  className="completeness-bar-badge"
-                  style={{
-                    color: profileCompleteness.missingCount > 4 ? '#DC2626' : '#D97706',
-                    background: profileCompleteness.missingCount > 4 ? '#FEF2F2' : '#FFFBEB',
-                    border: `1px solid ${profileCompleteness.missingCount > 4 ? '#FECACA' : '#FDE68A'}`,
-                  }}
-                >
-                  {profileCompleteness.missingCount} Gaps Found
-                </span>
+                <p className="completeness-bar-desc">
+                  <strong style={{ color: '#DC2626' }}>
+                    {profileCompleteness.missingCount} of {profileCompleteness.total} profile elements missing
+                  </strong>{' '}
+                  — why competitors rank ahead
+                </p>
               </div>
-              <div className="completeness-track">
-                <div
-                  className="completeness-fill"
-                  style={{
-                    width: `${animatedScore}%`,
-                    background:
-                      profileCompleteness.percentage >= 75
-                        ? '#10B981'
-                        : profileCompleteness.percentage >= 60
-                          ? '#F59E0B'
-                          : '#DC2626',
-                  }}
-                />
-              </div>
-              <p className="completeness-bar-desc">
-                <strong style={{ color: '#DC2626' }}>
-                  {profileCompleteness.missingCount} of {profileCompleteness.total} profile elements missing
-                </strong>{' '}
-                — why competitors rank ahead
-              </p>
-            </div>
+            )}
           </section>
 
           {/* ================================================== */}
           {/* SECTION 2: THE PROOF — Rank Leaderboard + Head-to-Head */}
           {/* ================================================== */}
-          <section id="section-proof" className="report-section section-proof-flow">
-            {/* Rank Leaderboard */}
-            <div className="section-title-wrap">
-              <div className="section-title-left">
-                <h3 className="section-title">
-                  <span className="editorial-serif">Google Maps</span> Rankings
-                </h3>
-                <p className="section-subtitle">Live positions in {locationLabel}</p>
+          {animationStage >= 4 && report && !isGenerating && (
+            <section id="section-proof" className="report-section section-proof-flow typewriter-section-enter">
+              {/* Rank Leaderboard */}
+              <div className="section-title-wrap">
+                <div className="section-title-left">
+                  <h3 className="section-title">
+                    <span className="editorial-serif">Google Maps</span> Rankings
+                  </h3>
+                  <p className="section-subtitle">Live positions in {locationLabel}</p>
+                </div>
+                <span className="section-header-pill green">84% calls → Top 3</span>
               </div>
-              <span className="section-header-pill green">84% calls → Top 3</span>
-            </div>
 
-            <div className="leaderboard-table">
-              {rankLadderSlots.map((slot) => {
-                const maxCalls = Math.max(...rankLadderSlots.map(s => s.estimatedCalls), 1);
-                const barWidth = Math.max(15, Math.round((slot.estimatedCalls / maxCalls) * 80));
+              <div className="leaderboard-table">
+                {rankLadderSlots.map((slot) => {
+                  const maxCalls = Math.max(...rankLadderSlots.map(s => s.estimatedCalls), 1);
+                  const barWidth = Math.max(15, Math.round((slot.estimatedCalls / maxCalls) * 80));
 
-                return (
-                  <div
-                    key={`${slot.rank}-${slot.isUser ? 'u' : 'c'}`}
-                    className={`leaderboard-row ${slot.isUser ? 'is-user-row' : ''} ${slot.isBlurred ? 'is-blurred-row' : ''}`}
-                  >
-                    {slot.isBlurred && (
-                      <div className="leaderboard-lock-overlay" onClick={() => setIsPlanModalOpen(true)}>
-                        <Lock size={14} color="#6366F1" />
-                        <span className="leaderboard-lock-text">Unlock all competitors</span>
-                      </div>
-                    )}
-                    <div className="leaderboard-row-content">
-                      <span className={`leaderboard-rank-tag rank-${slot.rank <= 3 ? slot.rank : 'other'}`}>
-                        #{slot.rank}
-                      </span>
-                      {slot.photo_url ? (
-                        <img
-                          src={slot.photo_url}
-                          alt={slot.name}
-                          referrerPolicy="no-referrer"
-                          className="leaderboard-photo"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className="leaderboard-photo-fallback" style={{ background: slot.isUser ? '#EDE9FE' : '#F1F5F9' }}>
-                          <Building2 size={16} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
+                  return (
+                    <div
+                      key={`${slot.rank}-${slot.isUser ? 'u' : 'c'}`}
+                      className={`leaderboard-row ${slot.isUser ? 'is-user-row' : ''} ${slot.isBlurred ? 'is-blurred-row' : ''}`}
+                    >
+                      {slot.isBlurred && (
+                        <div className="leaderboard-lock-overlay" onClick={() => setIsPlanModalOpen(true)}>
+                          <Lock size={14} color="#6366F1" />
+                          <span className="leaderboard-lock-text">Unlock all competitors</span>
                         </div>
                       )}
-                      <div className="leaderboard-info">
-                        <span className="leaderboard-name">
-                          {formatShortName(slot.name, 24)}
-                          {slot.isUser && <span className="leaderboard-you-badge">You</span>}
+                      <div className="leaderboard-row-content">
+                        <span className={`leaderboard-rank-tag rank-${slot.rank <= 3 ? slot.rank : 'other'}`}>
+                          #{slot.rank}
                         </span>
-                        <div className="leaderboard-meta">
-                          <span className="leaderboard-rating">★ {slot.rating.toFixed(1)}</span>
-                          <span className="leaderboard-reviews">({slot.review_count.toLocaleString()})</span>
+                        {slot.photo_url ? (
+                          <img
+                            src={slot.photo_url}
+                            alt={slot.name}
+                            referrerPolicy="no-referrer"
+                            className="leaderboard-photo"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="leaderboard-photo-fallback" style={{ background: slot.isUser ? '#EDE9FE' : '#F1F5F9' }}>
+                            <Building2 size={16} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
+                          </div>
+                        )}
+                        <div className="leaderboard-info">
+                          <span className="leaderboard-name">
+                            {formatShortName(slot.name, 24)}
+                            {slot.isUser && <span className="leaderboard-you-badge">You</span>}
+                          </span>
+                          <div className="leaderboard-meta">
+                            <span className="leaderboard-rating">★ {slot.rating.toFixed(1)}</span>
+                            <span className="leaderboard-reviews">({slot.review_count.toLocaleString()})</span>
+                          </div>
+                        </div>
+                        <div className="leaderboard-calls">
+                          <span
+                            className="leaderboard-calls-number"
+                            style={{ color: slot.isUser ? '#7C3AED' : slot.rank === 1 ? '#059669' : '#475569' }}
+                          >
+                            ~{slot.estimatedCalls}/mo
+                          </span>
+                          <div
+                            className="leaderboard-calls-bar"
+                            style={{
+                              width: `${barWidth}px`,
+                              background: slot.isUser
+                                ? '#7C3AED'
+                                : slot.rank === 1
+                                  ? '#10B981'
+                                  : slot.rank === 2
+                                    ? '#3B82F6'
+                                    : '#94A3B8',
+                            }}
+                          />
                         </div>
                       </div>
-                      <div className="leaderboard-calls">
-                        <span
-                          className="leaderboard-calls-number"
-                          style={{ color: slot.isUser ? '#7C3AED' : slot.rank === 1 ? '#059669' : '#475569' }}
-                        >
-                          ~{slot.estimatedCalls}/mo
-                        </span>
-                        <div
-                          className="leaderboard-calls-bar"
-                          style={{
-                            width: `${barWidth}px`,
-                            background: slot.isUser
-                              ? '#7C3AED'
-                              : slot.rank === 1
-                                ? '#10B981'
-                                : slot.rank === 2
-                                  ? '#3B82F6'
-                                  : '#94A3B8',
-                          }}
-                        />
+                    </div>
+                  );
+                })}
+
+                {/* Invisibility cutoff line between top 3 and user if outside */}
+                {!isInTop3 && rankLadderSlots.length >= 4 && (
+                  <div className="leaderboard-cutoff-line">
+                    <div className="cutoff-divider" />
+                    <span className="cutoff-badge">
+                      <AlertTriangle size={10} color="#DC2626" style={{ display: 'inline', verticalAlign: '-1px', marginRight: '3px' }} />
+                      84% OF CALLS GO TO TOP 3
+                    </span>
+                    <div className="cutoff-divider" />
+                  </div>
+                )}
+              </div>
+
+              {/* Head-to-Head Comparison Card */}
+              {userRank !== 1 && (
+                <div className="h2h-module">
+                  {/* Showdown Header Banner */}
+                  <div className="h2h-module-header">
+                    <div className="h2h-module-title-row">
+                      <div className="h2h-icon-box">
+                        <Swords size={16} color="#DC2626" />
+                      </div>
+                      <div>
+                        <h4 className="h2h-module-title">Head-to-Head Battle</h4>
+                        <p className="h2h-module-sub">Your Position vs Google Maps #1 Leader</p>
+                      </div>
+                    </div>
+                    <span className="h2h-live-tag">Google Maps #1 Leader</span>
+                  </div>
+
+                  {/* Competitor Avatars Matchup */}
+                  <div className="h2h-profiles-grid">
+                    {/* You Side */}
+                    <div className="h2h-profile-side is-you">
+                      <span className="h2h-side-tag you-tag">Your Business</span>
+                      <div className="h2h-side-main">
+                        <div className="h2h-avatar-wrap">
+                          {business.photo_url ? (
+                            <img
+                              src={business.photo_url}
+                              alt={business.name}
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="h2h-avatar-fallback you-fallback">
+                              <Building2 size={20} color="#7C3AED" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="h2h-profile-meta-wrap">
+                          <span className="h2h-profile-name" title={cleanBusinessName}>
+                            {formatShortName(cleanBusinessName, 15)}
+                          </span>
+                          <span className="h2h-profile-rank-chip rank-you">
+                            Rank #{userRank}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* VS Badge in Middle */}
+                    <div className="h2h-vs-circle">VS</div>
+
+                    {/* #1 Rival Side */}
+                    <div className="h2h-profile-side is-rival">
+                      <span className="h2h-side-tag rival-tag">#1 Competitor</span>
+                      <div className="h2h-side-main">
+                        <div className="h2h-avatar-wrap" style={{ background: '#DCFCE7' }}>
+                          {topRival.photo_url ? (
+                            <img
+                              src={topRival.photo_url}
+                              alt={topRival.name}
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="h2h-avatar-fallback rival-fallback">
+                              <Building2 size={20} color="#059669" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="h2h-profile-meta-wrap">
+                          <span className="h2h-profile-name" title={topRival.name}>
+                            {formatShortName(topRival.name, 15)}
+                          </span>
+                          <span className="h2h-profile-rank-chip rank-rival">
+                            <Crown size={11} color="#059669" style={{ verticalAlign: 'middle', marginRight: '3px' }} />
+                            Rank #1 Leader
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                );
-              })}
 
-              {/* Invisibility cutoff line between top 3 and user if outside */}
-              {!isInTop3 && rankLadderSlots.length >= 4 && (
-                <div className="leaderboard-cutoff-line">
-                  <div className="cutoff-divider" />
-                  <span className="cutoff-badge">
-                    <AlertTriangle size={10} color="#DC2626" style={{ display: 'inline', verticalAlign: '-1px', marginRight: '3px' }} />
-                    84% OF CALLS GO TO TOP 3
-                  </span>
-                  <div className="cutoff-divider" />
+                  {/* Attribute Comparison Rows */}
+                  <div className="h2h-comparison-table">
+                    {/* Row 1: Estimated Calls */}
+                    <div className="h2h-comp-row">
+                      <div className="h2h-comp-val you-val loss-text">
+                        ~{userEstimatedCalls}/mo
+                      </div>
+                      <div className="h2h-comp-label">
+                        <span>Monthly Calls</span>
+                      </div>
+                      <div className="h2h-comp-val rival-val win-text">
+                        ~{topRivalCalls}/mo
+                      </div>
+                    </div>
+
+                    {/* Visual Call Ratio Bar */}
+                    <div className="h2h-ratio-track">
+                      <div
+                        className="h2h-ratio-fill you-fill"
+                        style={{ width: `${Math.max(12, Math.round((userEstimatedCalls / (userEstimatedCalls + topRivalCalls)) * 100))}%` }}
+                        title={`You: ~${userEstimatedCalls} calls/mo`}
+                      />
+                      <div
+                        className="h2h-ratio-fill rival-fill"
+                        style={{ width: `${Math.max(12, Math.round((topRivalCalls / (userEstimatedCalls + topRivalCalls)) * 100))}%` }}
+                        title={`#1 Rival: ~${topRivalCalls} calls/mo`}
+                      />
+                    </div>
+
+                    {/* Row 2: Customer Reviews */}
+                    <div className="h2h-comp-row">
+                      <div className="h2h-comp-val you-val">
+                        ★ {business.rating?.toFixed(1) || '4.0'} ({business.review_count ?? 0})
+                      </div>
+                      <div className="h2h-comp-label">
+                        <span>Reviews Trust</span>
+                      </div>
+                      <div className="h2h-comp-val rival-val">
+                        ★ {topRival.rating?.toFixed(1) || '4.5'} ({topRival.review_count ?? 0})
+                      </div>
+                    </div>
+
+                    {/* Row 3: Profile Optimization */}
+                    <div className="h2h-comp-row">
+                      <div className="h2h-comp-val you-val loss-badge">
+                        {profileCompleteness.missingCount} Gaps Found
+                      </div>
+                      <div className="h2h-comp-label">
+                        <span>Profile Setup</span>
+                      </div>
+                      <div className="h2h-comp-val rival-val win-badge">
+                        Top 3 Verified
+                      </div>
+                    </div>
+
+                    {/* Row 4: Category & Keywords */}
+                    <div className="h2h-comp-row">
+                      <div className="h2h-comp-val you-val">
+                        {business.category || 'Basic Listing'}
+                      </div>
+                      <div className="h2h-comp-label">
+                        <span>Primary Category</span>
+                      </div>
+                      <div className="h2h-comp-val rival-val">
+                        Optimized for Calls
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Impact Takeaway */}
+                  <div className="h2h-takeaway-banner">
+                    <Flame size={14} color="#DC2626" style={{ flexShrink: 0 }} />
+                    <span>
+                      <strong>{formatShortName(topRival.name, 20)}</strong> captures ~<strong>{Math.max(15, topRivalCalls - userEstimatedCalls)} more calls every month</strong> simply by claiming Google's #1 spot.
+                    </span>
+                  </div>
                 </div>
               )}
-            </div>
-
-            {/* ================================================== */}
-            {/* HEAD-TO-HEAD X-RAY (Your Profile vs #1 Rival)     */}
-            {/* ================================================== */}
-            {userRank !== 1 && (
-              <div className="h2h-module">
-                <div className="h2h-module-header">
-                  <div>
-                    <h4 className="h2h-module-title">
-                      Head-to-Head
-                    </h4>
-                    <p className="h2h-module-sub">
-                      Why Google awards customer calls to #{1} {formatShortName(topRival.name, 18)}
-                    </p>
-                  </div>
-                  <span className="h2h-live-tag">Direct Rival Matchup</span>
-                </div>
-
-                {/* Profiles Matchup Columns */}
-                <div className="h2h-profiles-grid">
-                  {/* You */}
-                  <div className="h2h-profile-side is-you">
-                    <div className="h2h-side-tag you-tag">Your Listing</div>
-                    <div className="h2h-side-main">
-                      <div className="h2h-avatar-wrap">
-                        <SafeImage
-                          src={business.photo_url}
-                          alt={business.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
-                          fallback={<Building2 size={16} color="#7C3AED" />}
-                        />
-                      </div>
-                      <div className="h2h-profile-meta-wrap">
-                        <span className="h2h-profile-name">{formatShortName(cleanBusinessName, 18)}</span>
-                        <div className="h2h-profile-rank-chip rank-you">
-                          Rank #{userRank} · Invisible
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* VS Badge */}
-                  <div className="h2h-vs-circle">VS</div>
-
-                  {/* Rival */}
-                  <div className="h2h-profile-side is-rival">
-                    <div className="h2h-side-tag rival-tag">#1 Competitor</div>
-                    <div className="h2h-side-main">
-                      <div className="h2h-avatar-wrap">
-                        <SafeImage
-                          src={topRival.photo_url}
-                          alt={topRival.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
-                          fallback={<Trophy size={16} color="#F59E0B" />}
-                        />
-                      </div>
-                      <div className="h2h-profile-meta-wrap">
-                        <span className="h2h-profile-name">{formatShortName(topRival.name, 18)}</span>
-                        <div className="h2h-profile-rank-chip rank-rival">
-                          Rank #1 · Leader
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Attribute Comparison Rows */}
-                <div className="h2h-comparison-table">
-                  {/* Row 1: Estimated Calls */}
-                  <div className="h2h-comp-row">
-                    <div className="h2h-comp-val you-val loss-text">
-                      ~{userEstimatedCalls}/mo
-                    </div>
-                    <div className="h2h-comp-label">
-                      <span>Monthly Calls</span>
-                    </div>
-                    <div className="h2h-comp-val rival-val win-text">
-                      ~{topRivalCalls}/mo
-                    </div>
-                  </div>
-
-                  {/* Visual Call Ratio Bar */}
-                  <div className="h2h-ratio-track">
-                    <div
-                      className="h2h-ratio-fill you-fill"
-                      style={{ width: `${Math.max(12, Math.round((userEstimatedCalls / (userEstimatedCalls + topRivalCalls)) * 100))}%` }}
-                      title={`You: ~${userEstimatedCalls} calls/mo`}
-                    />
-                    <div
-                      className="h2h-ratio-fill rival-fill"
-                      style={{ width: `${Math.max(12, Math.round((topRivalCalls / (userEstimatedCalls + topRivalCalls)) * 100))}%` }}
-                      title={`#1 Rival: ~${topRivalCalls} calls/mo`}
-                    />
-                  </div>
-
-                  {/* Row 2: Customer Reviews */}
-                  <div className="h2h-comp-row">
-                    <div className="h2h-comp-val you-val">
-                      ★ {business.rating?.toFixed(1) || '4.0'} ({business.review_count ?? 0})
-                    </div>
-                    <div className="h2h-comp-label">
-                      <span>Reviews Trust</span>
-                    </div>
-                    <div className="h2h-comp-val rival-val">
-                      ★ {topRival.rating?.toFixed(1) || '4.5'} ({topRival.review_count ?? 0})
-                    </div>
-                  </div>
-
-                  {/* Row 3: Profile Optimization */}
-                  <div className="h2h-comp-row">
-                    <div className="h2h-comp-val you-val loss-badge">
-                      {profileCompleteness.missingCount} Gaps Found
-                    </div>
-                    <div className="h2h-comp-label">
-                      <span>Profile Setup</span>
-                    </div>
-                    <div className="h2h-comp-val rival-val win-badge">
-                      Top 3 Verified
-                    </div>
-                  </div>
-
-                  {/* Row 4: Category & Keywords */}
-                  <div className="h2h-comp-row">
-                    <div className="h2h-comp-val you-val">
-                      {business.category || 'Basic Listing'}
-                    </div>
-                    <div className="h2h-comp-label">
-                      <span>Primary Category</span>
-                    </div>
-                    <div className="h2h-comp-val rival-val">
-                      Optimized for Calls
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Impact Takeaway */}
-                <div className="h2h-takeaway-banner">
-                  <Flame size={14} color="#DC2626" style={{ flexShrink: 0 }} />
-                  <span>
-                    <strong>{formatShortName(topRival.name, 20)}</strong> captures ~<strong>{Math.max(15, topRivalCalls - userEstimatedCalls)} more calls every month</strong> simply by claiming Google's #1 spot.
-                  </span>
-                </div>
-              </div>
-            )}
-          </section>
+            </section>
+          )}
 
           {/* ================================================== */}
           {/* SECTION 3: REAL CUSTOMER SEARCHES                  */}
           {/* ================================================== */}
-          <section id="section-searches" className="report-section section-searches-flow">
-            <div className="section-title-wrap">
-              <div className="section-title-left">
-                <h3 className="section-title">
-                  <span className="editorial-serif">Real Customer</span> Searches
-                </h3>
-                <p className="section-subtitle">High-intent searches in {locationLabel} — and where you rank</p>
+          {animationStage >= 4 && report && !isGenerating && (
+            <section id="section-searches" className="report-section section-searches-flow typewriter-section-enter">
+              <div className="section-title-wrap">
+                <div className="section-title-left">
+                  <h3 className="section-title">
+                    <span className="editorial-serif">Real Customer</span> Searches
+                  </h3>
+                  <p className="section-subtitle">High-intent searches in {locationLabel} — and where you rank</p>
+                </div>
+                <span className="section-header-pill indigo">
+                  {realSearchesList.length} Searches Tracked
+                </span>
               </div>
-              <span className="section-header-pill indigo">
-                {realSearchesList.length} Searches Tracked
-              </span>
-            </div>
 
-            <div className="searches-clean-list">
-              {visibleSearches.map((item, idx) => {
-                const isTop3 = item.rank_number ? item.rank_number <= 3 : false;
-                return (
-                  <div key={idx} className={`search-clean-row ${item.is_critical ? 'is-critical-query' : ''}`}>
-                    <div className="search-query-left">
-                      <div className="search-pill-icon">
-                        <Search size={13} color="#64748B" />
+              <div className="searches-clean-list">
+                {visibleSearches.map((item, idx) => {
+                  const isTop3 = item.rank_number ? item.rank_number <= 3 : false;
+                  return (
+                    <div key={idx} className={`search-clean-row ${item.is_critical ? 'is-critical-query' : ''}`}>
+                      <div className="search-query-left">
+                        <div className="search-pill-icon">
+                          <Search size={13} color="#64748B" />
+                        </div>
+                        <div className="search-query-text-wrap">
+                          <span className="search-query-phrase">"{item.query}"</span>
+                          <span className="search-query-intent">
+                            {isTop3 ? 'High customer visibility' : `Calls lost to #${1} ${formatShortName(topRival.name, 16)}`}
+                          </span>
+                        </div>
                       </div>
-                      <div className="search-query-text-wrap">
-                        <span className="search-query-phrase">"{item.query}"</span>
-                        <span className="search-query-intent">
-                          {isTop3 ? 'High customer visibility' : `Calls lost to #${1} ${formatShortName(topRival.name, 16)}`}
+
+                      <div className="search-query-right">
+                        <span
+                          className="search-rank-pill"
+                          style={{
+                            color: isTop3 ? '#059669' : '#DC2626',
+                            background: isTop3 ? '#ECFDF5' : '#FEF2F2',
+                            border: `1px solid ${isTop3 ? '#A7F3D0' : '#FECDD3'}`,
+                          }}
+                        >
+                          {item.rank_number ? `#${item.rank_number}` : item.rank_status}
                         </span>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
 
-                    <div className="search-query-right">
-                      <span
-                        className="search-rank-pill"
-                        style={{
-                          color: isTop3 ? '#059669' : '#DC2626',
-                          background: isTop3 ? '#ECFDF5' : '#FEF2F2',
-                          border: `1px solid ${isTop3 ? '#A7F3D0' : '#FECDD3'}`,
-                        }}
-                      >
-                        {item.rank_number ? `#${item.rank_number}` : item.rank_status}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+              {realSearchesList.length > 3 && (
+                <button
+                  className="searches-toggle-btn"
+                  onClick={() => setShowAllSearches(!showAllSearches)}
+                >
+                  <span>{showAllSearches ? 'Show fewer searches' : `View all ${realSearchesList.length} local searches (${realSearchesList.length - 3} more)`}</span>
+                  <ChevronDown
+                    size={14}
+                    style={{ transform: showAllSearches ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}
+                  />
+                </button>
+              )}
 
-            {realSearchesList.length > 3 && (
-              <button
-                className="searches-toggle-btn"
-                onClick={() => setShowAllSearches(!showAllSearches)}
-              >
-                <span>{showAllSearches ? 'Show fewer searches' : `View all ${realSearchesList.length} local searches (${realSearchesList.length - 3} more)`}</span>
-                <ChevronDown
-                  size={14}
-                  style={{ transform: showAllSearches ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}
-                />
-              </button>
-            )}
-
-            <div className="searches-insight-footer">
-              <Sparkles size={14} color="#7C3AED" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <span>
-                <strong>Optigo AI Auto-Indexing:</strong> We inject these local keywords into your Google Business Profile categories, bio, and geotagged photos so nearby customers call you first.
-              </span>
-            </div>
-          </section>
+              <div className="searches-insight-footer">
+                <Sparkles size={14} color="#7C3AED" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>
+                  <strong>Optigo AI Auto-Indexing:</strong> We inject these local keywords into your Google Business Profile categories, bio, and geotagged photos so nearby customers call you first.
+                </span>
+              </div>
+            </section>
+          )}
 
           {/* ================================================== */}
           {/* SECTION 4: THE REASON — Merged Fix List            */}
           {/* ================================================== */}
-          <section id="section-reason" className="report-section section-reason-flow">
-            <div className="section-title-wrap">
-              <div className="section-title-left">
-                <h3 className="section-title">
-                  {mergedFixList.length} Issues Holding You Back
-                </h3>
-                <p className="section-subtitle">
-                  These are directly causing Google to rank rivals above you.
-                </p>
+          {animationStage >= 5 && report && !isGenerating && (
+            <section id="section-reason" className="report-section section-reason-flow typewriter-section-enter">
+              <div className="section-title-wrap">
+                <div className="section-title-left">
+                  <h3 className="section-title">
+                    {mergedFixList.length} Issues Holding You Back
+                  </h3>
+                  <p className="section-subtitle">
+                    These are directly causing Google to rank rivals above you.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="fix-list-container">
-              {visibleFixItems.map((item) => {
-                const isExpanded = expandedIssueId === item.id;
+              <div className="fix-list-container">
+                {visibleFixItems.map((item) => {
+                  const isExpanded = expandedIssueId === item.id;
 
-                return (
-                  <div
-                    key={item.id}
-                    className={`fix-list-item ${isExpanded ? 'is-expanded' : ''}`}
-                    onClick={() => setExpandedIssueId(isExpanded ? null : item.id)}
-                  >
-                    <div className="fix-list-main-row">
-                      <div
-                        className="fix-list-icon"
-                        style={{
-                          background: item.badgeVariant === 'critical' ? '#FEF2F2' : item.badgeVariant === 'quick_win' ? '#FFFBEB' : '#EEF2FF',
-                          border: `1px solid ${item.badgeVariant === 'critical' ? '#FEE2E2' : item.badgeVariant === 'quick_win' ? '#FEF3C7' : '#E0E7FF'}`,
-                        }}
-                      >
-                        {renderItemIcon(item.icon_type, item.color)}
-                      </div>
-                      <div className="fix-list-body">
-                        <h4 className="fix-list-title">{item.title}</h4>
-                        <p className="fix-list-desc">{item.shortImpact}</p>
-                      </div>
-                      <div className="fix-list-action-wrap">
-                        <span className={`fix-list-badge badge-${item.badgeVariant}`}>
-                          {item.badgeText}
-                        </span>
-                        <div className="fix-list-chevron">
-                          <ChevronRight size={14} />
+                  return (
+                    <div
+                      key={item.id}
+                      className={`fix-list-item ${isExpanded ? 'is-expanded' : ''}`}
+                      onClick={() => setExpandedIssueId(isExpanded ? null : item.id)}
+                    >
+                      <div className="fix-list-main-row">
+                        <div
+                          className="fix-list-icon"
+                          style={{
+                            background: item.badgeVariant === 'critical' ? '#FEF2F2' : item.badgeVariant === 'quick_win' ? '#FFFBEB' : '#EEF2FF',
+                            border: `1px solid ${item.badgeVariant === 'critical' ? '#FEE2E2' : item.badgeVariant === 'quick_win' ? '#FEF3C7' : '#E0E7FF'}`,
+                          }}
+                        >
+                          {renderItemIcon(item.icon_type, item.color)}
+                        </div>
+                        <div className="fix-list-body">
+                          <h4 className="fix-list-title">{item.title}</h4>
+                          <p className="fix-list-desc">{item.shortImpact}</p>
+                        </div>
+                        <div className="fix-list-action-wrap">
+                          <span className={`fix-list-badge badge-${item.badgeVariant}`}>
+                            {item.badgeText}
+                          </span>
+                          <div className="fix-list-chevron">
+                            <ChevronRight size={14} />
+                          </div>
                         </div>
                       </div>
+
+                      {/* Expanded AI fix suggestion & competitor context */}
+                      {isExpanded && (
+                        <div
+                          className="fix-expanded-drawer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {item.competitorBenchmark && (
+                            <div className="fix-benchmark-row">
+                              <Flame size={13} color="#DC2626" />
+                              <span><strong>Rival Benchmark:</strong> {item.competitorBenchmark}</span>
+                            </div>
+                          )}
+                          <div className="fix-ai-box">
+                            <div className="fix-ai-icon-wrap">
+                              <Sparkles size={14} color="#7C3AED" />
+                            </div>
+                            <div className="fix-ai-content">
+                              <span className="fix-ai-label">How Optigo AI Solves This</span>
+                              <p className="fix-ai-text">{item.aiFix}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
+                  );
+                })}
+              </div>
 
-                    {/* Expanded AI fix suggestion & competitor context */}
-                    {isExpanded && (
-                      <div
-                        className="fix-expanded-drawer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {item.competitorBenchmark && (
-                          <div className="fix-benchmark-row">
-                            <Flame size={13} color="#DC2626" />
-                            <span><strong>Rival Benchmark:</strong> {item.competitorBenchmark}</span>
-                          </div>
-                        )}
-                        <div className="fix-ai-box">
-                          <div className="fix-ai-icon-wrap">
-                            <Sparkles size={14} color="#7C3AED" />
-                          </div>
-                          <div className="fix-ai-content">
-                            <span className="fix-ai-label">How Optigo AI Solves This</span>
-                            <p className="fix-ai-text">{item.aiFix}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {mergedFixList.length > 3 && (
-              <button onClick={() => setShowAllIssues(!showAllIssues)} className="fix-list-expander">
-                <span>{showAllIssues ? 'Show fewer issues' : `+${mergedFixList.length - 3} more issues`}</span>
-                <ChevronRight
-                  size={14}
-                  style={{
-                    transform: showAllIssues ? 'rotate(-90deg)' : 'rotate(90deg)',
-                    transition: 'transform 0.15s ease',
-                  }}
-                />
-              </button>
-            )}
-          </section>
+              {mergedFixList.length > 3 && (
+                <button onClick={() => setShowAllIssues(!showAllIssues)} className="fix-list-expander">
+                  <span>{showAllIssues ? 'Show fewer issues' : `+${mergedFixList.length - 3} more issues`}</span>
+                  <ChevronRight
+                    size={14}
+                    style={{
+                      transform: showAllIssues ? 'rotate(-90deg)' : 'rotate(90deg)',
+                      transition: 'transform 0.15s ease',
+                    }}
+                  />
+                </button>
+              )}
+            </section>
+          )}
 
           {/* ================================================== */}
           {/* SECTION 5: COST OF WAITING + Free vs Paid          */}
           {/* ================================================== */}
-          <section id="section-cost" className="report-section section-cost-flow">
-            <div className="section-title-wrap">
-              <div className="section-title-left">
-                <h3 className="section-title">
-                  <span className="editorial-serif">What happens</span> if you do nothing?
-                </h3>
-                <p className="section-subtitle">Delaying optimization compounds rival advantage over time</p>
-              </div>
-            </div>
-
-            <div className="inaction-list">
-              {inactionConsequences.map((item, idx) => (
-                <div key={idx} className="inaction-row">
-                  <div className="inaction-bullet-icon">
-                    {item.icon_type === 'down_trend' && <TrendingDown size={14} color="#DC2626" />}
-                    {item.icon_type === 'lost_customers' && <Users size={14} color="#DC2626" />}
-                    {item.icon_type === 'time_lag' && <Clock size={14} color="#DC2626" />}
-                    {!['down_trend', 'lost_customers', 'time_lag'].includes(item.icon_type) && (
-                      <AlertTriangle size={14} color="#DC2626" />
-                    )}
-                  </div>
-                  <p className="inaction-text">{item.text}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Free vs Paid Comparison */}
-            <div className="free-vs-paid-card">
-              <h4 className="free-vs-paid-title">
-                <span className="editorial-serif">A smarter way</span> to grow
-              </h4>
-              <div className="free-vs-paid-grid">
-                <div className="fvp-col free-col">
-                  <div className="fvp-col-header">Free Report</div>
-                  <div className="fvp-row free-row">
-                    <Minus size={12} color="#94A3B8" />
-                    <span>One-time snapshot</span>
-                  </div>
-                  <div className="fvp-row free-row">
-                    <Minus size={12} color="#94A3B8" />
-                    <span>See issues only</span>
-                  </div>
-                  <div className="fvp-row free-row">
-                    <Minus size={12} color="#94A3B8" />
-                    <span>Manual effort required</span>
-                  </div>
-                </div>
-                <div className="fvp-col paid-col">
-                  <div className="fvp-col-header">Optigo AI Paid</div>
-                  <div className="fvp-row paid-row">
-                    <Check size={12} color="#16A34A" />
-                    <span>Continuous monitoring</span>
-                  </div>
-                  <div className="fvp-row paid-row">
-                    <Check size={12} color="#16A34A" />
-                    <span>AI fixes automatically</span>
-                  </div>
-                  <div className="fvp-row paid-row">
-                    <Check size={12} color="#16A34A" />
-                    <span>Hands-free optimization</span>
-                  </div>
+          {animationStage >= 5 && report && !isGenerating && (
+            <section id="section-cost" className="report-section section-cost-flow typewriter-section-enter">
+              <div className="section-title-wrap">
+                <div className="section-title-left">
+                  <h3 className="section-title">
+                    <span className="editorial-serif">What happens</span> if you do nothing?
+                  </h3>
+                  <p className="section-subtitle">Delaying optimization compounds rival advantage over time</p>
                 </div>
               </div>
-            </div>
-          </section>
+
+              <div className="inaction-list">
+                {inactionConsequences.map((item, idx) => (
+                  <div key={idx} className="inaction-row">
+                    <div className="inaction-bullet-icon">
+                      {item.icon_type === 'down_trend' && <TrendingDown size={14} color="#DC2626" />}
+                      {item.icon_type === 'lost_customers' && <Users size={14} color="#DC2626" />}
+                      {item.icon_type === 'time_lag' && <Clock size={14} color="#DC2626" />}
+                      {!['down_trend', 'lost_customers', 'time_lag'].includes(item.icon_type) && (
+                        <AlertTriangle size={14} color="#DC2626" />
+                      )}
+                    </div>
+                    <p className="inaction-text">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Free vs Paid Comparison */}
+              <div className="free-vs-paid-card">
+                <h4 className="free-vs-paid-title">
+                  <span className="editorial-serif">A smarter way</span> to grow
+                </h4>
+                <div className="free-vs-paid-grid">
+                  <div className="fvp-col free-col">
+                    <div className="fvp-col-header">Free Report</div>
+                    <div className="fvp-row free-row">
+                      <Minus size={12} color="#94A3B8" />
+                      <span>One-time snapshot</span>
+                    </div>
+                    <div className="fvp-row free-row">
+                      <Minus size={12} color="#94A3B8" />
+                      <span>See issues only</span>
+                    </div>
+                    <div className="fvp-row free-row">
+                      <Minus size={12} color="#94A3B8" />
+                      <span>Manual effort required</span>
+                    </div>
+                  </div>
+                  <div className="fvp-col paid-col">
+                    <div className="fvp-col-header">Optigo AI Paid</div>
+                    <div className="fvp-row paid-row">
+                      <Check size={12} color="#16A34A" />
+                      <span>Continuous monitoring</span>
+                    </div>
+                    <div className="fvp-row paid-row">
+                      <Check size={12} color="#16A34A" />
+                      <span>AI fixes automatically</span>
+                    </div>
+                    <div className="fvp-row paid-row">
+                      <Check size={12} color="#16A34A" />
+                      <span>Hands-free optimization</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* ================================================== */}
           {/* SECTION 6: THE FIX — Single Conversion Card        */}
           {/* ================================================== */}
-          <section id="section-fix" className="report-section section-fix-flow">
-            <div className="solution-conversion-card">
-              <div className="solution-icon-wrap">
-                <Zap size={22} color="#FFFFFF" />
-              </div>
-
-              <h3 className="solution-card-title">
-                <span className="editorial-serif">Grow faster</span> with Optigo AI
-              </h3>
-              <p className="solution-card-sub">
-                We'll fix {mergedFixList.length} issues, optimize your profile, and help you outrank {competitorsAheadCount > 0 ? `${competitorsAheadCount} competitor${competitorsAheadCount > 1 ? 's' : ''}` : 'competitors'}.
-              </p>
-
-              {/* Revenue Recovery Stat — Integrated, no inner box */}
-              {userRank !== 1 && (
-                <div className="solution-recovery-highlight">
-                  <BarChart3 size={20} color="#4ADE80" style={{ flexShrink: 0 }} />
-                  <div>
-                    <span className="solution-recovery-val">
-                      +₹{estimatedLowRevenue.toLocaleString('en-IN')}–₹{estimatedHighRevenue.toLocaleString('en-IN')}/mo
-                    </span>
-                    <span className="solution-recovery-sub" style={{ display: 'block' }}>
-                      Potential revenue recovery at Top 3 rank
-                    </span>
-                  </div>
+          {animationStage >= 5 && report && !isGenerating && (
+            <section id="section-fix" className="report-section section-fix-flow typewriter-section-enter">
+              <div className="solution-conversion-card">
+                <div className="solution-icon-wrap">
+                  <Zap size={22} color="#FFFFFF" />
                 </div>
-              )}
 
-              <button
-                onClick={() => setIsPlanModalOpen(true)}
-                className="solution-card-btn"
-              >
-                <span>View Plans & Pricing</span>
-                <ArrowRight size={16} />
-              </button>
+                <h3 className="solution-card-title">
+                  <span className="editorial-serif">Grow faster</span> with Optigo AI
+                </h3>
+                <p className="solution-card-sub">
+                  We'll fix {mergedFixList.length} issues, optimize your profile, and help you outrank {competitorsAheadCount > 0 ? `${competitorsAheadCount} competitor${competitorsAheadCount > 1 ? 's' : ''}` : 'competitors'}.
+                </p>
 
-              <div className="solution-card-trust">
-                <ShieldCheck size={16} color="rgba(255, 255, 255, 0.85)" />
-                <span>Trusted by local businesses</span>
+                {/* Revenue Recovery Stat — Integrated, no inner box */}
+                {userRank !== 1 && (
+                  <div className="solution-recovery-highlight">
+                    <BarChart3 size={20} color="#4ADE80" style={{ flexShrink: 0 }} />
+                    <div>
+                      <span className="solution-recovery-val">
+                        +₹{estimatedLowRevenue.toLocaleString('en-IN')}–₹{estimatedHighRevenue.toLocaleString('en-IN')}/mo
+                      </span>
+                      <span className="solution-recovery-sub" style={{ display: 'block' }}>
+                        Potential revenue recovery at Top 3 rank
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setIsPlanModalOpen(true)}
+                  className="solution-card-btn"
+                >
+                  <span>View Plans & Pricing</span>
+                  <ArrowRight size={16} />
+                </button>
+
+                <div className="solution-card-trust">
+                  <ShieldCheck size={16} color="rgba(255, 255, 255, 0.85)" />
+                  <span>Trusted by local businesses</span>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
         </main>
 
         {/* ================================================== */}
@@ -2005,53 +2285,55 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
       {/* ================================================== */}
       {/* SINGLE STICKY BOTTOM BAR — One CTA + WhatsApp Share */}
       {/* ================================================== */}
-      <div className="mobile-floating-cta-bar">
-        <button className="whatsapp-share-btn" onClick={handleWhatsAppShare} title="Share on WhatsApp">
-          <WhatsAppIcon size={18} />
-        </button>
+      {animationStage >= 2 && report && !isGenerating && (
+        <div className="mobile-floating-cta-bar">
+          <button className="whatsapp-share-btn" onClick={handleWhatsAppShare} title="Share on WhatsApp">
+            <WhatsAppIcon size={18} />
+          </button>
 
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-          <span
-            style={{
-              fontSize: '0.74rem',
-              fontWeight: 800,
-              color: userRank === 1 ? '#059669' : '#DC2626',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-            }}
-          >
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
             <span
-              className="live-pulse-dot"
               style={{
-                width: '6px',
-                height: '6px',
-                background: userRank === 1 ? '#10B981' : '#EF4444',
-                boxShadow: userRank === 1 ? '0 0 8px #10B981' : '0 0 8px #EF4444',
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                color: userRank === 1 ? '#059669' : '#DC2626',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
               }}
-            />
-            {userRank === 1
-              ? `~${userEstimatedCalls} calls won/mo`
-              : `₹${estimatedLowRevenue.toLocaleString('en-IN')}+ lost/mo`}
-          </span>
-          <span style={{ fontSize: '0.68rem', color: '#64748B', whiteSpace: 'nowrap' }}>
-            {userRank === 1
-              ? 'Rank #1 • Defend Top Spot'
-              : isInTop3
-                ? `Rank #${userRank} • Claim #1`
-                : `Rank #${userRank} • Fix Invisibility`}
-          </span>
-        </div>
+            >
+              <span
+                className="live-pulse-dot"
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  background: userRank === 1 ? '#10B981' : '#EF4444',
+                  boxShadow: userRank === 1 ? '0 0 8px #10B981' : '0 0 8px #EF4444',
+                }}
+              />
+              {userRank === 1
+                ? `~${userEstimatedCalls} calls won/mo`
+                : `₹${estimatedLowRevenue.toLocaleString('en-IN')}+ lost/mo`}
+            </span>
+            <span style={{ fontSize: '0.68rem', color: '#64748B', whiteSpace: 'nowrap' }}>
+              {userRank === 1
+                ? 'Rank #1 • Defend Top Spot'
+                : isInTop3
+                  ? `Rank #${userRank} • Claim #1`
+                  : `Rank #${userRank} • Fix Invisibility`}
+            </span>
+          </div>
 
-        <button
-          onClick={() => setIsPlanModalOpen(true)}
-          className="mobile-floating-cta-btn"
-        >
-          <Sparkles size={13} />
-          <span>{isInTop3 ? (userRank === 1 ? 'Defend #1' : 'Claim #1') : 'Fix Now'}</span>
-          <ArrowRight size={13} />
-        </button>
-      </div>
+          <button
+            onClick={() => setIsPlanModalOpen(true)}
+            className="mobile-floating-cta-btn"
+          >
+            <Sparkles size={13} />
+            <span>{isInTop3 ? (userRank === 1 ? 'Defend #1' : 'Claim #1') : 'Fix Now'}</span>
+            <ArrowRight size={13} />
+          </button>
+        </div>
+      )}
 
       {/* ================================================== */}
       {/* MODAL 1: ISSUE DETAILS MODAL */}
@@ -2186,7 +2468,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
 
             {/* Plan Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '18px' }}>
-              {(report.plans || []).map((plan: PlanData) => {
+              {(report?.plans || []).map((plan: PlanData) => {
                 const isSelected = selectedPlanSlug === (plan.slug || plan.id);
                 const price =
                   billingCycle === 'annual'

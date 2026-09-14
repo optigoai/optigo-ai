@@ -661,15 +661,12 @@ class LeadService:
         return results
 
     async def create_or_update_lead(self, data: LeadCreate) -> Lead:
-        """Create lead record or update existing recent lead from same place/phone."""
+        """
+        Create a new lead record for every audit submission.
+        Does not deduplicate by business name or phone number, ensuring
+        every audit creates and stores a distinct, fresh report in the database.
+        """
         clean_phone = data.phone.strip().replace(" ", "").replace("-", "")
-
-        # Deduplication check
-        existing_lead = None
-        if data.place_id:
-            existing_lead = await self.repo.get_by_place_id(data.place_id)
-        if not existing_lead and clean_phone:
-            existing_lead = await self.repo.get_by_phone(clean_phone)
 
         # Check if business already exists in database
         existing_business = None
@@ -720,38 +717,6 @@ class LeadService:
                     )
             except Exception:
                 pass
-
-        if existing_lead:
-            existing_lead.business_name = data.business_name
-            existing_lead.phone = clean_phone
-            existing_lead.country_code = data.country_code or existing_lead.country_code
-            existing_lead.email = data.email or existing_lead.email
-            existing_lead.address = resolved_addr or existing_lead.address
-            existing_lead.category = resolved_category or existing_lead.category
-            existing_lead.rating = data.rating if data.rating is not None else existing_lead.rating
-            existing_lead.review_count = data.review_count if data.review_count is not None else existing_lead.review_count
-            existing_lead.website = data.website or existing_lead.website
-            existing_lead.photo_url = photo_url or existing_lead.photo_url
-            if lat is not None:
-                existing_lead.latitude = float(lat)
-            if lng is not None:
-                existing_lead.longitude = float(lng)
-            existing_lead.raw_places_data = data.raw_places_data or existing_lead.raw_places_data
-            existing_lead.status = "form_submitted"
-            existing_lead.last_activity_at = datetime.utcnow()
-
-            timeline = existing_lead.timeline or []
-            timeline.append(initial_event)
-            existing_lead.timeline = timeline
-
-            if existing_business:
-                existing_lead.business_id = existing_business.id
-                existing_lead.organization_id = existing_business.organization_id
-
-            await self.repo.save(existing_lead)
-            await self.db.commit()
-            await self.db.refresh(existing_lead)
-            return existing_lead
 
         # New Lead
         lead = Lead(

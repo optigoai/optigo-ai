@@ -65,23 +65,13 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
   const searchTimeoutRef = useRef<any>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // Debounced Places Search
-  // Debounced Places Search
+  // Debounced Place Search (Google Places API Autocomplete)
   useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
-    // If a place is selected and the search query matches it, don't re-trigger search
-    if (selectedPlace && selectedPlace.name.trim().toLowerCase() === searchQuery.trim().toLowerCase()) {
-      setShowDropdown(false);
-      setIsSearching(false);
-      return;
-    }
-
-    if (!searchQuery || searchQuery.trim().length < 2) {
+    const q = searchQuery.trim();
+    if (q.length < 2 || selectedPlace) {
       setSearchResults([]);
-      setIsSearching(false);
       setShowDropdown(false);
       return;
     }
@@ -89,24 +79,21 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
     setIsSearching(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const results = await leadService.searchPlaces(searchQuery, locationQuery);
-        setSearchResults(results);
-        setShowDropdown(true);
-      } catch (err) {
-        console.error('Failed to search places:', err);
+        const results = await leadService.searchPlaces(q, locationQuery.trim() || undefined);
+        setSearchResults(results || []);
+        setShowDropdown((results || []).length > 0);
+      } catch {
+        setSearchResults([]);
+        setShowDropdown(false);
       } finally {
         setIsSearching(false);
       }
     }, 350);
 
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
+    return () => clearTimeout(searchTimeoutRef.current);
   }, [searchQuery, locationQuery, selectedPlace]);
 
-  // Click outside to close dropdown
+  // Click outside to dismiss dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -118,20 +105,10 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
   }, []);
 
   const handleSelectPlace = (place: PlaceSearchResult) => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
     setSelectedPlace(place);
     setSearchQuery(place.name);
-    setSearchResults([]);
     setShowDropdown(false);
-    setIsSearching(false);
-    if (place.phone && !phone) {
-      const clean = place.phone.replace(/[^0-9]/g, '');
-      if (clean.length >= 10) {
-        setPhone(clean.slice(-10));
-      }
-    }
+    setErrorMessage(null);
   };
 
   const handleStartAudit = async (e: React.FormEvent) => {
@@ -151,17 +128,6 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
     }
 
     setIsAuditing(true);
-    setAuditStepIndex(0);
-    setAuditProgress(15);
-
-    // Step progression timer
-    const stepInterval = setInterval(() => {
-      setAuditStepIndex((prev) => {
-        const next = prev < AUDIT_STEPS.length - 1 ? prev + 1 : prev;
-        setAuditProgress(Math.min(92, 20 + next * 18));
-        return next;
-      });
-    }, 1200);
 
     try {
       // Extract locality if business name was typed with a comma (e.g. "Casa Rasa Family Restaurant, Edappal")
@@ -173,7 +139,7 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
         }
       }
 
-      // 1. Create or update lead
+      // 1. Create or update lead record
       const lead = await leadService.createLead({
         business_name: businessName,
         place_id: selectedPlace?.place_id,
@@ -190,24 +156,15 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
         raw_places_data: selectedPlace,
       });
 
-      // 2. Trigger asynchronous analysis
-      await leadService.analyzeLead(lead.id);
-
-      // Finish progress
-      clearInterval(stepInterval);
-      setAuditProgress(100);
-
-      setTimeout(() => {
-        if (onReportReady) {
-          onReportReady(lead.id);
-        } else {
-          window.location.href = `/report/${lead.id}`;
-        }
-      }, 700);
+      // 2. Navigate immediately to report page with in-page generation flow
+      if (onReportReady) {
+        onReportReady(lead.id);
+      } else {
+        window.location.href = `/report/${lead.id}?generating=true`;
+      }
     } catch (err: any) {
-      clearInterval(stepInterval);
       setIsAuditing(false);
-      setErrorMessage(err?.message || 'Unable to complete the business audit. Please try again.');
+      setErrorMessage(err?.message || 'Unable to start the business audit. Please try again.');
     }
   };
 
@@ -234,138 +191,16 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
 
       {/* Main Content Area */}
       <main className="onboard-main-shell">
-        {isAuditing ? (
-          /* Live Animated Audit Progress Screen (Open Seamless Layout) */
-          <div
-            style={{
-              width: '100%',
-              maxWidth: '560px',
-              textAlign: 'center',
-              boxSizing: 'border-box',
-            }}
-          >
-            <div
-              style={{
-                width: '74px',
-                height: '74px',
-                borderRadius: '50%',
-                background: '#F5F3FF',
-                border: '2.5px solid #DDD6FE',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 20px',
-                position: 'relative',
-                boxShadow: '0 8px 24px rgba(124, 58, 237, 0.16)',
-                overflow: 'hidden',
-              }}
-            >
-              {selectedPlace?.photo_url ? (
-                <img
-                  src={selectedPlace.photo_url}
-                  alt={selectedPlace.name}
-                  referrerPolicy="no-referrer"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                <Loader2 size={34} color="#7C3AED" style={{ animation: 'spin 1.5s linear infinite' }} />
-              )}
-            </div>
-
-            <h2 style={{ fontSize: '1.45rem', fontWeight: 800, marginBottom: '6px', color: '#1E1B4B' }}>
-              Checking {selectedPlace?.name || searchQuery}
-            </h2>
-            <p style={{ color: '#64748B', fontSize: '0.88rem', marginBottom: '28px', lineHeight: 1.45 }}>
-              Checking your Google profile, nearby competitors, and customer reviews in your area...
+        <div className="onboard-card-container">
+          {/* Clean, Open Header */}
+          <div className="onboard-header-block">
+            <h1 className="onboard-title">
+              Audit Your Business <span className="onboard-title-gradient">Visibility</span>
+            </h1>
+            <p className="onboard-subtitle">
+              See your Google Maps ranking, rivals, and diverted customer calls.
             </p>
-
-            {/* Progress Bar */}
-            <div
-              style={{
-                width: '100%',
-                height: '8px',
-                background: '#F1EFF9',
-                borderRadius: '999px',
-                overflow: 'hidden',
-                marginBottom: '28px',
-              }}
-            >
-              <div
-                style={{
-                  height: '100%',
-                  width: `${auditProgress}%`,
-                  background: 'linear-gradient(90deg, #6366F1 0%, #7C3AED 50%, #A855F7 100%)',
-                  borderRadius: '999px',
-                  transition: 'width 0.4s ease-in-out',
-                }}
-              />
-            </div>
-
-            {/* Audit Checklist Steps */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
-              {AUDIT_STEPS.map((step, idx) => {
-                const isCompleted = idx < auditStepIndex;
-                const isCurrent = idx === auditStepIndex;
-
-                return (
-                  <div
-                    key={step.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '13px 16px',
-                      borderRadius: '14px',
-                      background: isCurrent ? '#FFFFFF' : isCompleted ? '#FAF9FE' : 'transparent',
-                      border: isCurrent ? '1.5px solid #C4B5FD' : '1px solid #EBE8F6',
-                      boxShadow: isCurrent ? '0 4px 16px rgba(124, 58, 237, 0.08)' : 'none',
-                      transition: 'all 0.25s',
-                    }}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 size={18} color="#10B981" />
-                    ) : isCurrent ? (
-                      <Loader2 size={18} color="#7C3AED" style={{ animation: 'spin 1s linear infinite' }} />
-                    ) : (
-                      <div
-                        style={{
-                          width: '18px',
-                          height: '18px',
-                          borderRadius: '50%',
-                          border: '2px solid #CBD5E1',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    )}
-                    <span
-                      style={{
-                        fontSize: '0.9rem',
-                        color: isCompleted ? '#334155' : isCurrent ? '#5B21B6' : '#94A3B8',
-                        fontWeight: isCurrent ? 700 : isCompleted ? 600 : 400,
-                      }}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
           </div>
-        ) : (
-          /* Seamless Open Single-Page Form (No Boxed Login Container) */
-          <div className="onboard-card-container">
-            {/* Clean, Open Header */}
-            <div className="onboard-header-block">
-              <h1 className="onboard-title">
-                Audit Your Business <span className="onboard-title-gradient">Visibility</span>
-              </h1>
-              <p className="onboard-subtitle">
-                See your Google Maps ranking, rivals, and diverted customer calls.
-              </p>
-            </div>
 
             <form onSubmit={handleStartAudit} className="onboard-form">
               {/* Error Banner */}
@@ -593,13 +428,21 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                 disabled={isAuditing}
                 className="onboard-submit-btn"
               >
-                <span>Audit My Business</span>
-                <ArrowRight size={19} />
+                {isAuditing ? (
+                  <>
+                    <Loader2 size={19} color="#FFFFFF" style={{ animation: 'spin 1s linear infinite' }} />
+                    <span>Opening Audit Report...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Audit My Business</span>
+                    <ArrowRight size={19} />
+                  </>
+                )}
               </button>
             </form>
           </div>
-        )}
-      </main>
+        </main>
 
       {/* Modern Simple Footer */}
       <footer className="onboard-footer">
