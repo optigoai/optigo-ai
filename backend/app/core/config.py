@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     serper_api_key: str = ""
     serpapi_api_key: str = ""
 
+    # ---- Google Places API (New) ----
+    google_places_api_key: str = ""
+
     # ---- Website Crawler & Intelligence ----
     website_crawler_provider: str = "firecrawl"  # firecrawl, beautifulsoup, playwright
     firecrawl_api_key: str = ""

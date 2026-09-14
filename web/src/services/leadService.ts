@@ -70,6 +70,8 @@ export interface CompetitorData {
   photo_url?: string;
   lat?: number;
   lng?: number;
+  estimated_monthly_calls?: number;
+  call_share_pct?: number;
 }
 
 export interface CompetitorsSummaryData {
@@ -140,11 +142,44 @@ export interface OpportunityData {
   description: string;
 }
 
+export interface RevenueBreakdown {
+  search_volume_est: number;
+  local_pack_ctr: number;
+  total_pack_calls: number;
+  rank1_share: number;
+  rank1_calls: number;
+  business_rank: number;
+  business_share: number;
+  business_calls: number;
+  missed_calls: number;
+  conversion_rate: number;
+  lost_customers_monthly: number;
+  price_source: string;
+  google_price_range?: {
+    start_price?: number;
+    end_price?: number;
+    currency?: string;
+  };
+  google_price_level?: string;
+  currency: string;
+  avg_ticket_low: number;
+  avg_ticket_high: number;
+  monthly_loss_low: number;
+  monthly_loss_high: number;
+  annual_loss_low: number;
+  annual_loss_high: number;
+}
+
 export interface BusinessImpactData {
   top_competitor_name: string;
   competitor_rank_advantage: string;
   estimated_missed_calls_monthly: number;
   estimated_lost_walkins_monthly: number;
+  estimated_revenue_loss_monthly_low?: number;
+  estimated_revenue_loss_monthly_high?: number;
+  estimated_revenue_loss_annual_low?: number;
+  estimated_revenue_loss_annual_high?: number;
+  revenue_breakdown?: RevenueBreakdown;
   visibility_verdict: string;
   urgency_headline: string;
 }
@@ -202,6 +237,17 @@ export interface BusinessReportData {
     phone?: string;
     photo_url?: string;
     is_verified?: boolean;
+    open_now?: boolean;
+    weekday_descriptions?: string[];
+    business_status?: string;
+    price_level?: string;
+    price_range?: {
+      start_price?: number;
+      end_price?: number;
+      currency?: string;
+    };
+    editorial_summary?: string;
+    place_id?: string;
   };
   health_score?: HealthScoreData;
   quick_stats?: QuickStatsData;
@@ -231,11 +277,16 @@ export interface BusinessReportData {
   searches_analyzed_count?: number;
   competitors_ahead_count?: number;
   user_rank?: number;
+  user_estimated_calls?: number;
+  user_call_share_pct?: number;
+  total_local_calls_monthly?: number;
+  is_in_top_3?: boolean;
   estimated_missed_calls?: number;
   business_impact: BusinessImpactData & {
     user_rank?: number;
     competitors_ahead_count?: number;
   };
+  revenue_breakdown?: RevenueBreakdown;
   solutions: SolutionBlueprint[];
   plans: PlanData[];
   generated_at: string;

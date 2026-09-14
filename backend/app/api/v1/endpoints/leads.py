@@ -10,6 +10,7 @@ Public REST API endpoints for single-page onboarding:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any, List, Optional
 
@@ -35,10 +36,31 @@ async def search_places(
 ):
     """
     Search-as-you-type Google Places autocomplete.
-    Returns business name, place_id, address, rating, review count, and category.
+    Uses Google Places API (New) when configured, with fallback to Serper Places and local database.
     """
     service = LeadService(db)
     return await service.search_places(query=query, location=location)
+
+
+@router.get("/places/photo", summary="Proxy Google Places Photo")
+async def get_place_photo(
+    photo_name: str = Query(..., description="Google Places photo resource name, e.g. places/.../photos/..."),
+):
+    """
+    Secure backend proxy for Google Places API (New) photo media.
+    Prevents leaking Google Cloud API Key to client browsers.
+    """
+    from app.providers.places.google_places import GooglePlacesNewProvider
+
+    provider = GooglePlacesNewProvider()
+    if not provider.is_configured():
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Google Places API not configured")
+
+    media_url = provider.get_photo_media_url(photo_name)
+    if not media_url:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid photo name")
+
+    return RedirectResponse(url=media_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
 @router.post("", response_model=LeadResponse, status_code=status.HTTP_201_CREATED, summary="Create or Update Lead")
