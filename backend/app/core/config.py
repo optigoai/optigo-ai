@@ -79,8 +79,32 @@ class Settings(BaseSettings):
     google_application_credentials: str = ""
     local_storage_path: str = "./uploads"
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def assemble_database_url(cls, v: str) -> str:
+        if not v or not isinstance(v, str):
+            return v
+        # Cloud providers (Render, Supabase, Neon, Heroku) provide postgres:// or postgresql://
+        # create_async_engine requires the driver explicitly: postgresql+asyncpg://
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgresql://") and not v.startswith("postgresql+asyncpg://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
+    @field_validator("database_url_sync", mode="before")
+    @classmethod
+    def assemble_database_url_sync(cls, v: str) -> str:
+        if not v or not isinstance(v, str):
+            return v
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        if v.startswith("postgresql+asyncpg://"):
+            return v.replace("postgresql+asyncpg://", "postgresql://", 1)
+        return v
+
     # ---- CORS ----
-    cors_origins: str = '["http://localhost:3000","http://localhost:8080","http://localhost:5173"]'
+    cors_origins: str = '["http://localhost:3000","http://localhost:8080","http://localhost:5173","https://optigo-ai.vercel.app"]'
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -90,10 +114,17 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> List[str]:
         import json
-        try:
-            return json.loads(self.cors_origins)
-        except (json.JSONDecodeError, TypeError):
-            return ["http://localhost:3000"]
+        if not self.cors_origins:
+            return ["*"]
+        val = str(self.cors_origins).strip()
+        if val == "*":
+            return ["*"]
+        if val.startswith("[") and val.endswith("]"):
+            try:
+                return json.loads(val)
+            except Exception:
+                pass
+        return [item.strip() for item in val.split(",") if item.strip()] or ["*"]
 
     # ---- Admin ----
     admin_email: str = "admin@optigoai.com"
