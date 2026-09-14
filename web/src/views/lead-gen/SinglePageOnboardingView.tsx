@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import optigoLogo from '../../assets/optigoai-logo.png';
 import { leadService, PlaceSearchResult } from '../../services/leadService';
+import './SinglePageOnboardingView.css';
 
 interface SinglePageOnboardingViewProps {
   onReportReady?: (leadId: string) => void;
@@ -211,110 +212,28 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8FF 50%, #F5F2FE 100%)',
-        color: '#0F172A',
-        fontFamily: "'Manrope', system-ui, -apple-system, sans-serif",
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        overflowX: 'hidden',
-      }}
-    >
+    <div className="onboard-page-wrapper">
       {/* Background Subtle Luminous Glow */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '-160px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '900px',
-          height: '480px',
-          background: 'radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, rgba(245, 243, 255, 0) 70%)',
-          pointerEvents: 'none',
-        }}
-      />
+      <div className="onboard-ambient-glow" />
 
       {/* Top Header */}
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '14px 28px',
-          background: 'rgba(255, 255, 255, 0.92)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid #EDE9FE',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          width: '100%',
-          boxSizing: 'border-box',
-          boxShadow: '0 1px 3px rgba(124, 58, 237, 0.04)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src={optigoLogo} alt="Optigo AI" style={{ height: '32px', width: 'auto' }} />
-          <span
-            style={{
-              fontWeight: 800,
-              fontSize: '1.22rem',
-              letterSpacing: '-0.02em',
-              color: '#0F172A',
-            }}
-          >
-            Optigo<span style={{ color: '#7C3AED' }}>AI</span>
+      <header className="onboard-nav-header">
+        <div className="onboard-brand">
+          <img src={optigoLogo} alt="Optigo AI" className="onboard-brand-logo" />
+          <span className="onboard-brand-name">
+            Optigo<span className="onboard-brand-accent">AI</span>
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <a
-            href="/login"
-            style={{
-              color: '#6D28D9',
-              textDecoration: 'none',
-              fontSize: '0.86rem',
-              fontWeight: 700,
-              padding: '7px 15px',
-              borderRadius: '999px',
-              background: '#F5F3FF',
-              border: '1px solid #DDD6FE',
-              transition: 'all 0.2s',
-            }}
-            onMouseOver={(e) => {
-              (e.currentTarget as HTMLElement).style.background = '#7C3AED';
-              (e.currentTarget as HTMLElement).style.color = '#FFFFFF';
-            }}
-            onMouseOut={(e) => {
-              (e.currentTarget as HTMLElement).style.background = '#F5F3FF';
-              (e.currentTarget as HTMLElement).style.color = '#6D28D9';
-            }}
-          >
+        <div>
+          <a href="/login" className="onboard-login-btn">
             Customer Login →
           </a>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main
-        className="onboarding-main-container"
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '24px 16px 40px',
-          maxWidth: '680px',
-          margin: '0 auto',
-          width: '100%',
-          boxSizing: 'border-box',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
+      <main className="onboard-main-shell">
         {isAuditing ? (
           /* Live Animated Audit Progress Screen (Open Seamless Layout) */
           <div
@@ -437,34 +356,18 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
           </div>
         ) : (
           /* Seamless Open Single-Page Form (No Boxed Login Container) */
-          <div
-            style={{
-              width: '100%',
-              maxWidth: '520px',
-              margin: '0 auto',
-              boxSizing: 'border-box',
-            }}
-          >
+          <div className="onboard-card-container">
             {/* Clean, Open Header */}
-            <div style={{ textAlign: 'center', marginBottom: '26px' }}>
-              <h1
-                style={{
-                  fontSize: '1.55rem',
-                  fontWeight: 800,
-                  color: '#1E1B4B',
-                  margin: '0 0 8px',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.25,
-                }}
-              >
-                Audit Your Business Visibility
+            <div className="onboard-header-block">
+              <h1 className="onboard-title">
+                Audit Your Business <span className="onboard-title-gradient">Visibility</span>
               </h1>
-              <p style={{ fontSize: '0.88rem', color: '#64748B', margin: 0, lineHeight: 1.45 }}>
+              <p className="onboard-subtitle">
                 See your Google Maps ranking, rivals, and diverted customer calls.
               </p>
             </div>
 
-            <form onSubmit={handleStartAudit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <form onSubmit={handleStartAudit} className="onboard-form">
               {/* Error Banner */}
               {errorMessage && (
                 <div
@@ -487,86 +390,30 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
 
               {/* Step 1: Business Search Input */}
               <div style={{ position: 'relative' }} ref={dropdownRef}>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.88rem',
-                    fontWeight: 700,
-                    color: '#1E1B4B',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: '22px',
-                      height: '22px',
-                      borderRadius: '50%',
-                      background: '#F5F3FF',
-                      border: '1px solid #DDD6FE',
-                      color: '#7C3AED',
-                      fontSize: '0.74rem',
-                      fontWeight: 800,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    1
-                  </span>
+                <label className="onboard-step-label">
+                  <span className="onboard-step-badge">1</span>
                   <span>Type Your Business or Shop Name</span>
                 </label>
 
                 {selectedPlace ? (
                   /* Single Unified Selected Business Card (Fixes 2-time duplicate bug) */
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      background: '#FAF8FF',
-                      border: '2px solid #7C3AED',
-                      borderRadius: '14px',
-                      padding: '12px 16px',
-                      boxShadow: '0 0 0 4px rgba(124, 58, 237, 0.12)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                      <div style={{ position: 'relative', width: '38px', height: '38px', flexShrink: 0 }}>
+                  <div className="onboard-selected-card">
+                    <div className="onboard-selected-info">
+                      <div className="onboard-selected-thumb">
                         {selectedPlace.photo_url ? (
                           <img
                             src={selectedPlace.photo_url}
                             alt={selectedPlace.name}
                             referrerPolicy="no-referrer"
-                            style={{
-                              width: '38px',
-                              height: '38px',
-                              borderRadius: '10px',
-                              objectFit: 'cover',
-                              border: '1.5px solid #DDD6FE',
-                            }}
                             onError={(e) => {
                               (e.currentTarget as HTMLElement).style.display = 'none';
                             }}
                           />
                         ) : (
-                          <div
-                            style={{
-                              width: '38px',
-                              height: '38px',
-                              borderRadius: '10px',
-                              background: '#EDE9FE',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Building2 size={20} color="#7C3AED" />
-                          </div>
+                          <Building2 size={20} color="#7C3AED" />
                         )}
                         <CheckCircle2
-                          size={15}
+                          size={14}
                           color="#7C3AED"
                           style={{
                             position: 'absolute',
@@ -577,38 +424,21 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                           }}
                         />
                       </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 800, color: '#1E1B4B', fontSize: '0.98rem' }}>
+                      <div className="onboard-selected-texts">
+                        <div className="onboard-selected-title-row">
+                          <span className="onboard-selected-name">
                             {selectedPlace.name}
                           </span>
                           {selectedPlace.category && (
-                            <span
-                              style={{
-                                fontSize: '0.72rem',
-                                color: '#6D28D9',
-                                background: '#EDE9FE',
-                                padding: '2px 7px',
-                                borderRadius: '6px',
-                                fontWeight: 600,
-                              }}
-                            >
+                            <span className="onboard-selected-cat">
                               {selectedPlace.category}
                             </span>
                           )}
                         </div>
                         {selectedPlace.address && (
-                          <div
-                            style={{
-                              fontSize: '0.78rem',
-                              color: '#64748B',
-                              marginTop: '2px',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            {selectedPlace.address}
+                          <div className="onboard-selected-addr">
+                            <MapPin size={12} color="#7C3AED" />
+                            <span>{selectedPlace.address}</span>
                           </div>
                         )}
                       </div>
@@ -622,45 +452,15 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                         setSearchResults([]);
                         setShowDropdown(false);
                       }}
-                      style={{
-                        background: '#FFFFFF',
-                        border: '1px solid #DDD6FE',
-                        color: '#7C3AED',
-                        fontSize: '0.82rem',
-                        fontWeight: 700,
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                        marginLeft: '12px',
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                        transition: 'all 0.15s ease',
-                      }}
-                      onMouseOver={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = '#EDE9FE';
-                      }}
-                      onMouseOut={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = '#FFFFFF';
-                      }}
+                      className="onboard-change-btn"
                     >
                       Change
                     </button>
                   </div>
                 ) : (
                   /* Standard Search Input (when no place is selected) */
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E2E8F0',
-                      borderRadius: '14px',
-                      padding: '0 16px',
-                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.04)',
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    <Search size={19} color="#64748B" style={{ marginRight: '12px' }} />
+                  <div className="onboard-input-box">
+                    <Search size={18} className="onboard-input-icon" />
                     <input
                       type="text"
                       value={searchQuery}
@@ -671,15 +471,6 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                         if (searchResults.length > 0) setShowDropdown(true);
                       }}
                       placeholder="e.g., Royal Bakery & Cafe, Apollo Dental..."
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#0F172A',
-                        fontSize: '1rem',
-                        padding: '14px 0',
-                        outline: 'none',
-                      }}
                     />
                     {isSearching && <Loader2 size={18} color="#7C3AED" style={{ animation: 'spin 1s linear infinite' }} />}
                   </div>
@@ -687,70 +478,46 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
 
                 {/* Autocomplete Dropdown with Star Ratings (hidden when a place is selected) */}
                 {!selectedPlace && showDropdown && searchResults.length > 0 && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 'calc(100% + 6px)',
-                      left: 0,
-                      right: 0,
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E4DCF9',
-                      borderRadius: '16px',
-                      maxHeight: '260px',
-                      overflowY: 'auto',
-                      zIndex: 50,
-                      boxShadow: '0 16px 36px rgba(124, 58, 237, 0.12), 0 2px 8px rgba(15, 23, 42, 0.04)',
-                    }}
-                  >
+                  <div className="onboard-dropdown-menu">
                     {searchResults.map((place) => (
                       <div
                         key={place.place_id}
                         onClick={() => handleSelectPlace(place)}
-                        style={{
-                          padding: '12px 16px',
-                          borderBottom: '1px solid #F1F0FB',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '4px',
-                          transition: 'background 0.15s',
-                        }}
-                        onMouseOver={(e) => ((e.currentTarget as HTMLElement).style.background = '#F5F3FF')}
-                        onMouseOut={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+                        className="onboard-dropdown-item"
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                          <span style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.94rem' }}>{place.name}</span>
-                          {place.rating ? (
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '3px',
-                                fontSize: '0.78rem',
-                                color: '#D97706',
-                                fontWeight: 700,
-                                background: '#FFFBEB',
-                                border: '1px solid #FDE68A',
-                                padding: '2px 7px',
-                                borderRadius: '999px',
-                                flexShrink: 0,
+                        <div className="onboard-item-thumb">
+                          {place.photo_url ? (
+                            <img
+                              src={place.photo_url}
+                              alt={place.name}
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
                               }}
-                            >
-                              <Star size={11} fill="#F59E0B" color="#F59E0B" />
-                              <span>{place.rating.toFixed(1)}</span>
-                              {place.review_count !== undefined && place.review_count > 0 && (
-                                <span style={{ color: '#92400E', fontWeight: 500, fontSize: '0.72rem' }}>
-                                  ({place.review_count})
-                                </span>
-                              )}
-                            </span>
-                          ) : null}
+                            />
+                          ) : (
+                            <Building2 size={16} color="#7C3AED" />
+                          )}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', fontSize: '0.8rem' }}>
-                          <MapPin size={13} color="#7C3AED" />
-                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {place.address || 'Local Listing'}
-                          </span>
+                        <div className="onboard-item-details">
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                            <span className="onboard-item-name">{place.name}</span>
+                            {place.rating ? (
+                              <span className="onboard-item-stars">
+                                <Star size={11} fill="#F59E0B" color="#F59E0B" />
+                                <span>{place.rating.toFixed(1)}</span>
+                                {place.review_count !== undefined && place.review_count > 0 && (
+                                  <span style={{ color: '#94A3B8', fontWeight: 500, fontSize: '0.7rem' }}>
+                                    ({place.review_count})
+                                  </span>
+                                )}
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="onboard-item-meta">
+                            <MapPin size={11} color="#7C3AED" />
+                            <span className="onboard-item-addr">{place.address || 'Local Listing'}</span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -767,37 +534,18 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                       fontSize: '0.84rem',
                       fontWeight: 600,
                       color: '#475569',
-                      marginBottom: '6px',
+                      marginBottom: '8px',
                     }}
                   >
                     City / Area (Optional)
                   </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E2E8F0',
-                      borderRadius: '14px',
-                      padding: '0 16px',
-                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.04)',
-                    }}
-                  >
-                    <MapPin size={18} color="#64748B" style={{ marginRight: '12px' }} />
+                  <div className="onboard-input-box">
+                    <MapPin size={18} className="onboard-input-icon" />
                     <input
                       type="text"
                       value={locationQuery}
                       onChange={(e) => setLocationQuery(e.target.value)}
                       placeholder="e.g., Kochi, Bengaluru, Mumbai..."
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#0F172A',
-                        fontSize: '0.98rem',
-                        padding: '13px 0',
-                        outline: 'none',
-                      }}
                     />
                   </div>
                 </div>
@@ -805,76 +553,28 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
 
               {/* Step 2: Phone Number Input */}
               <div>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.88rem',
-                    fontWeight: 700,
-                    color: '#1E1B4B',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: '22px',
-                      height: '22px',
-                      borderRadius: '50%',
-                      background: '#F5F3FF',
-                      border: '1px solid #DDD6FE',
-                      color: '#7C3AED',
-                      fontSize: '0.74rem',
-                      fontWeight: 800,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    2
-                  </span>
+                <label className="onboard-step-label">
+                  <span className="onboard-step-badge">2</span>
                   <span>Business Phone Number</span>
                 </label>
 
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="onboard-phone-row">
                   {/* Country Code Selector */}
                   <select
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
-                    style={{
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E2E8F0',
-                      borderRadius: '14px',
-                      color: '#0F172A',
-                      padding: '13px 12px',
-                      fontSize: '0.92rem',
-                      fontWeight: 600,
-                      outline: 'none',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.04)',
-                    }}
+                    className="onboard-country-select"
                   >
                     {COUNTRY_CODES.map((item) => (
-                      <option key={item.code} value={item.code} style={{ background: '#FFFFFF', color: '#0F172A' }}>
+                      <option key={item.code} value={item.code}>
                         {item.label}
                       </option>
                     ))}
                   </select>
 
                   {/* Phone Input */}
-                  <div
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: '#FFFFFF',
-                      border: '1.5px solid #E2E8F0',
-                      borderRadius: '14px',
-                      padding: '0 16px',
-                      boxShadow: '0 2px 8px rgba(99, 102, 241, 0.04)',
-                    }}
-                  >
-                    <Phone size={18} color="#64748B" style={{ marginRight: '10px' }} />
+                  <div className="onboard-input-box" style={{ flex: 1 }}>
+                    <Phone size={18} className="onboard-input-icon" />
                     <input
                       type="tel"
                       value={phone}
@@ -882,15 +582,6 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                       placeholder="9876543210"
                       maxLength={12}
                       required
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#0F172A',
-                        fontSize: '0.98rem',
-                        padding: '13px 0',
-                        outline: 'none',
-                      }}
                     />
                   </div>
                 </div>
@@ -900,32 +591,7 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
               <button
                 type="submit"
                 disabled={isAuditing}
-                style={{
-                  marginTop: '8px',
-                  width: '100%',
-                  padding: '16px 24px',
-                  borderRadius: '14px',
-                  background: 'linear-gradient(135deg, #6366F1 0%, #7C3AED 50%, #9333EA 100%)',
-                  border: 'none',
-                  color: '#FFFFFF',
-                  fontSize: '1.04rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  boxShadow: '0 8px 24px rgba(124, 58, 237, 0.32)',
-                  transition: 'all 0.15s ease',
-                }}
-                onMouseOver={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 28px rgba(124, 58, 237, 0.42)';
-                }}
-                onMouseOut={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(124, 58, 237, 0.32)';
-                }}
+                className="onboard-submit-btn"
               >
                 <span>Audit My Business</span>
                 <ArrowRight size={19} />
@@ -936,32 +602,9 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
       </main>
 
       {/* Modern Simple Footer */}
-      <footer
-        style={{
-          borderTop: '1px solid #EDE9FE',
-          background: '#FFFFFF',
-          padding: '16px 20px',
-          textAlign: 'center',
-          color: '#64748B',
-          fontSize: '0.8rem',
-        }}
-      >
+      <footer className="onboard-footer">
         © {new Date().getFullYear()} Optigo AI. Helping local businesses get found and chosen on Google.
       </footer>
-
-      {/* Global CSS for Animations and Mobile Responsiveness */}
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 640px) {
-          .onboarding-main-container {
-            padding: 20px 16px 32px !important;
-          }
-        }
-      `}</style>
     </div>
   );
 };

@@ -184,11 +184,160 @@ def detect_canonical_category(name: str, raw_category: Optional[str] = None, add
     """
     Determines canonical industry category, search keywords, positive allowed keywords,
     and negative excluded keywords for a business.
+    Specific niche models (Cafe, Bakery, Desserts, Fast Food, Dental, Clinic, Salon, Gym, etc.)
+    are prioritized ahead of generic catch-alls (Restaurant, Local Business) to ensure
+    businesses are compared strictly with authentic peers.
     """
-    text = f"{name} {raw_category or ''}".lower()
+    name_lower = (name or "").lower()
     raw_cat_lower = (raw_category or "").lower().strip()
+    text = f"{name_lower} {raw_cat_lower}".strip()
 
-    # 1. Restaurant / Dining / Food
+    # 1. Cafe & Coffee Shop (Must precede Restaurant so cafes aren't lumped with dining halls/mandhi)
+    is_cafe = (
+        any(kw in name_lower for kw in ["cafe", "coffee", "cappuccino", "espresso", "tea lounge", "tea bar", "chai", "tea shop", "cafeteria"])
+        or any(kw in raw_cat_lower for kw in ["cafe", "coffee shop", "tea house", "espresso bar", "tea lounge", "coffee store"])
+    )
+    if is_cafe:
+        return {
+            "canonical_category": "Cafe & Coffee Shop",
+            "search_keyword": "cafe",
+            "positive_categories": [
+                "cafe", "coffee", "tea", "bistro", "bakery", "burger", "fast food",
+                "dessert", "juice", "shakes", "waffle", "ice cream", "snacks",
+                "pizza", "sandwich", "beverage", "quick bites", "breakfast"
+            ],
+            "negative_categories": [
+                "mandhi", "kuzhimandhi", "biryani", "dhaba", "mess", "meals", "thali",
+                "catering", "dining hall", "family restaurant", "seafood restaurant",
+                "barbecue restaurant", "amusement", "clothing", "supermarket",
+                "hospital", "clinic", "gym", "salon", "hardware"
+            ]
+        }
+
+    # 2. Bakery & Confectionery
+    is_bakery = any(kw in name_lower or kw in raw_cat_lower for kw in ["bakery", "bake", "cake", "pastry", "confectionery", "bakes", "patisserie"])
+    if is_bakery:
+        return {
+            "canonical_category": "Bakery & Cake Shop",
+            "search_keyword": "bakery",
+            "positive_categories": ["bakery", "cake", "pastry", "sweets", "confectionery", "bakes", "dessert", "cafe", "bakehouse"],
+            "negative_categories": ["mandhi", "biryani", "dhaba", "mess", "meals", "family restaurant", "clothing", "supermarket", "hospital"]
+        }
+
+    # 3. Ice Cream, Shakes & Desserts
+    is_ice_cream = any(kw in name_lower or kw in raw_cat_lower for kw in ["ice cream", "dessert", "falooda", "waffle", "gelato", "kulfi", "juice bar", "juice shop", "fruitbae"])
+    if is_ice_cream:
+        return {
+            "canonical_category": "Ice Cream & Desserts",
+            "search_keyword": "ice cream parlour",
+            "positive_categories": ["ice cream", "dessert", "falooda", "waffle", "shakes", "juice", "sweet", "cafe"],
+            "negative_categories": ["mandhi", "biryani", "dhaba", "meals", "family restaurant", "clothing", "supermarket"]
+        }
+
+    # 4. Fast Food, Burger & Pizza
+    is_fast_food = any(kw in name_lower or kw in raw_cat_lower for kw in ["burger", "pizza", "fried chicken", "fast food", "shawarma", "sandwich", "broast", "rolls"])
+    if is_fast_food:
+        return {
+            "canonical_category": "Fast Food & Quick Bites",
+            "search_keyword": "fast food",
+            "positive_categories": ["fast food", "burger", "pizza", "shawarma", "sandwich", "fried chicken", "cafe", "bites", "snack"],
+            "negative_categories": ["mandhi", "biryani", "dhaba", "mess", "meals", "thali", "clothing", "supermarket"]
+        }
+
+    # 5. Dental Clinic
+    if any(kw in text for kw in ["dental", "dentist", "teeth", "orthodontic", "dentistry"]):
+        return {
+            "canonical_category": "Dental Clinic",
+            "search_keyword": "dental clinic dentist",
+            "positive_categories": ["dental", "dentist", "orthodontic", "dentistry", "oral"],
+            "negative_categories": ["clothing", "restaurant", "cafe", "gym", "salon", "grocery"]
+        }
+
+    # 6. Eye Care & Opticals
+    if any(kw in text for kw in ["optical", "optician", "eyewear", "eye care", "optometry", "spectacles", "lens", "opticals"]):
+        return {
+            "canonical_category": "Eye Care & Opticals",
+            "search_keyword": "opticals eye care",
+            "positive_categories": ["optical", "optician", "eyewear", "eye", "spectacles", "opticals"],
+            "negative_categories": ["restaurant", "cafe", "clothing", "gym", "salon"]
+        }
+
+    # 7. Medical Clinic & Hospital
+    if any(kw in text for kw in ["clinic", "hospital", "doctor", "physician", "ayurveda", "homeopathy", "pediatric", "diagnostic", "scan center", "healthcare"]):
+        return {
+            "canonical_category": "Clinic & Healthcare",
+            "search_keyword": "clinic hospital",
+            "positive_categories": ["clinic", "hospital", "doctor", "health", "medical", "diagnostic"],
+            "negative_categories": ["restaurant", "cafe", "clothing", "gym", "salon", "supermarket"]
+        }
+
+    # 8. Beauty Salon & Spa
+    if any(kw in text for kw in ["salon", "beauty parlour", "spa", "hair", "barber", "grooming", "makeup", "unisex salon"]):
+        return {
+            "canonical_category": "Beauty Salon & Spa",
+            "search_keyword": "beauty salon spa",
+            "positive_categories": ["salon", "beauty", "spa", "hair", "barber", "grooming"],
+            "negative_categories": ["restaurant", "cafe", "grocery", "medical", "hospital"]
+        }
+
+    # 9. Gym & Fitness
+    if any(kw in text for kw in ["gym", "fitness", "workout", "crossfit", "health club", "bodybuilding"]):
+        return {
+            "canonical_category": "Gym & Fitness Center",
+            "search_keyword": "gym fitness centre",
+            "positive_categories": ["gym", "fitness", "workout", "crossfit", "sports"],
+            "negative_categories": ["restaurant", "cafe", "clothing", "hospital"]
+        }
+
+    # 10. Supermarket & Grocery
+    if any(kw in text for kw in ["supermarket", "hypermarket", "grocery", "provisions", "mart"]):
+        return {
+            "canonical_category": "Supermarket & Grocery",
+            "search_keyword": "supermarket grocery store",
+            "positive_categories": ["supermarket", "hypermarket", "grocery", "mart", "store"],
+            "negative_categories": ["restaurant", "hospital", "gym", "salon"]
+        }
+
+    # 11. Automobile & Garage
+    if any(kw in text for kw in ["automobile", "car repair", "garage", "auto service", "tyre", "car wash", "workshop", "mechanic", "motor"]):
+        return {
+            "canonical_category": "Automobile & Garage",
+            "search_keyword": "car repair garage",
+            "positive_categories": ["automobile", "garage", "mechanic", "car repair", "service station", "tyre", "workshop"],
+            "negative_categories": ["restaurant", "cafe", "hospital", "clothing"]
+        }
+
+    # 12. Hotel & Lodging
+    is_lodging = any(kw in text for kw in ["lodge", "resort", "residency", "inn", "suites", "homestay", "guest house", "rooms", "stay"]) or (
+        raw_cat_lower in ("hotel", "lodging", "resort", "motel") and not any(kw in name_lower for kw in ["restaurant", "bhojanalaya", "dhaba", "mess", "meals"])
+    )
+    if is_lodging:
+        return {
+            "canonical_category": "Hotel & Lodging",
+            "search_keyword": "hotel resort lodge",
+            "positive_categories": ["hotel", "resort", "lodge", "residency", "inn", "suites", "stay"],
+            "negative_categories": ["hospital", "clothing", "supermarket"]
+        }
+
+    # 13. Clothing & Fashion
+    if any(kw in text for kw in ["clothing", "textile", "garments", "silks", "saree", "fashion", "boutique", "menswear", "apparel"]):
+        return {
+            "canonical_category": "Clothing & Fashion",
+            "search_keyword": "clothing textile store",
+            "positive_categories": ["clothing", "textile", "fashion", "apparel", "boutique", "garments", "saree"],
+            "negative_categories": ["restaurant", "cafe", "hospital", "grocery"]
+        }
+
+    # 14. Flour & Oil Mill
+    if any(kw in text for kw in ["mill", "flour mill", "oil mill", "atta"]):
+        return {
+            "canonical_category": "Oil & Flour Mill",
+            "search_keyword": "flour oil mill",
+            "positive_categories": ["mill", "flour", "oil", "grain", "processor"],
+            "negative_categories": ["clothing", "restaurant", "cafe", "hospital"]
+        }
+
+    # 15. General Restaurant / Dining / Food (Catch-all for sit-down & dining establishments)
     restaurant_kw = [
         "restaurant", "dining", "diner", "bistro", "eatery", "kitchen", "biryani",
         "mandhi", "kuzhimandhi", "chammanti", "meals", "dhaba", "barbecue", "bbq",
@@ -196,9 +345,8 @@ def detect_canonical_category(name: str, raw_category: Optional[str] = None, add
         "arab restaurant", "family restaurant", "mess", "food court", "thali", "curry"
     ]
     is_restaurant = any(kw in text for kw in restaurant_kw) or (
-        raw_cat_lower in ("restaurant", "family-friendly", "family friendly") and any(kw in name.lower() for kw in ("restaurant", "food", "dining", "grill", "kitchen", "cafe", "bites", "bistro", "rasa", "chammanti"))
+        raw_cat_lower in ("restaurant", "family-friendly", "family friendly") and any(kw in name_lower for kw in ("restaurant", "food", "dining", "grill", "kitchen", "bites", "bistro", "rasa", "chammanti"))
     )
-
     if is_restaurant:
         return {
             "canonical_category": "Restaurant",
@@ -219,96 +367,6 @@ def detect_canonical_category(name: str, raw_category: Optional[str] = None, add
                 "service station", "tyre", "juice bar", "juice shop", "fruitbae", "fruit",
                 "ice cream parlour", "tea stall", "tea shop"
             ]
-        }
-
-    # 2. Cafe & Coffee Shop
-    if any(kw in text for kw in ["cafe", "coffee", "cappuccino", "espresso", "tea lounge", "tea bar", "chai"]):
-        return {
-            "canonical_category": "Cafe & Coffee Shop",
-            "search_keyword": "cafe coffee shop",
-            "positive_categories": ["cafe", "coffee", "tea", "bistro", "bakery"],
-            "negative_categories": ["amusement", "funzone", "clothing", "supermarket", "hospital", "clinic", "gym", "salon", "hardware"]
-        }
-
-    # 3. Bakery & Confectionery
-    if any(kw in text for kw in ["bakery", "bake", "cake", "pastry", "confectionery", "bakes"]):
-        return {
-            "canonical_category": "Bakery & Confectionery",
-            "search_keyword": "bakery cake shop",
-            "positive_categories": ["bakery", "cake", "pastry", "sweets", "confectionery"],
-            "negative_categories": ["amusement", "funzone", "clothing", "supermarket", "hospital", "gym"]
-        }
-
-    # 4. Dental Clinic
-    if any(kw in text for kw in ["dental", "dentist", "teeth", "orthodontic", "dentistry"]):
-        return {
-            "canonical_category": "Dental Clinic",
-            "search_keyword": "dental clinic dentist",
-            "positive_categories": ["dental", "dentist", "orthodontic", "dentistry", "oral"],
-            "negative_categories": ["clothing", "restaurant", "cafe", "gym", "salon", "grocery"]
-        }
-
-    # 5. Medical Clinic & Hospital
-    if any(kw in text for kw in ["clinic", "hospital", "doctor", "physician", "ayurveda", "homeopathy", "pediatric", "diagnostic", "scan center", "healthcare"]):
-        return {
-            "canonical_category": "Clinic & Healthcare",
-            "search_keyword": "clinic hospital",
-            "positive_categories": ["clinic", "hospital", "doctor", "health", "medical", "diagnostic"],
-            "negative_categories": ["restaurant", "cafe", "clothing", "gym", "salon", "supermarket"]
-        }
-
-    # 6. Beauty Salon & Spa
-    if any(kw in text for kw in ["salon", "beauty parlour", "spa", "hair", "barber", "grooming", "makeup", "unisex salon"]):
-        return {
-            "canonical_category": "Beauty Salon & Spa",
-            "search_keyword": "beauty salon spa",
-            "positive_categories": ["salon", "beauty", "spa", "hair", "barber", "grooming"],
-            "negative_categories": ["restaurant", "cafe", "grocery", "medical", "hospital"]
-        }
-
-    # 7. Gym & Fitness
-    if any(kw in text for kw in ["gym", "fitness", "workout", "crossfit", "health club", "bodybuilding"]):
-        return {
-            "canonical_category": "Gym & Fitness Center",
-            "search_keyword": "gym fitness centre",
-            "positive_categories": ["gym", "fitness", "workout", "crossfit", "sports"],
-            "negative_categories": ["restaurant", "cafe", "clothing", "hospital"]
-        }
-
-    # 8. Supermarket & Grocery
-    if any(kw in text for kw in ["supermarket", "hypermarket", "grocery", "provisions", "mart"]):
-        return {
-            "canonical_category": "Supermarket & Grocery",
-            "search_keyword": "supermarket grocery store",
-            "positive_categories": ["supermarket", "hypermarket", "grocery", "mart", "store"],
-            "negative_categories": ["restaurant", "hospital", "gym", "salon"]
-        }
-
-    # 9. Flour & Oil Mill
-    if any(kw in text for kw in ["mill", "flour mill", "oil mill", "atta"]):
-        return {
-            "canonical_category": "Oil & Flour Mill",
-            "search_keyword": "flour oil mill",
-            "positive_categories": ["mill", "flour", "oil", "grain", "processor"],
-            "negative_categories": ["clothing", "restaurant", "cafe", "hospital"]
-        }
-
-    # 10. Clothing & Fashion
-    if any(kw in text for kw in ["clothing", "textile", "garments", "silks", "saree", "fashion", "boutique", "menswear", "apparel"]):
-        return {
-            "canonical_category": "Clothing & Fashion",
-            "search_keyword": "clothing textile store",
-            "positive_categories": ["clothing", "textile", "fashion", "apparel", "boutique", "garments", "saree"],
-            "negative_categories": ["restaurant", "cafe", "hospital", "grocery"]
-        }
-
-    # 11. Hotel & Lodging
-    if any(kw in text for kw in ["hotel", "resort", "lodge", "residency", "inn", "suites", "homestay"]):
-        return {
-            "canonical_category": "Hotel & Lodging",
-            "search_keyword": "hotel resort lodge",
-            "positive_categories": ["hotel", "resort", "lodge", "residency", "inn", "suites", "stay"],
-            "negative_categories": ["hospital", "clothing", "supermarket"]
         }
 
     # Default fallback
@@ -371,7 +429,15 @@ def calculate_unit_economics_and_revenue_loss(
 
     # 2. Category conversion rate & party size multiplier
     # Real-world conversion benchmarks:
-    if any(k in cat_lower for k in ("restaurant", "dining", "food", "cafe", "bakery", "coffee")):
+    if any(k in cat_lower for k in ("cafe", "coffee", "tea")):
+        conv_rate = 0.60
+        default_ticket_low, default_ticket_high = 220, 580
+        party_mult_low, party_mult_high = 1.3, 1.8
+    elif any(k in cat_lower for k in ("bakery", "cake", "pastry", "dessert", "ice cream")):
+        conv_rate = 0.55
+        default_ticket_low, default_ticket_high = 250, 700
+        party_mult_low, party_mult_high = 1.2, 1.5
+    elif any(k in cat_lower for k in ("restaurant", "dining", "food", "kitchen", "biryani", "dhaba")):
         conv_rate = 0.55
         default_ticket_low, default_ticket_high = 450, 950
         party_mult_low, party_mult_high = 1.6, 2.2
@@ -623,9 +689,11 @@ class LeadService:
         }
 
         cat_info = detect_canonical_category(data.business_name, data.category, data.address)
-        resolved_category = data.category
-        if not resolved_category or resolved_category.lower() in ("local business", "family-friendly", "family friendly", "point of interest", "establishment", "business"):
-            resolved_category = cat_info["canonical_category"]
+        canonical = cat_info.get("canonical_category")
+        if canonical and canonical != "Local Business":
+            resolved_category = canonical
+        else:
+            resolved_category = data.category or canonical or "Local Business"
 
         # Sanitize incoming address and infer locality from business name if missing
         raw_addr = (data.address or "").strip()
@@ -933,8 +1001,12 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
         positive_cats = [c.lower() for c in cat_info["positive_categories"]]
         negative_cats = [c.lower() for c in cat_info["negative_categories"]]
 
-        # Ensure lead.category reflects canonical category if previously generic
-        if not lead.category or lead.category.lower() in ("local business", "family-friendly", "family friendly", "point of interest", "establishment", "business"):
+        # Ensure lead.category reflects verified canonical category
+        if canonical_category and (
+            not lead.category
+            or lead.category != canonical_category
+            or lead.category.lower() in ("local business", "family-friendly", "family friendly", "point of interest", "establishment", "business", "hamburger restaurant", "restaurant")
+        ):
             lead.category = canonical_category
             await self.repo.save(lead)
 

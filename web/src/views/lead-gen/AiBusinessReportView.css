@@ -645,51 +645,155 @@
   margin: 2px 0 0 0;
 }
 
-/* Sleek Open KPI Ribbon (No inner box, subtle top/bottom hairlines) */
-.wound-kpi-ribbon {
+/* 3 Executive KPI Stat Cards */
+.wound-kpi-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 12px 0;
-  border-top: 1px solid rgba(221, 214, 254, 0.5);
-  border-bottom: 1px solid rgba(221, 214, 254, 0.5);
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 8px 0 2px;
 }
 
-.kpi-cell {
-  padding: 4px 8px;
-  text-align: center;
-  border-right: 1px solid rgba(221, 214, 254, 0.5);
+.kpi-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.kpi-card-good {
+  border-color: rgba(16, 185, 129, 0.28);
+  background: linear-gradient(180deg, #FFFFFF 50%, #F0FDF4 100%);
+}
+
+.kpi-card-alert {
+  border-color: rgba(239, 68, 68, 0.24);
+  background: linear-gradient(180deg, #FFFFFF 50%, #FEF2F2 100%);
+}
+
+.kpi-card-purple {
+  border-color: rgba(124, 58, 237, 0.24);
+  background: linear-gradient(180deg, #FFFFFF 50%, #F5F3FF 100%);
+}
+
+.kpi-card-loss {
+  border-color: rgba(220, 38, 38, 0.28);
+  background: linear-gradient(180deg, #FFFFFF 50%, #FFF1F2 100%);
+}
+
+.kpi-card-header {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 5px;
+  margin-bottom: 3px;
 }
 
-.kpi-cell:last-child {
-  border-right: none;
+.kpi-card-icon-wrap {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.kpi-num {
-  font-size: 1.15rem;
-  font-weight: 950;
+.kpi-card-icon-wrap.rank-icon-good {
+  background: #DCFCE7;
+  color: #059669;
+}
+
+.kpi-card-icon-wrap.rank-icon-alert {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.kpi-card-icon-wrap.share-icon {
+  background: #EDE9FE;
+  color: #7C3AED;
+}
+
+.kpi-card-icon-wrap.loss-icon-good {
+  background: #DCFCE7;
+  color: #059669;
+}
+
+.kpi-card-icon-wrap.loss-icon-alert {
+  background: #FFE4E6;
+  color: #E11D48;
+}
+
+.kpi-card-label {
+  font-size: 0.74rem;
+  font-weight: 750;
+  color: #475569;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.kpi-card-val {
+  font-size: 1.45rem;
+  font-weight: 900;
   line-height: 1.15;
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  margin: 3px 0 6px;
 }
 
-.kpi-label {
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: #0F172A;
-  margin-top: 2px;
+.kpi-card-unit {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748B;
+  opacity: 0.85;
 }
 
-.kpi-sub {
-  font-size: 0.58rem;
-  color: #94A3B8;
-  font-weight: 600;
+.kpi-card-badge {
+  font-size: 0.65rem;
+  font-weight: 750;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.badge-good {
+  background: #DCFCE7;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.badge-alert {
+  background: #FEE2E2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+.badge-purple {
+  background: #EDE9FE;
+  color: #6D28D9;
+  border: 1px solid #DDD6FE;
+}
+
+.badge-loss {
+  background: #FFE4E6;
+  color: #BE123C;
+  border: 1px solid #FECDD3;
 }
 
 /* Profile Completeness (Open, no bounding inner box) */
@@ -1909,16 +2013,40 @@
     font-size: 1.65rem;
   }
 
-  .kpi-cell {
-    padding: 8px 4px;
+  .wound-kpi-grid {
+    gap: 6px;
   }
 
-  .kpi-num {
-    font-size: 1.05rem;
+  .kpi-card {
+    padding: 10px 4px;
+    border-radius: 12px;
   }
 
-  .kpi-label {
-    font-size: 0.62rem;
+  .kpi-card-icon-wrap {
+    width: 18px;
+    height: 18px;
+  }
+
+  .kpi-card-icon-wrap svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .kpi-card-label {
+    font-size: 0.64rem;
+  }
+
+  .kpi-card-val {
+    font-size: 1.18rem;
+  }
+
+  .kpi-card-unit {
+    font-size: 0.68rem;
+  }
+
+  .kpi-card-badge {
+    font-size: 0.58rem;
+    padding: 2px 5px;
   }
 
   .h2h-module {

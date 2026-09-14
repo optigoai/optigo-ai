@@ -569,7 +569,19 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
     let partyMultLow = 1.0;
     let partyMultHigh = 1.0;
 
-    if (cat.includes('restaurant') || cat.includes('food') || cat.includes('dining') || cat.includes('cafe') || cat.includes('bakery')) {
+    if (cat.includes('cafe') || cat.includes('coffee') || cat.includes('tea')) {
+      convRate = 0.60;
+      defaultLow = 220;
+      defaultHigh = 580;
+      partyMultLow = 1.3;
+      partyMultHigh = 1.8;
+    } else if (cat.includes('bakery') || cat.includes('cake') || cat.includes('pastry') || cat.includes('dessert') || cat.includes('ice cream')) {
+      convRate = 0.55;
+      defaultLow = 250;
+      defaultHigh = 700;
+      partyMultLow = 1.2;
+      partyMultHigh = 1.5;
+    } else if (cat.includes('restaurant') || cat.includes('food') || cat.includes('dining')) {
       convRate = 0.55;
       defaultLow = 450;
       defaultHigh = 950;
@@ -1331,28 +1343,57 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
               )}
             </div>
 
-            {/* Unified KPI Ribbon (Single continuous 3-column strip) */}
-            <div className="wound-kpi-ribbon">
-              <div className="kpi-cell">
-                <span className="kpi-num" style={{ color: userRank <= 3 ? '#059669' : '#DC2626' }}>
+            {/* 3 Executive KPI Stat Cards */}
+            <div className="wound-kpi-grid">
+              {/* Card 1: Google Maps Position */}
+              <div className={`kpi-card ${userRank <= 3 ? 'kpi-card-good' : 'kpi-card-alert'}`}>
+                <div className="kpi-card-header">
+                  <div className={`kpi-card-icon-wrap ${userRank <= 3 ? 'rank-icon-good' : 'rank-icon-alert'}`}>
+                    {userRank <= 3 ? <Trophy size={13} /> : <MapPin size={13} />}
+                  </div>
+                  <span className="kpi-card-label">Google Maps</span>
+                </div>
+                <div className="kpi-card-val" style={{ color: userRank <= 3 ? '#059669' : '#DC2626' }}>
                   #{userRank}
-                </span>
-                <span className="kpi-label">Maps Rank</span>
-                <span className="kpi-sub">in {locationLabel}</span>
+                </div>
+                <div className={`kpi-card-badge ${userRank <= 3 ? 'badge-good' : 'badge-alert'}`}>
+                  {userRank === 1 ? 'Market Leader' : userRank <= 3 ? 'In Top 3 Pack' : 'Below Top 3'}
+                </div>
               </div>
-              <div className="kpi-cell">
-                <span className="kpi-num" style={{ color: '#7C3AED' }}>
+
+              {/* Card 2: Local Call Share */}
+              <div className="kpi-card kpi-card-purple">
+                <div className="kpi-card-header">
+                  <div className="kpi-card-icon-wrap share-icon">
+                    <Phone size={13} />
+                  </div>
+                  <span className="kpi-card-label">Calls You Get</span>
+                </div>
+                <div className="kpi-card-val" style={{ color: '#7C3AED' }}>
                   ~{userCallSharePct}%
-                </span>
-                <span className="kpi-label">Call Capture</span>
-                <span className="kpi-sub">Top 3 win 84%</span>
+                </div>
+                <div className="kpi-card-badge badge-purple">
+                  {userRank === 1 ? 'Top 42% Share' : 'Top 3 take 84%'}
+                </div>
               </div>
-              <div className="kpi-cell">
-                <span className="kpi-num" style={{ color: userRank === 1 ? '#059669' : '#DC2626' }}>
+
+              {/* Card 3: Calls Lost to Competitors */}
+              <div className={`kpi-card ${userRank === 1 ? 'kpi-card-good' : 'kpi-card-loss'}`}>
+                <div className="kpi-card-header">
+                  <div className={`kpi-card-icon-wrap ${userRank === 1 ? 'loss-icon-good' : 'loss-icon-alert'}`}>
+                    {userRank === 1 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                  </div>
+                  <span className="kpi-card-label">
+                    {userRank === 1 ? 'Calls Won' : 'Calls Lost'}
+                  </span>
+                </div>
+                <div className="kpi-card-val" style={{ color: userRank === 1 ? '#059669' : '#DC2626' }}>
                   ~{userRank === 1 ? userEstimatedCalls : estimatedMissedCalls}
-                </span>
-                <span className="kpi-label">{userRank === 1 ? 'Calls Won/mo' : 'Calls Lost/mo'}</span>
-                <span className="kpi-sub">Every month</span>
+                  <span className="kpi-card-unit">/mo</span>
+                </div>
+                <div className={`kpi-card-badge ${userRank === 1 ? 'badge-good' : 'badge-loss'}`}>
+                  {userRank === 1 ? 'Defending #1' : 'Going to Rivals'}
+                </div>
               </div>
             </div>
 

@@ -134,9 +134,16 @@ class GooglePlacesNewProvider:
 
                     # Extract category
                     cat_obj = p.get("primaryTypeDisplayName") or {}
-                    category = cat_obj.get("text")
-                    if not category and p.get("primaryType"):
-                        category = p.get("primaryType", "").replace("_", " ").title()
+                    raw_cat = cat_obj.get("text")
+                    if not raw_cat and p.get("primaryType"):
+                        raw_cat = p.get("primaryType", "").replace("_", " ").title()
+
+                    try:
+                        from app.services.lead_service import detect_canonical_category
+                        cat_info = detect_canonical_category(name=title, raw_category=raw_cat, address=formatted_addr)
+                        category = cat_info["canonical_category"]
+                    except Exception:
+                        category = raw_cat or "Local Business"
 
                     # Extract coordinates
                     loc_obj = p.get("location") or {}
@@ -288,7 +295,15 @@ class GooglePlacesNewProvider:
 
                 # Process category
                 cat_obj = p.get("primaryTypeDisplayName") or {}
-                category = cat_obj.get("text") or p.get("primaryType", "").replace("_", " ").title()
+                raw_cat = cat_obj.get("text") or p.get("primaryType", "").replace("_", " ").title()
+                p_name = (p.get("displayName") or {}).get("text") or ""
+                p_addr = p.get("formattedAddress") or ""
+                try:
+                    from app.services.lead_service import detect_canonical_category
+                    cat_info = detect_canonical_category(name=p_name, raw_category=raw_cat, address=p_addr)
+                    category = cat_info["canonical_category"]
+                except Exception:
+                    category = raw_cat
 
                 result_data = {
                     "place_id": clean_id,
