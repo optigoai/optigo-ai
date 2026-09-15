@@ -99,20 +99,27 @@ class LeadStatusUpdateRequest(BaseModel):
     status: Optional[str] = None
     priority: Optional[str] = None
     notes: Optional[str] = None
+    selected_plan: Optional[str] = None
+    plan_duration: Optional[str] = None
 
 
 class LeadAddNoteRequest(BaseModel):
     note: str = Field(..., min_length=1)
+    author: Optional[str] = "Sales Rep"
 
 
 class LeadStatsResponse(BaseModel):
     total_leads: int = 0
+    today_leads: int = 0
     new_leads: int = 0
     active_onboarding: int = 0
     report_ready: int = 0
+    report_viewed: int = 0
+    plan_selected: int = 0
     stuck_abandoned: int = 0
     converted_leads: int = 0
     conversion_rate: float = 0.0
+    total_loss_pipeline: int = 0
 
 
 class HealthScoreBreakdownItem(BaseModel):

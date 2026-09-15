@@ -100,6 +100,26 @@ def create_app() -> FastAPI:
             )
         return {"message": "Admin portal static assets not found"}
 
+    # Mount Leads CRM Web Portal static files
+    leads_static_dir = os.path.join(os.path.dirname(__file__), "static", "leads")
+    if os.path.exists(leads_static_dir):
+        app.mount("/leads-static", StaticFiles(directory=leads_static_dir), name="leads_static")
+
+    @app.get("/leads", include_in_schema=False)
+    @app.get("/leads/", include_in_schema=False)
+    async def serve_leads_portal():
+        index_file = os.path.join(leads_static_dir, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(
+                index_file,
+                headers={
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                },
+            )
+        return {"message": "Leads CRM portal static assets not found"}
+
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
         favicon_path = os.path.join(admin_static_dir, "favicon.ico")

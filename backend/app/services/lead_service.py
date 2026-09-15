@@ -31,7 +31,7 @@ from app.models.user import User, UserRole
 from app.repositories.lead_repo import LeadRepository
 from app.repositories.business_repo import BusinessRepository
 from app.repositories.user_repo import UserRepository
-from app.schemas.lead import LeadCreate, LeadPlacesSearchResult, LeadVerifyPaymentRequest
+from app.schemas.lead import LeadCreate, LeadPlacesSearchResult, LeadVerifyPaymentRequest, LeadStatusUpdateRequest
 from app.providers.seo.factory import SEOProviderFactory
 from app.ai.ai_service import AIService
 from app.core.security import hash_password, create_access_token
@@ -2006,3 +2006,137 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
             "token_type": "bearer",
             "business_id": lead.business_id,
         }
+
+    async def list_leads_crm(
+        self,
+        status: Optional[str] = None,
+        priority: Optional[str] = None,
+        plan: Optional[str] = None,
+        search: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        sort_by: str = "last_activity_at",
+        sort_order: str = "desc",
+        limit: int = 50,
+        offset: int = 0,
+    ) -> Dict[str, Any]:
+        """List leads for the CRM portal with filtering, search, and dynamic sorting."""
+        leads = await self.repo.list_leads(
+            status=status,
+            priority=priority,
+            plan=plan,
+            search=search,
+            start_date=start_date,
+            end_date=end_date,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            limit=limit,
+            offset=offset,
+        )
+        total = await self.repo.count_leads(
+            status=status,
+            priority=priority,
+            plan=plan,
+            search=search,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return {
+            "leads": leads,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
+
+    async def get_crm_stats(self) -> Dict[str, Any]:
+        """Fetch CRM funnel and conversion statistics."""
+        return await self.repo.get_stats()
+
+    async def update_lead_crm(
+        self,
+        lead_id: str,
+        data: LeadStatusUpdateRequest,
+    ) -> Lead:
+        """Update lead status, priority, plan, or notes from the CRM."""
+        lead = await self.repo.get_by_id(lead_id)
+        if not lead:
+            raise ValueError(f"Lead {lead_id} not found")
+
+        timeline = list(lead.timeline or [])
+        changes = []
+
+        if data.status and data.status != lead.status:
+            changes.append(f"Stage changed: {lead.status} -> {data.status}")
+            lead.status = data.status
+
+        if data.priority and data.priority != lead.priority:
+            changes.append(f"Priority changed: {lead.priority} -> {data.priority}")
+            lead.priority = data.priority
+
+        if data.selected_plan and data.selected_plan != lead.selected_plan:
+            changes.append(f"Plan changed: {lead.selected_plan or 'None'} -> {data.selected_plan}")
+            lead.selected_plan = data.selected_plan
+
+        if data.plan_duration and data.plan_duration != lead.plan_duration:
+            lead.plan_duration = data.plan_duration
+
+        if data.notes is not None:
+            lead.notes = data.notes
+
+        if changes:
+            timeline.append({
+                "event": "crm_update",
+                "timestamp": datetime.utcnow().isoformat(),
+                "details": "; ".join(changes),
+            })
+            lead.timeline = timeline
+
+        await self.repo.save(lead)
+        await self.db.commit()
+        return lead
+
+    async def add_note_crm(
+        self,
+        lead_id: str,
+        note_text: str,
+        author: str = "Sales Rep",
+    ) -> Lead:
+        """Append a time-stamped note and log activity event."""
+        lead = await self.repo.get_by_id(lead_id)
+        if not lead:
+            raise ValueError(f"Lead {lead_id} not found")
+
+        timestamp_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        formatted_entry = f"[{timestamp_str} | {author}]\n{note_text.strip()}"
+
+        if lead.notes:
+            lead.notes = f"{formatted_entry}\n\n---\n\n{lead.notes}"
+        else:
+            lead.notes = formatted_entry
+
+        timeline = list(lead.timeline or [])
+        timeline.append({
+            "event": "note_added",
+            "timestamp": datetime.utcnow().isoformat(),
+            "author": author,
+            "preview": note_text[:80] + ("..." if len(note_text) > 80 else ""),
+        })
+        lead.timeline = timeline
+
+        await self.repo.save(lead)
+        await self.db.commit()
+        return lead
+
+    async def delete_lead(self, lead_id: str) -> bool:
+        """Delete lead from database."""
+        res = await self.repo.delete(lead_id)
+        if res:
+            await self.db.commit()
+        return res
+
+    async def delete_all_leads(self) -> int:
+        """Delete all leads from database."""
+        count = await self.repo.delete_all()
+        await self.db.commit()
+        return count
+

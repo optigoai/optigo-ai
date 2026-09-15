@@ -23,6 +23,9 @@ from app.schemas.lead import (
     LeadSelectPlanRequest,
     LeadCreateOrderRequest,
     LeadVerifyPaymentRequest,
+    LeadStatusUpdateRequest,
+    LeadAddNoteRequest,
+    LeadStatsResponse,
 )
 
 router = APIRouter()
@@ -96,6 +99,69 @@ async def analyze_lead(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Audit generation failed: {str(e)}")
 
 
+@router.get("", summary="List Leads (CRM)")
+async def list_leads(
+    status: Optional[str] = Query(None),
+    priority: Optional[str] = Query(None),
+    plan: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    sort_by: str = Query("last_activity_at"),
+    sort_order: str = Query("desc"),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    List all captured leads for the CRM portal with live filtering,
+    date ranges, search terms, and dynamic sorting.
+    """
+    from datetime import datetime
+    dt_start = None
+    dt_end = None
+    if start_date:
+        try:
+            dt_start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+        except Exception:
+            pass
+    if end_date:
+        try:
+            dt_end = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+        except Exception:
+            pass
+
+    service = LeadService(db)
+    result = await service.list_leads_crm(
+        status=status,
+        priority=priority,
+        plan=plan,
+        search=search,
+        start_date=dt_start,
+        end_date=dt_end,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        limit=limit,
+        offset=offset,
+    )
+    return {
+        "leads": [LeadResponse.model_validate(l) for l in result["leads"]],
+        "total": result["total"],
+        "limit": result["limit"],
+        "offset": result["offset"],
+    }
+
+
+@router.get("/stats/crm", response_model=LeadStatsResponse, summary="Get Lead CRM Funnel Stats")
+async def get_crm_stats(
+    db: AsyncSession = Depends(get_db),
+):
+    """Get aggregated CRM pipeline metrics, funnel counts, and estimated revenue loss."""
+    service = LeadService(db)
+    stats = await service.get_crm_stats()
+    return LeadStatsResponse(**stats)
+
+
 @router.get("/{lead_id}", response_model=LeadResponse, summary="Get Lead & Report Details")
 async def get_lead(
     lead_id: str,
@@ -107,6 +173,59 @@ async def get_lead(
     if not lead:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found")
     return LeadResponse.model_validate(lead)
+
+
+@router.patch("/{lead_id}", response_model=LeadResponse, summary="Update Lead Stage / CRM Fields")
+async def update_lead(
+    lead_id: str,
+    data: LeadStatusUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update lead status, priority, plan, or notes."""
+    service = LeadService(db)
+    try:
+        lead = await service.update_lead_crm(lead_id, data)
+        return LeadResponse.model_validate(lead)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post("/{lead_id}/notes", response_model=LeadResponse, summary="Add CRM Sales Note")
+async def add_lead_note(
+    lead_id: str,
+    data: LeadAddNoteRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Add time-stamped note to lead and record in timeline."""
+    service = LeadService(db)
+    try:
+        lead = await service.add_note_crm(lead_id, note_text=data.note, author=data.author or "Sales Rep")
+        return LeadResponse.model_validate(lead)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.delete("", summary="Delete All Leads")
+async def delete_all_leads(
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete all leads from database for a clean slate."""
+    service = LeadService(db)
+    deleted_count = await service.delete_all_leads()
+    return {"status": "ok", "deleted_count": deleted_count}
+
+
+@router.delete("/{lead_id}", summary="Delete Lead")
+async def delete_lead(
+    lead_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a lead from database."""
+    service = LeadService(db)
+    success = await service.delete_lead(lead_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found")
+    return {"status": "ok", "deleted": True}
 
 
 @router.post("/{lead_id}/viewed", summary="Record Report Viewed")

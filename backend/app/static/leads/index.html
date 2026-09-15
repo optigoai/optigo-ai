@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OptigoAI — Leads & Sales Funnel CRM</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Dedicated Light Theme CRM CSS -->
+  <link rel="stylesheet" href="/leads-static/css/leads.css?v=3.0">
+</head>
+<body>
+
+  <!-- ==================================================
+       HEADER / TOP NAVBAR
+       ================================================== -->
+  <header class="crm-navbar">
+    <div class="crm-nav-container">
+      
+      <!-- Brand & Title -->
+      <div class="brand-wrapper">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">
+            OptigoAI
+            <span class="brand-badge">Sales CRM</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Search -->
+      <div class="crm-nav-center">
+        <div class="search-box">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="lead-search-input" class="search-input" placeholder="Search by business name, phone, city, or category...">
+        </div>
+      </div>
+
+      <!-- Right Actions: Live Sync, Views, Export, Admin Link -->
+      <div class="crm-nav-actions">
+        
+        <!-- Live Sync Status Indicator with Pulse -->
+        <div class="live-sync-pill" id="live-sync-indicator" title="Click to manually refresh">
+          <div class="pulse-dot"></div>
+          <span id="sync-status-text">Live Sync (10s)</span>
+          <svg id="sync-refresh-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </div>
+
+        <!-- View Switcher (Kanban vs Table) -->
+        <div class="view-switcher">
+          <button type="button" class="view-btn active" id="btn-view-kanban">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="18" rx="1"/>
+              <rect x="14" y="3" width="7" height="11" rx="1"/>
+            </svg>
+            Kanban
+          </button>
+          <button type="button" class="view-btn" id="btn-view-table">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+            Table
+          </button>
+        </div>
+
+        <!-- CSV Export Button -->
+        <button type="button" class="btn-secondary" id="btn-export-csv" title="Export leads to CSV">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export CSV
+        </button>
+
+        <!-- Clear All Leads Button -->
+        <button type="button" class="btn-secondary" id="btn-clear-leads" title="Delete all leads (clean slate)" style="color:#dc2626;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Reset Leads
+        </button>
+
+        <!-- Link to Admin Portal -->
+        <a href="/admin" class="btn-secondary" title="Open Executive Admin Portal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9" rx="1"/>
+            <rect x="14" y="3" width="7" height="5" rx="1"/>
+            <rect x="14" y="12" width="7" height="9" rx="1"/>
+            <rect x="3" y="16" width="7" height="5" rx="1"/>
+          </svg>
+          Admin
+        </a>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================================================
+       MAIN CONTENT CONTAINER
+       ================================================== -->
+  <main class="crm-layout">
+
+    <!-- KPI Metrics Top Cards -->
+    <section class="kpi-grid">
+      
+      <!-- Total Inbound Leads -->
+      <div class="kpi-card purple">
+        <div class="kpi-info">
+          <span class="kpi-label">Total Inbound Leads</span>
+          <span class="kpi-value" id="kpi-total-leads">0</span>
+          <span class="kpi-subtext" id="kpi-today-leads">+0 today from search</span>
+        </div>
+        <div class="kpi-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Report Viewed (Warm Leads) -->
+      <div class="kpi-card blue">
+        <div class="kpi-info">
+          <span class="kpi-label">Audits Viewed</span>
+          <span class="kpi-value" id="kpi-report-viewed">0</span>
+          <span class="kpi-subtext highlight" id="kpi-viewed-rate">0% engagement rate</span>
+        </div>
+        <div class="kpi-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </div>
+      </div>
+
+      <!-- High Intent (Plan Selected) -->
+      <div class="kpi-card amber">
+        <div class="kpi-info">
+          <span class="kpi-label">Plan Selected</span>
+          <span class="kpi-value" id="kpi-plan-selected">0</span>
+          <span class="kpi-subtext" id="kpi-plan-intent">High intent prospects</span>
+        </div>
+        <div class="kpi-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Total Opportunity Revenue Loss Pipeline -->
+      <div class="kpi-card rose">
+        <div class="kpi-info">
+          <span class="kpi-label">Est. Revenue Loss at Stake</span>
+          <span class="kpi-value" id="kpi-loss-pipeline">₹0/mo</span>
+          <span class="kpi-subtext">Aggregated prospect loss</span>
+        </div>
+        <div class="kpi-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Converted Paid Customers -->
+      <div class="kpi-card emerald">
+        <div class="kpi-info">
+          <span class="kpi-label">Converted Customers</span>
+          <span class="kpi-value" id="kpi-converted-leads">0</span>
+          <span class="kpi-subtext highlight" id="kpi-conversion-rate">0% conversion rate</span>
+        </div>
+        <div class="kpi-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Controls Panel: Quick Segments + Detailed Filters -->
+    <section class="crm-controls-panel">
+      
+      <!-- Quick Segments (One-click focus for 100s-1000s of leads) -->
+      <div class="quick-segments">
+        <button type="button" class="segment-pill active" data-segment="all">
+          All Leads <span class="segment-badge" id="seg-count-all">0</span>
+        </button>
+        <button type="button" class="segment-pill" data-segment="today">
+          Today's New <span class="segment-badge" id="seg-count-today">0</span>
+        </button>
+        <button type="button" class="segment-pill" data-segment="hot">
+          Hot Prospects <span class="segment-badge" id="seg-count-hot">0</span>
+        </button>
+        <button type="button" class="segment-pill" data-segment="viewed">
+          Audits Viewed <span class="segment-badge" id="seg-count-viewed">0</span>
+        </button>
+        <button type="button" class="segment-pill" data-segment="plans">
+          Plan Selected <span class="segment-badge" id="seg-count-plans">0</span>
+        </button>
+        <button type="button" class="segment-pill" data-segment="converted">
+          Converted <span class="segment-badge" id="seg-count-converted">0</span>
+        </button>
+      </div>
+
+      <!-- Advanced Filter Controls -->
+      <div class="toolbar-filters">
+        
+        <div class="filter-left-group">
+          
+          <!-- Date Filter -->
+          <div class="filter-item">
+            <label class="filter-label" for="filter-date">Date:</label>
+            <select id="filter-date" class="filter-select">
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+            </select>
+          </div>
+
+          <!-- Stage Filter -->
+          <div class="filter-item">
+            <label class="filter-label" for="filter-stage">Stage:</label>
+            <select id="filter-stage" class="filter-select">
+              <option value="all">All Stages</option>
+              <option value="new_lead">1. Inbound</option>
+              <option value="report_ready">2. Audit Ready</option>
+              <option value="report_viewed">3. Report Viewed</option>
+              <option value="plan_selected">4. Plan Selected</option>
+              <option value="contacted">5. Contacted</option>
+              <option value="converted">6. Converted</option>
+              <option value="abandoned">7. Lost / Inactive</option>
+            </select>
+          </div>
+
+          <!-- Priority Filter -->
+          <div class="filter-item">
+            <label class="filter-label" for="filter-priority">Priority:</label>
+            <select id="filter-priority" class="filter-select">
+              <option value="all">All Priorities</option>
+              <option value="hot">Hot</option>
+              <option value="warm">Warm</option>
+              <option value="cold">Cold</option>
+            </select>
+          </div>
+
+          <!-- Plan Filter -->
+          <div class="filter-item">
+            <label class="filter-label" for="filter-plan">Plan:</label>
+            <select id="filter-plan" class="filter-select">
+              <option value="all">All Plans</option>
+              <option value="pro">Pro (₹9,999)</option>
+              <option value="growth">Growth (₹4,999)</option>
+              <option value="starter">Starter (₹2,499)</option>
+            </select>
+          </div>
+
+          <!-- Sort By Dropdown -->
+          <div class="filter-item">
+            <label class="filter-label" for="filter-sort">Sort:</label>
+            <select id="filter-sort" class="filter-select">
+              <option value="last_activity_at:desc">Latest Activity</option>
+              <option value="created_at:desc">Newest Created</option>
+              <option value="created_at:asc">Oldest Created</option>
+              <option value="report_score:asc">Lowest Score</option>
+              <option value="report_score:desc">Highest Score</option>
+              <option value="business_name:asc">Business (A-Z)</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn-reset-filter" id="btn-clear-filters">Clear</button>
+
+        </div>
+
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span class="leads-count-pill" id="leads-count-badge">Loading...</span>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==================================================
+         VIEW A: KANBAN PIPELINE BOARD
+         ================================================== -->
+    <div class="kanban-view-wrapper" id="kanban-view-container">
+      
+      <!-- Stage Jump Navigation Bar (Direct 1-Click Status Switching) -->
+      <div class="kanban-nav-bar">
+        <div class="kanban-nav-left">
+          <span class="kanban-nav-title">Stages:</span>
+          <div class="kanban-stage-pills" id="kanban-stage-pills">
+            <button type="button" class="stage-nav-pill" data-target-stage="new_lead" title="Jump to Inbound">
+              <span class="nav-dot" style="background:#6366f1;"></span>
+              <span>1. Inbound</span>
+              <span class="nav-count" id="nav-count-stage-new_lead">0</span>
+            </button>
+            <button type="button" class="stage-nav-pill" data-target-stage="report_ready" title="Jump to Audit Ready">
+              <span class="nav-dot" style="background:#0284c7;"></span>
+              <span>2. Audit Ready</span>
+              <span class="nav-count" id="nav-count-stage-report_ready">0</span>
+            </button>
+            <button type="button" class="stage-nav-pill active" data-target-stage="report_viewed" title="Jump to Report Viewed">
+              <span class="nav-dot" style="background:#f59e0b;"></span>
+              <span>3. Report Viewed</span>
+              <span class="nav-count" id="nav-count-stage-report_viewed">0</span>
+            </button>
+            <button type="button" class="stage-nav-pill" data-target-stage="plan_selected" title="Jump to Plan Selected">
+              <span class="nav-dot" style="background:#ec4899;"></span>
+              <span>4. Plan Selected</span>
+              <span class="nav-count" id="nav-count-stage-plan_selected">0</span>
+            </button>
+            <button type="button" class="stage-nav-pill" data-target-stage="contacted" title="Jump to Contacted">
+              <span class="nav-dot" style="background:#8b5cf6;"></span>
+              <span>5. Contacted</span>
+              <span class="nav-count" id="nav-count-stage-contacted">0</span>
+            </button>
+            <button type="button" class="stage-nav-pill" data-target-stage="converted" title="Jump to Converted">
+              <span class="nav-dot" style="background:#10b981;"></span>
+              <span>6. Converted</span>
+              <span class="nav-count" id="nav-count-stage-converted">0</span>
+            </button>
+            <button type="button" class="stage-nav-pill" data-target-stage="abandoned" title="Jump to Lost / Inactive">
+              <span class="nav-dot" style="background:#94a3b8;"></span>
+              <span>7. Lost</span>
+              <span class="nav-count" id="nav-count-stage-abandoned">0</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="kanban-nav-right">
+          <!-- Scroll Left / Right arrow buttons -->
+          <div class="kanban-scroll-arrows">
+            <button type="button" class="btn-kanban-arrow" id="btn-kanban-scroll-left" title="Scroll Left (or press [)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <button type="button" class="btn-kanban-arrow" id="btn-kanban-scroll-right" title="Scroll Right (or press ])">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Smart Fit Toggle (Fits all 7 columns on screen by auto-collapsing empty columns) -->
+          <button type="button" class="btn-kanban-toggle active" id="btn-toggle-smart-fit" title="Fit all 7 columns on screen by auto-collapsing empty columns">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="9" y1="3" x2="9" y2="21"/>
+              <line x1="15" y1="3" x2="15" y2="21"/>
+            </svg>
+            Smart Fit (All Stages)
+          </button>
+        </div>
+      </div>
+
+      <!-- Kanban Pipeline Columns -->
+      <section class="kanban-board" id="kanban-board-view">
+        
+        <!-- Stage 1: Inbound -->
+        <div class="kanban-column" data-stage="new_lead" id="col-stage-new_lead">
+          <div class="kanban-column-header">
+            <div class="column-title-wrap">
+              <span class="column-indicator" style="background:#6366f1;"></span>
+              <span class="column-title">1. Inbound</span>
+              <span class="column-count" id="count-stage-new_lead">0</span>
+            </div>
+            <button type="button" class="btn-col-collapse" data-toggle-stage="new_lead" title="Collapse / Expand column">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="kanban-card-list" id="cards-stage-new_lead"></div>
+        </div>
+
+        <!-- Stage 2: Audit Ready -->
+        <div class="kanban-column" data-stage="report_ready" id="col-stage-report_ready">
+          <div class="kanban-column-header">
+            <div class="column-title-wrap">
+              <span class="column-indicator" style="background:#0284c7;"></span>
+              <span class="column-title">2. Audit Ready</span>
+              <span class="column-count" id="count-stage-report_ready">0</span>
+            </div>
+            <button type="button" class="btn-col-collapse" data-toggle-stage="report_ready" title="Collapse / Expand column">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="kanban-card-list" id="cards-stage-report_ready"></div>
+        </div>
+
+        <!-- Stage 3: Report Viewed -->
+        <div class="kanban-column" data-stage="report_viewed" id="col-stage-report_viewed">
+          <div class="kanban-column-header">
+            <div class="column-title-wrap">
+              <span class="column-indicator" style="background:#f59e0b;"></span>
+              <span class="column-title">3. Report Viewed</span>
+              <span class="column-count" id="count-stage-report_viewed">0</span>
+            </div>
+            <button type="button" class="btn-col-collapse" data-toggle-stage="report_viewed" title="Collapse / Expand column">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="kanban-card-list" id="cards-stage-report_viewed"></div>
+        </div>
+
+        <!-- Stage 4: Plan Selected -->
+        <div class="kanban-column" data-stage="plan_selected" id="col-stage-plan_selected">
+          <div class="kanban-column-header">
+            <div class="column-title-wrap">
+              <span class="column-indicator" style="background:#ec4899;"></span>
+              <span class="column-title">4. Plan Selected</span>
+              <span class="column-count" id="count-stage-plan_selected">0</span>
+            </div>
+            <button type="button" class="btn-col-collapse" data-toggle-stage="plan_selected" title="Collapse / Expand column">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="kanban-card-list" id="cards-stage-plan_selected"></div>
+        </div>
+
+        <!-- Stage 5: Contacted -->
+        <div class="kanban-column" data-stage="contacted" id="col-stage-contacted">
+          <div class="kanban-column-header">
+            <div class="column-title-wrap">
+              <span class="column-indicator" style="background:#8b5cf6;"></span>
+              <span class="column-title">5. Contacted</span>
+              <span class="column-count" id="count-stage-contacted">0</span>
+            </div>
+            <button type="button" class="btn-col-collapse" data-toggle-stage="contacted" title="Collapse / Expand column">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="kanban-card-list" id="cards-stage-contacted"></div>
+        </div>
+
+        <!-- Stage 6: Converted -->
+        <div class="kanban-column" data-stage="converted" id="col-stage-converted">
+          <div class="kanban-column-header">
+            <div class="column-title-wrap">
+              <span class="column-indicator" style="background:#10b981;"></span>
+              <span class="column-title">6. Converted</span>
+              <span class="column-count" id="count-stage-converted">0</span>
+            </div>
+            <button type="button" class="btn-col-collapse" data-toggle-stage="converted" title="Collapse / Expand column">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="kanban-card-list" id="cards-stage-converted"></div>
+        </div>
+
+        <!-- Stage 7: Lost / Inactive -->
+        <div class="kanban-column" data-stage="abandoned" id="col-stage-abandoned">
+          <div class="kanban-column-header">
+            <div class="column-title-wrap">
+              <span class="column-indicator" style="background:#94a3b8;"></span>
+              <span class="column-title">7. Lost / Inactive</span>
+              <span class="column-count" id="count-stage-abandoned">0</span>
+            </div>
+            <button type="button" class="btn-col-collapse" data-toggle-stage="abandoned" title="Collapse / Expand column">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div class="kanban-card-list" id="cards-stage-abandoned"></div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- ==================================================
+         VIEW B: DATA TABLE VIEW WITH PAGINATION
+         ================================================== -->
+    <section class="table-view-container" id="table-view-container" style="display:none;">
+      <div style="overflow-x:auto;">
+        <table class="crm-table">
+          <thead>
+            <tr>
+              <th>Business & Location</th>
+              <th>Phone</th>
+              <th>Google Rank</th>
+              <th>Audit Score</th>
+              <th>Est. Loss / Mo</th>
+              <th>Selected Plan</th>
+              <th>Funnel Stage</th>
+              <th>Priority</th>
+              <th>Last Activity</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leads-table-tbody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Bar -->
+      <div class="pagination-bar">
+        <div>
+          <span id="pagination-info">Showing 1-25 of 0 leads</span>
+        </div>
+        <div class="pagination-controls">
+          <button type="button" class="btn-page" id="btn-page-prev" disabled>Previous</button>
+          <span id="pagination-page-label" style="font-weight:700; padding:0 0.3rem;">Page 1 of 1</span>
+          <button type="button" class="btn-page" id="btn-page-next" disabled>Next</button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==================================================
+       LEAD 360° SLIDE-OVER DRAWER MODAL
+       ================================================== -->
+  <div class="drawer-backdrop" id="drawer-backdrop">
+    <div class="crm-drawer" id="lead-drawer">
+      
+      <!-- Drawer Header -->
+      <div class="drawer-header">
+        <div>
+          <h2 id="drawer-business-name" style="font-size:1.05rem; font-weight:800; color:var(--text-main); line-height:1.2;">Business Profile</h2>
+          <span id="drawer-business-category" style="font-size:0.75rem; color:var(--text-muted);">Category • Location</span>
+        </div>
+        <button type="button" class="drawer-close" id="btn-close-drawer" title="Close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Drawer Body Content -->
+      <div class="drawer-content">
+
+        <!-- 1. Funnel Journey Progress Stepper -->
+        <div class="drawer-section">
+          <div class="section-title">
+            <span>Onboarding Journey Progress</span>
+            <span id="drawer-funnel-pct" style="color:var(--primary); font-size:0.72rem;">Step 3 of 6</span>
+          </div>
+          <div class="funnel-stepper">
+            
+            <div class="stepper-item" id="step-search">
+              <div class="stepper-circle">1</div>
+              <span class="stepper-label">Google Places Search</span>
+              <span class="stepper-time" id="step-time-search">Completed</span>
+            </div>
+
+            <div class="stepper-item" id="step-submit">
+              <div class="stepper-circle">2</div>
+              <span class="stepper-label">Verified Mobile Number</span>
+              <span class="stepper-time" id="step-time-submit">Completed</span>
+            </div>
+
+            <div class="stepper-item" id="step-audit">
+              <div class="stepper-circle">3</div>
+              <span class="stepper-label">AI Audit & Competitors</span>
+              <span class="stepper-time" id="step-time-audit">Completed</span>
+            </div>
+
+            <div class="stepper-item" id="step-viewed">
+              <div class="stepper-circle">4</div>
+              <span class="stepper-label">Customer Opened Report</span>
+              <span class="stepper-time" id="step-time-viewed">Pending</span>
+            </div>
+
+            <div class="stepper-item" id="step-plan">
+              <div class="stepper-circle">5</div>
+              <span class="stepper-label">Selected Pricing Plan</span>
+              <span class="stepper-time" id="step-time-plan">Pending</span>
+            </div>
+
+            <div class="stepper-item" id="step-convert">
+              <div class="stepper-circle">6</div>
+              <span class="stepper-label">Paid Account & Converted</span>
+              <span class="stepper-time" id="step-time-convert">Pending</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 2. Opportunity & Audit Intelligence -->
+        <div class="drawer-section">
+          <div class="section-title">
+            <span>Audit Intelligence & Competitor Loss</span>
+            <a href="#" target="_blank" id="drawer-view-report-link" class="btn-primary" style="padding:0.3rem 0.65rem; font-size:0.72rem;">
+              View Live Report
+            </a>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:0.55rem;">
+            <div style="background:var(--rose-light); border:1px solid var(--rose-border); border-radius:var(--radius-sm); padding:0.65rem; text-align:center;">
+              <span style="font-size:0.65rem; font-weight:700; color:var(--rose); text-transform:uppercase;">Est. Revenue Loss</span>
+              <div id="drawer-loss-value" style="font-size:1.05rem; font-weight:800; color:var(--rose);">₹0/mo</div>
+            </div>
+            <div style="background:var(--amber-light); border:1px solid var(--amber-border); border-radius:var(--radius-sm); padding:0.65rem; text-align:center;">
+              <span style="font-size:0.65rem; font-weight:700; color:#92400e; text-transform:uppercase;">Google Maps Rank</span>
+              <div id="drawer-rank-value" style="font-size:1.05rem; font-weight:800; color:#92400e;">#--</div>
+            </div>
+            <div style="background:var(--primary-light); border:1px solid var(--primary-border); border-radius:var(--radius-sm); padding:0.65rem; text-align:center;">
+              <span style="font-size:0.65rem; font-weight:700; color:var(--primary); text-transform:uppercase;">Audit Health Score</span>
+              <div id="drawer-score-value" style="font-size:1.05rem; font-weight:800; color:var(--primary);">--/100</div>
+            </div>
+          </div>
+
+          <!-- Top Rivals -->
+          <div style="background:var(--bg-subtle); border-radius:var(--radius-sm); padding:0.65rem;">
+            <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:0.35rem;">Top Local Competitors:</span>
+            <div id="drawer-competitors-list" style="display:flex; flex-direction:column; gap:0.3rem; font-size:0.75rem;">
+              <span>No competitor data</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 3. Sales Outreach Actions -->
+        <div class="drawer-section">
+          <div class="section-title">
+            <span>Sales Outreach Actions</span>
+          </div>
+
+          <!-- Direct Call & Details -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+            <div>
+              <span style="font-size:0.68rem; color:var(--text-muted); display:block;">Verified Contact Phone:</span>
+              <span id="drawer-phone-display" style="font-size:0.9rem; font-weight:800; color:var(--text-main);">--</span>
+            </div>
+            <a href="#" id="drawer-call-btn" class="btn-secondary">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+              Direct Dial Call
+            </a>
+          </div>
+
+          <!-- WhatsApp Box -->
+          <div class="whatsapp-box">
+            <span style="font-size:0.72rem; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.03em;">
+              Tailored WhatsApp Message:
+            </span>
+            <div class="whatsapp-text-preview" id="drawer-whatsapp-text">Generating message...</div>
+            <div style="display:flex; gap:0.4rem;">
+              <a href="#" target="_blank" id="drawer-whatsapp-link" class="btn-whatsapp-send" style="flex:1;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+                Launch WhatsApp Chat
+              </a>
+              <button type="button" class="btn-secondary" id="btn-copy-wa">Copy Text</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 4. Stage & Priority Controls -->
+        <div class="drawer-section">
+          <div class="section-title">
+            <span>Pipeline Stage & Priority Assignment</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.65rem;">
+            <div>
+              <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:0.2rem;">Pipeline Stage:</label>
+              <select id="drawer-stage-select" class="filter-select" style="width:100%;">
+                <option value="new_lead">1. Inbound</option>
+                <option value="report_ready">2. Audit Ready</option>
+                <option value="report_viewed">3. Report Viewed</option>
+                <option value="plan_selected">4. Plan Selected</option>
+                <option value="contacted">5. Contacted</option>
+                <option value="converted">6. Converted</option>
+                <option value="abandoned">7. Lost / Inactive</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:0.2rem;">Priority:</label>
+              <select id="drawer-priority-select" class="filter-select" style="width:100%;">
+                <option value="hot">Hot</option>
+                <option value="warm">Warm</option>
+                <option value="cold">Cold</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="button" class="btn-primary" id="btn-save-lead-stage" style="align-self:flex-start; margin-top:0.25rem;">
+            Save Stage Changes
+          </button>
+        </div>
+
+        <!-- 5. Sales Call Notes & Activity History -->
+        <div class="drawer-section">
+          <div class="section-title">
+            <span>Sales Notes & Activity History</span>
+          </div>
+
+          <div class="notes-input-box">
+            <textarea id="drawer-new-note" class="notes-textarea" placeholder="Enter follow-up notes, client feedback, or call summary..."></textarea>
+            <button type="button" class="btn-secondary" id="btn-add-note" style="align-self:flex-end;">
+              Save Note
+            </button>
+          </div>
+
+          <div class="notes-history" id="drawer-notes-history">
+            No notes logged yet.
+          </div>
+        </div>
+
+        <!-- Delete Lead Section -->
+        <div style="display:flex; justify-content:flex-end; padding-top:0.35rem;">
+          <button type="button" class="btn-reset-filter" id="btn-delete-lead" style="color:#e11d48; font-size:0.74rem;">
+            Delete Lead
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedicated Leads CRM JavaScript -->
+  <script src="/leads-static/js/leads.js?v=3.0"></script>
+</body>
+</html>
