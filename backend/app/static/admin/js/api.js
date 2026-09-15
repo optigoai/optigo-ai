@@ -2,9 +2,9 @@
 // OptigoAI Admin Web Portal — API Client
 // ==================================================
 
-const API_BASE = window.location.origin.includes(':8000') 
-  ? '/api/v1' 
-  : 'http://localhost:8000/api/v1';
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? (window.location.port === '8000' ? '/api/v1' : 'http://localhost:8000/api/v1')
+  : '/api/v1';
 
 class AdminAPI {
   constructor() {

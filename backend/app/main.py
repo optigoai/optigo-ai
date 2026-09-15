@@ -100,6 +100,14 @@ def create_app() -> FastAPI:
             )
         return {"message": "Admin portal static assets not found"}
 
+    @app.get("/favicon.ico", include_in_schema=False)
+    async def favicon():
+        favicon_path = os.path.join(admin_static_dir, "favicon.ico")
+        if os.path.exists(favicon_path):
+            return FileResponse(favicon_path)
+        from fastapi import Response
+        return Response(status_code=204)
+
     return app
 
 
