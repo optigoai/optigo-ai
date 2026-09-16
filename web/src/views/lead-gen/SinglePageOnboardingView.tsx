@@ -63,32 +63,42 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const searchTimeoutRef = useRef<any>(null);
+  const searchSeqRef = useRef<number>(0);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Debounced Place Search (Google Places API Autocomplete)
+  // Utilizes 500ms debounce and 3-char threshold to eliminate redundant Google Places API quota consumption
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
     const q = searchQuery.trim();
-    if (q.length < 2 || selectedPlace) {
+    if (q.length < 3 || selectedPlace) {
       setSearchResults([]);
       setShowDropdown(false);
+      setIsSearching(false);
       return;
     }
 
-    setIsSearching(true);
     searchTimeoutRef.current = setTimeout(async () => {
+      const currentSeq = ++searchSeqRef.current;
+      setIsSearching(true);
       try {
         const results = await leadService.searchPlaces(q, locationQuery.trim() || undefined);
-        setSearchResults(results || []);
-        setShowDropdown((results || []).length > 0);
+        if (currentSeq === searchSeqRef.current) {
+          setSearchResults(results || []);
+          setShowDropdown((results || []).length > 0);
+        }
       } catch {
-        setSearchResults([]);
-        setShowDropdown(false);
+        if (currentSeq === searchSeqRef.current) {
+          setSearchResults([]);
+          setShowDropdown(false);
+        }
       } finally {
-        setIsSearching(false);
+        if (currentSeq === searchSeqRef.current) {
+          setIsSearching(false);
+        }
       }
-    }, 350);
+    }, 500);
 
     return () => clearTimeout(searchTimeoutRef.current);
   }, [searchQuery, locationQuery, selectedPlace]);
@@ -102,6 +112,38 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const resetFormState = () => {
+    setIsAuditing(false);
+    setSelectedPlace(null);
+    setSearchQuery('');
+    setLocationQuery('');
+    setSearchResults([]);
+    setShowDropdown(false);
+    setPhone('');
+    setErrorMessage(null);
+    setAuditStepIndex(0);
+    setAuditProgress(10);
+  };
+
+  // Reset form and cancel loading whenever page is restored from bfcache or shown
+  useEffect(() => {
+    const handlePageShow = () => {
+      resetFormState();
+    };
+
+    const handlePageHide = () => {
+      // Ensure the snapshot frozen into browser history/bfcache is clean
+      resetFormState();
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('pagehide', handlePageHide);
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
   }, []);
 
   const handleSelectPlace = (place: PlaceSearchResult) => {
@@ -157,11 +199,18 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
       });
 
       // 2. Navigate immediately to report page with in-page generation flow
+      const reportUrl = `/report/${lead.id}?generating=true`;
       if (onReportReady) {
         onReportReady(lead.id);
       } else {
-        window.location.href = `/report/${lead.id}?generating=true`;
+        window.location.href = reportUrl;
       }
+
+      // Proactively reset state so that if this page is preserved in history/bfcache,
+      // returning to it will immediately display a fresh, clean search form without stuck loading.
+      setTimeout(() => {
+        resetFormState();
+      }, 100);
     } catch (err: any) {
       setIsAuditing(false);
       setErrorMessage(err?.message || 'Unable to start the business audit. Please try again.');
@@ -202,7 +251,7 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
             </p>
           </div>
 
-            <form onSubmit={handleStartAudit} className="onboard-form">
+            <form onSubmit={handleStartAudit} className="onboard-form" autoComplete="off">
               {/* Error Banner */}
               {errorMessage && (
                 <div
@@ -299,6 +348,7 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                     <input
                       type="text"
                       value={searchQuery}
+                      autoComplete="off"
                       onChange={(e) => {
                         setSearchQuery(e.target.value);
                       }}
@@ -413,6 +463,7 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                     <input
                       type="tel"
                       value={phone}
+                      autoComplete="off"
                       onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
                       placeholder="9876543210"
                       maxLength={12}

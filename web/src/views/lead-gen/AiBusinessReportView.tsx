@@ -888,11 +888,11 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           });
         }
       }
-      // Position 4+ blurred
-      const comp4 = competitorsList[compIdx] || competitorsList[competitorsList.length - 1];
+      // Position 4+ blurred (only if a 4th competitor exists)
+      const comp4 = competitorsList[compIdx] || (competitorsList.length >= 4 ? competitorsList[3] : undefined);
       if (comp4) {
         slots.push({
-          rank: comp4.rank || 4,
+          rank: Math.max(4, comp4.rank || 4),
           name: comp4.name || 'Competitor #4',
           photo_url: comp4.photo_url,
           rating: comp4.rating ?? 4.0,
@@ -1525,29 +1525,42 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                     </div>
 
                     <div className="math-steps-grid">
-                      {/* Step 1: Search Demand */}
+                      {/* Step 1: Volume / Review Velocity */}
                       <div className="math-step-item">
                         <div className="math-step-num">Step 1</div>
-                        <div className="math-step-title">Local Search Demand</div>
+                        <div className="math-step-title">
+                          {revenueBreakdown.engine_version?.startsWith('v4') ? 'Review Velocity & Customers' : 'Local Search Demand'}
+                        </div>
                         <div className="math-step-val">
-                          ~{revenueBreakdown.search_volume_est.toLocaleString('en-IN')} searches/mo
+                          {revenueBreakdown.engine_version?.startsWith('v4')
+                            ? `~${(revenueBreakdown.your_estimated_customers_per_month ?? userEstimatedCalls).toLocaleString('en-IN')} customers/mo`
+                            : `~${revenueBreakdown.search_volume_est.toLocaleString('en-IN')} searches/mo`
+                          }
                         </div>
                         <p className="math-step-desc">
-                          Local {business.category || 'industry'} demand in {locationLabel}. At Google's verified 5.2% Local 3-Pack CTR, that generates ~{revenueBreakdown.total_pack_calls} monthly calls.
+                          {revenueBreakdown.engine_version?.startsWith('v4')
+                            ? `Calculated from verified Google Places review velocity (${business.review_count ?? 0} reviews) at vertical conversion rate. Estimated current monthly customers.`
+                            : `Local ${business.category || 'industry'} demand in ${locationLabel}. At Google's verified 5.2% Local 3-Pack CTR, that generates ~${revenueBreakdown.total_pack_calls} monthly calls.`
+                          }
                         </p>
                       </div>
 
-                      {/* Step 2: Position Share Gap */}
+                      {/* Step 2: Position & Rival Footfall Gap */}
                       <div className="math-step-item">
                         <div className="math-step-num">Step 2</div>
-                        <div className="math-step-title">3-Pack Ranking Call Share</div>
+                        <div className="math-step-title">
+                          {revenueBreakdown.engine_version?.startsWith('v4') ? 'Competitive Volume Gap' : '3-Pack Ranking Call Share'}
+                        </div>
                         <div className="math-step-val">
-                          {userRank === 1 ? 'Rank #1 (42% Share)' : `Rank #${userRank} (${Math.round(revenueBreakdown.business_share * 100)}%) vs #1 (42%)`}
+                          {userRank === 1
+                            ? 'Rank #1 (Market Leader)'
+                            : `~${(revenueBreakdown.lost_customers_monthly ?? revenueBreakdown.missed_calls).toLocaleString('en-IN')} customers/mo gap`
+                          }
                         </div>
                         <p className="math-step-desc">
                           {userRank === 1
-                            ? `You capture ~${revenueBreakdown.business_calls} calls/mo at #1. Top rivals are actively closing the review gap.`
-                            : `The #1 spot captures ~${revenueBreakdown.rank1_calls} calls/mo. Your #${userRank} spot captures ~${revenueBreakdown.business_calls} calls. Difference: ~${revenueBreakdown.missed_calls} calls/mo lost to leader.`
+                            ? `You lead the local market in customer volume at #1. Top rivals are actively competing for your position.`
+                            : `Top competitors ahead of you capture ~${(revenueBreakdown.target_estimated_customers_per_month ?? revenueBreakdown.rank1_calls).toLocaleString('en-IN')} customers/mo. Gap of ~${(revenueBreakdown.lost_customers_monthly ?? revenueBreakdown.missed_calls).toLocaleString('en-IN')} customers lost to rivals every month.`
                           }
                         </p>
                       </div>
@@ -1555,16 +1568,15 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                       {/* Step 3: Verified Pricing & Conversion */}
                       <div className="math-step-item">
                         <div className="math-step-num">Step 3</div>
-                        <div className="math-step-title">Pricing & Phone Conversion</div>
+                        <div className="math-step-title">Average Order Value (AOV)</div>
                         <div className="math-step-val">
                           ₹{revenueBreakdown.avg_ticket_low.toLocaleString('en-IN')}–₹{revenueBreakdown.avg_ticket_high.toLocaleString('en-IN')} avg spend
                         </div>
                         <p className="math-step-desc">
                           {revenueBreakdown.google_price_range
                             ? `Verified from Google Places API (${revenueBreakdown.currency} ${revenueBreakdown.google_price_range.start_price}–${revenueBreakdown.google_price_range.end_price}/person). Party dining order: ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high}.`
-                            : `Standard ${business.category || 'category'} benchmark ticket. Phone conversion rate: ${Math.round(revenueBreakdown.conversion_rate * 100)}%.`
+                            : `Standard ${business.category || 'category'} benchmark spend: ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high}.`
                           }
-                          {userRank !== 1 && ` (${revenueBreakdown.missed_calls} missed calls × ${Math.round(revenueBreakdown.conversion_rate * 100)}% = ~${revenueBreakdown.lost_customers_monthly} lost customers/mo)`}
                         </p>
                       </div>
 
@@ -1578,7 +1590,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                         <p className="math-step-desc">
                           {userRank === 1
                             ? `Capturing ~₹${(revenueBreakdown.annual_loss_low).toLocaleString('en-IN')}–₹${(revenueBreakdown.annual_loss_high).toLocaleString('en-IN')}/yr in local revenue at #1.`
-                            : `~${revenueBreakdown.lost_customers_monthly} lost customers/mo × ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high} = ₹${revenueBreakdown.monthly_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.monthly_loss_high.toLocaleString('en-IN')}/mo (annualized: ₹${revenueBreakdown.annual_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.annual_loss_high.toLocaleString('en-IN')}/yr).`
+                            : `~${(revenueBreakdown.lost_customers_monthly ?? revenueBreakdown.missed_calls).toLocaleString('en-IN')} lost customers/mo × ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high} = ₹${revenueBreakdown.monthly_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.monthly_loss_high.toLocaleString('en-IN')}/mo (annualized: ₹${revenueBreakdown.annual_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.annual_loss_high.toLocaleString('en-IN')}/yr).`
                           }
                         </p>
                       </div>
@@ -1607,34 +1619,39 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   </div>
                 </div>
 
-                {/* Card 2: Local Call Share */}
+                {/* Card 2: Local Customer Share / Inquiries */}
                 <div className="kpi-card kpi-card-purple">
                   <div className="kpi-card-header">
                     <div className="kpi-card-icon-wrap share-icon">
                       <Phone size={13} />
                     </div>
-                    <span className="kpi-card-label">Calls You Get</span>
+                    <span className="kpi-card-label">
+                      {revenueBreakdown.engine_version?.startsWith('v4') ? 'Your Customers' : 'Calls You Get'}
+                    </span>
                   </div>
                   <div className="kpi-card-val" style={{ color: '#7C3AED' }}>
-                    ~{userCallSharePct}%
+                    ~{revenueBreakdown.engine_version?.startsWith('v4') ? userEstimatedCalls.toLocaleString('en-IN') : `${userCallSharePct}%`}
+                    {revenueBreakdown.engine_version?.startsWith('v4') && <span className="kpi-card-unit">/mo</span>}
                   </div>
                   <div className="kpi-card-badge badge-purple">
-                    {userRank === 1 ? 'Top 42% Share' : 'Top 3 take 84%'}
+                    {userRank === 1 ? 'Market Leader' : 'In Top 3 Pack'}
                   </div>
                 </div>
 
-                {/* Card 3: Calls Lost to Competitors */}
+                {/* Card 3: Customers/Calls Lost to Competitors */}
                 <div className={`kpi-card ${userRank === 1 ? 'kpi-card-good' : 'kpi-card-loss'}`}>
                   <div className="kpi-card-header">
                     <div className={`kpi-card-icon-wrap ${userRank === 1 ? 'loss-icon-good' : 'loss-icon-alert'}`}>
                       {userRank === 1 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
                     </div>
                     <span className="kpi-card-label">
-                      {userRank === 1 ? 'Calls Won' : 'Calls Lost'}
+                      {userRank === 1
+                        ? (revenueBreakdown.engine_version?.startsWith('v4') ? 'Customers Won' : 'Calls Won')
+                        : (revenueBreakdown.engine_version?.startsWith('v4') ? 'Customers Lost' : 'Calls Lost')}
                     </span>
                   </div>
                   <div className="kpi-card-val" style={{ color: userRank === 1 ? '#059669' : '#DC2626' }}>
-                    ~{userRank === 1 ? userEstimatedCalls : estimatedMissedCalls}
+                    ~{(userRank === 1 ? userEstimatedCalls : (revenueBreakdown.lost_customers_monthly ?? estimatedMissedCalls)).toLocaleString('en-IN')}
                     <span className="kpi-card-unit">/mo</span>
                   </div>
                   <div className={`kpi-card-badge ${userRank === 1 ? 'badge-good' : 'badge-loss'}`}>
@@ -1716,13 +1733,13 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
               </div>
 
               <div className="leaderboard-table">
-                {rankLadderSlots.map((slot) => {
+                {rankLadderSlots.map((slot, sIdx) => {
                   const maxCalls = Math.max(...rankLadderSlots.map(s => s.estimatedCalls), 1);
                   const barWidth = Math.max(15, Math.round((slot.estimatedCalls / maxCalls) * 80));
 
                   return (
                     <div
-                      key={`${slot.rank}-${slot.isUser ? 'u' : 'c'}`}
+                      key={`slot-${slot.rank}-${slot.isUser ? 'u' : 'c'}-${slot.isBlurred ? 'b' : 'v'}-${sIdx}`}
                       className={`leaderboard-row ${slot.isUser ? 'is-user-row' : ''} ${slot.isBlurred ? 'is-blurred-row' : ''}`}
                     >
                       {slot.isBlurred && (

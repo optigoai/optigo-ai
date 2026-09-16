@@ -2,7 +2,7 @@
 // OptigoAI Enterprise — Real Application Root
 // ==================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FranchiseProvider, useFranchise } from './context/FranchiseContext';
 import { LocationProvider, useLocation } from './context/LocationContext';
@@ -43,8 +43,18 @@ const MainRouter: React.FC = () => {
   const { scope, activeFranchiseTab, activeBranchTab, isOnboardingOpen, setIsOnboardingOpen } = useLocation();
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
-  // Check URL path
-  const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  // Check URL path and react to browser Back/Forward (popstate)
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname.replace(/^\/+|\/+$/g, ''));
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname.replace(/^\/+|\/+$/g, ''));
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  const cleanPath = currentPath;
   const internalReserved = ['', 'login', 'signup', 'onboarding', 'audit', 'onboard', 'report', 'app', 'admin', 'dashboard'];
 
   // Public Lead-Gen Single-Page Onboarding (/audit or /onboard)

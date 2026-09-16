@@ -84,8 +84,8 @@ class SerperProvider(BaseSEOProvider):
                     "provider": "serper",
                 }
             except Exception as e:
-                logger.error("Serper query failed", error=str(e))
-                return {"keyword": keyword, "domain": domain, "rank": None, "error": str(e)}
+                logger.error("Serper query failed", error=repr(e), exc_info=True)
+                return {"keyword": keyword, "domain": domain, "rank": None, "error": repr(e)}
 
     async def get_keyword_metrics(
         self,
@@ -176,28 +176,60 @@ class SerperProvider(BaseSEOProvider):
         if target_gl:
             payload["gl"] = target_gl
 
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            try:
-                res = await client.post(SERPER_PLACES_ENDPOINT, json=payload, headers=self._get_headers())
-                if res.status_code != 200:
-                    logger.warning("Serper places returned non-200", status_code=res.status_code, body=res.text)
-                    return []
-                data = res.json()
-                places = data.get("places", [])
+        places: List[Dict[str, Any]] = []
+        timeout = httpx.Timeout(25.0, connect=10.0, read=25.0, write=10.0)
 
-                # If primary query returned too few places, try variations with the primary town or clean location
-                if len(places) < 4 and (primary_town or clean_loc):
-                    search_target = primary_town or clean_loc
-                    fallback_queries = [
-                        f"{clean_kw} in {search_target}".strip(),
-                        f"{clean_kw} {clean_loc}".strip(),
-                    ]
-                    for fallback_query in fallback_queries:
-                        if fallback_query == query_str:
-                            continue
-                        fallback_payload = {"q": fallback_query, "num": fetch_num}
-                        if target_gl:
-                            fallback_payload["gl"] = target_gl
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            # 1. Primary query attempt with automatic retries and exponential backoff
+            for attempt in range(3):
+                try:
+                    res = await client.post(SERPER_PLACES_ENDPOINT, json=payload, headers=self._get_headers())
+                    if res.status_code == 200:
+                        data = res.json()
+                        places = data.get("places", [])
+                        break
+                    elif res.status_code == 429:
+                        logger.warning("Serper rate limit (429), retrying...", attempt=attempt + 1)
+                        await asyncio.sleep(1.5 * (attempt + 1))
+                    else:
+                        logger.warning(
+                            "Serper places returned non-200",
+                            status_code=res.status_code,
+                            body=res.text[:200],
+                            attempt=attempt + 1,
+                        )
+                        if attempt < 2:
+                            await asyncio.sleep(1.0)
+                except (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPError) as e:
+                    logger.warning(
+                        "Serper places request attempt failed",
+                        attempt=attempt + 1,
+                        error=repr(e),
+                        error_type=type(e).__name__,
+                        query=query_str,
+                    )
+                    if attempt < 2:
+                        await asyncio.sleep(1.0 * (attempt + 1))
+                    else:
+                        logger.error("All Serper places attempts failed", error=repr(e), exc_info=True)
+                except Exception as e:
+                    logger.error("Unexpected error in Serper places request", error=repr(e), exc_info=True)
+                    break
+
+            # 2. If primary query returned too few places, try variations with primary town or clean location
+            if len(places) < 4 and (primary_town or clean_loc):
+                search_target = primary_town or clean_loc
+                fallback_queries = [
+                    f"{clean_kw} in {search_target}".strip(),
+                    f"{clean_kw} {clean_loc}".strip(),
+                ]
+                for fallback_query in fallback_queries:
+                    if fallback_query == query_str:
+                        continue
+                    fallback_payload = {"q": fallback_query, "num": fetch_num}
+                    if target_gl:
+                        fallback_payload["gl"] = target_gl
+                    try:
                         fallback_res = await client.post(
                             SERPER_PLACES_ENDPOINT,
                             json=fallback_payload,
@@ -209,31 +241,30 @@ class SerperProvider(BaseSEOProvider):
                             for fp in fallback_places:
                                 if fp.get("cid") not in seen_cids:
                                     places.append(fp)
-                        if len(places) >= 5:
-                            break
+                    except Exception as e:
+                        logger.warning("Serper places fallback variation failed", query=fallback_query, error=repr(e))
+                    if len(places) >= 5:
+                        break
 
-                loc_fallback = clean_loc or primary_town or "Local Area"
-                return [
-                    {
-                        "name": p.get("title", f"Competitor #{i}"),
-                        "rating": float(p.get("rating", 4.2)),
-                        "reviews_count": int(p.get("ratingCount", 15)),
-                        "rank": int(p.get("position", i)),
-                        "position": int(p.get("position", i)),
-                        "address": p.get("address") or loc_fallback,
-                        "photo_url": p.get("thumbnailUrl"),
-                        "lat": p.get("latitude"),
-                        "lng": p.get("longitude"),
-                        "category": p.get("category", clean_kw.title()),
-                        "phone": p.get("phoneNumber"),
-                        "website": p.get("website"),
-                        "cid": p.get("cid"),
-                    }
-                    for i, p in enumerate(places[:limit], 1)
-                ]
-            except Exception as e:
-                logger.error("Serper places query failed", error=str(e))
-                return []
+            loc_fallback = clean_loc or primary_town or "Local Area"
+            return [
+                {
+                    "name": p.get("title", f"Competitor #{i}"),
+                    "rating": float(p.get("rating", 4.2)),
+                    "reviews_count": int(p.get("ratingCount", 15)),
+                    "rank": int(p.get("position", i)),
+                    "position": int(p.get("position", i)),
+                    "address": p.get("address") or loc_fallback,
+                    "photo_url": p.get("thumbnailUrl"),
+                    "lat": p.get("latitude"),
+                    "lng": p.get("longitude"),
+                    "category": p.get("category", clean_kw.title()),
+                    "phone": p.get("phoneNumber"),
+                    "website": p.get("website"),
+                    "cid": p.get("cid"),
+                }
+                for i, p in enumerate(places[:limit], 1)
+            ]
 
     async def search(
         self,
@@ -281,7 +312,7 @@ class SerperProvider(BaseSEOProvider):
                             if img_url and img_url.startswith("http") and not img_url.endswith(".svg"):
                                 return img_url
             except Exception as e:
-                logger.warning("Failed to extract business photo", business=business_name, error=str(e))
+                logger.warning("Failed to extract business photo", business=business_name, error=repr(e))
         return None
 
     async def get_business_photos_batch(

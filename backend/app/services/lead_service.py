@@ -35,6 +35,18 @@ from app.schemas.lead import LeadCreate, LeadPlacesSearchResult, LeadVerifyPayme
 from app.providers.seo.factory import SEOProviderFactory
 from app.ai.ai_service import AIService
 from app.core.security import hash_password, create_access_token
+from app.services.loss_engine import (
+    map_canonical_to_vertical,
+    get_vertical_profile,
+    LossCompetitor,
+    ReviewSnapshot,
+    parse_review_timestamps_to_days_ago,
+    LocalMarket,
+    run_loss_estimate,
+    estimate_benchmark_revenue,
+    pairwise_decay_shares,
+    ENGINE_VERSION,
+)
 
 logger = get_logger("app.services.lead")
 
@@ -180,211 +192,363 @@ def extract_primary_town(address: Optional[str], business_name: Optional[str] = 
     return parts[0] if parts else loc
 
 
+def has_category_match(patterns: List[str], text: str) -> bool:
+    """
+    Exact word-boundary or multi-word phrase matching.
+    Prevents single-word triggers like 'spa' from matching inside words like 'space'.
+    """
+    if not patterns or not text:
+        return False
+    text_lower = text.lower()
+    for pat in patterns:
+        pat_clean = pat.strip().lower()
+        if not pat_clean:
+            continue
+        if " " in pat_clean or "-" in pat_clean:
+            if pat_clean in text_lower:
+                return True
+        else:
+            if re.search(rf"\b{re.escape(pat_clean)}\b", text_lower):
+                return True
+    return False
+
+
 def detect_canonical_category(name: str, raw_category: Optional[str] = None, address: Optional[str] = None) -> Dict[str, Any]:
     """
-    Determines canonical industry category, search keywords, positive allowed keywords,
-    and negative excluded keywords for a business.
-    Specific niche models (Cafe, Bakery, Desserts, Fast Food, Dental, Clinic, Salon, Gym, etc.)
-    are prioritized ahead of generic catch-alls (Restaurant, Local Business) to ensure
-    businesses are compared strictly with authentic peers.
+    Data-driven category extraction:
+    Respects Google Places API primaryType while deriving industry-standard search keywords
+    and realistic competitor positive/negative category filters using exact word boundaries.
     """
-    name_lower = (name or "").lower()
-    raw_cat_lower = (raw_category or "").lower().strip()
-    text = f"{name_lower} {raw_cat_lower}".strip()
-
-    # 1. Cafe & Coffee Shop (Must precede Restaurant so cafes aren't lumped with dining halls/mandhi)
-    is_cafe = (
-        any(kw in name_lower for kw in ["cafe", "coffee", "cappuccino", "espresso", "tea lounge", "tea bar", "chai", "tea shop", "cafeteria"])
-        or any(kw in raw_cat_lower for kw in ["cafe", "coffee shop", "tea house", "espresso bar", "tea lounge", "coffee store"])
-    )
-    if is_cafe:
-        return {
-            "canonical_category": "Cafe & Coffee Shop",
-            "search_keyword": "cafe",
-            "positive_categories": [
-                "cafe", "coffee", "tea", "bistro", "bakery", "burger", "fast food",
-                "dessert", "juice", "shakes", "waffle", "ice cream", "snacks",
-                "pizza", "sandwich", "beverage", "quick bites", "breakfast"
-            ],
-            "negative_categories": [
-                "mandhi", "kuzhimandhi", "biryani", "dhaba", "mess", "meals", "thali",
-                "catering", "dining hall", "family restaurant", "seafood restaurant",
-                "barbecue restaurant", "amusement", "clothing", "supermarket",
-                "hospital", "clinic", "gym", "salon", "hardware"
-            ]
-        }
-
-    # 2. Bakery & Confectionery
-    is_bakery = any(kw in name_lower or kw in raw_cat_lower for kw in ["bakery", "bake", "cake", "pastry", "confectionery", "bakes", "patisserie"])
-    if is_bakery:
-        return {
-            "canonical_category": "Bakery & Cake Shop",
-            "search_keyword": "bakery",
-            "positive_categories": ["bakery", "cake", "pastry", "sweets", "confectionery", "bakes", "dessert", "cafe", "bakehouse"],
-            "negative_categories": ["mandhi", "biryani", "dhaba", "mess", "meals", "family restaurant", "clothing", "supermarket", "hospital"]
-        }
-
-    # 3. Ice Cream, Shakes & Desserts
-    is_ice_cream = any(kw in name_lower or kw in raw_cat_lower for kw in ["ice cream", "dessert", "falooda", "waffle", "gelato", "kulfi", "juice bar", "juice shop", "fruitbae"])
-    if is_ice_cream:
-        return {
-            "canonical_category": "Ice Cream & Desserts",
-            "search_keyword": "ice cream parlour",
-            "positive_categories": ["ice cream", "dessert", "falooda", "waffle", "shakes", "juice", "sweet", "cafe"],
-            "negative_categories": ["mandhi", "biryani", "dhaba", "meals", "family restaurant", "clothing", "supermarket"]
-        }
-
-    # 4. Fast Food, Burger & Pizza
-    is_fast_food = any(kw in name_lower or kw in raw_cat_lower for kw in ["burger", "pizza", "fried chicken", "fast food", "shawarma", "sandwich", "broast", "rolls"])
-    if is_fast_food:
-        return {
-            "canonical_category": "Fast Food & Quick Bites",
-            "search_keyword": "fast food",
-            "positive_categories": ["fast food", "burger", "pizza", "shawarma", "sandwich", "fried chicken", "cafe", "bites", "snack"],
-            "negative_categories": ["mandhi", "biryani", "dhaba", "mess", "meals", "thali", "clothing", "supermarket"]
-        }
-
-    # 5. Dental Clinic
-    if any(kw in text for kw in ["dental", "dentist", "teeth", "orthodontic", "dentistry"]):
-        return {
-            "canonical_category": "Dental Clinic",
-            "search_keyword": "dental clinic dentist",
-            "positive_categories": ["dental", "dentist", "orthodontic", "dentistry", "oral"],
-            "negative_categories": ["clothing", "restaurant", "cafe", "gym", "salon", "grocery"]
-        }
-
-    # 6. Eye Care & Opticals
-    if any(kw in text for kw in ["optical", "optician", "eyewear", "eye care", "optometry", "spectacles", "lens", "opticals"]):
-        return {
-            "canonical_category": "Eye Care & Opticals",
-            "search_keyword": "opticals eye care",
-            "positive_categories": ["optical", "optician", "eyewear", "eye", "spectacles", "opticals"],
-            "negative_categories": ["restaurant", "cafe", "clothing", "gym", "salon"]
-        }
-
-    # 7. Medical Clinic & Hospital
-    if any(kw in text for kw in ["clinic", "hospital", "doctor", "physician", "ayurveda", "homeopathy", "pediatric", "diagnostic", "scan center", "healthcare"]):
-        return {
-            "canonical_category": "Clinic & Healthcare",
-            "search_keyword": "clinic hospital",
-            "positive_categories": ["clinic", "hospital", "doctor", "health", "medical", "diagnostic"],
-            "negative_categories": ["restaurant", "cafe", "clothing", "gym", "salon", "supermarket"]
-        }
-
-    # 8. Beauty Salon & Spa
-    if any(kw in text for kw in ["salon", "beauty parlour", "spa", "hair", "barber", "grooming", "makeup", "unisex salon"]):
-        return {
-            "canonical_category": "Beauty Salon & Spa",
-            "search_keyword": "beauty salon spa",
-            "positive_categories": ["salon", "beauty", "spa", "hair", "barber", "grooming"],
-            "negative_categories": ["restaurant", "cafe", "grocery", "medical", "hospital"]
-        }
-
-    # 9. Gym & Fitness
-    if any(kw in text for kw in ["gym", "fitness", "workout", "crossfit", "health club", "bodybuilding"]):
-        return {
-            "canonical_category": "Gym & Fitness Center",
-            "search_keyword": "gym fitness centre",
-            "positive_categories": ["gym", "fitness", "workout", "crossfit", "sports"],
-            "negative_categories": ["restaurant", "cafe", "clothing", "hospital"]
-        }
-
-    # 10. Supermarket & Grocery
-    if any(kw in text for kw in ["supermarket", "hypermarket", "grocery", "provisions", "mart"]):
-        return {
-            "canonical_category": "Supermarket & Grocery",
-            "search_keyword": "supermarket grocery store",
-            "positive_categories": ["supermarket", "hypermarket", "grocery", "mart", "store"],
-            "negative_categories": ["restaurant", "hospital", "gym", "salon"]
-        }
-
-    # 11. Automobile & Garage
-    if any(kw in text for kw in ["automobile", "car repair", "garage", "auto service", "tyre", "car wash", "workshop", "mechanic", "motor"]):
-        return {
-            "canonical_category": "Automobile & Garage",
-            "search_keyword": "car repair garage",
-            "positive_categories": ["automobile", "garage", "mechanic", "car repair", "service station", "tyre", "workshop"],
-            "negative_categories": ["restaurant", "cafe", "hospital", "clothing"]
-        }
-
-    # 12. Hotel & Lodging
-    is_lodging = any(kw in text for kw in ["lodge", "resort", "residency", "inn", "suites", "homestay", "guest house", "rooms", "stay"]) or (
-        raw_cat_lower in ("hotel", "lodging", "resort", "motel") and not any(kw in name_lower for kw in ["restaurant", "bhojanalaya", "dhaba", "mess", "meals"])
-    )
-    if is_lodging:
-        return {
-            "canonical_category": "Hotel & Lodging",
-            "search_keyword": "hotel resort lodge",
-            "positive_categories": ["hotel", "resort", "lodge", "residency", "inn", "suites", "stay"],
-            "negative_categories": ["hospital", "clothing", "supermarket"]
-        }
-
-    # 13. Clothing & Fashion
-    if any(kw in text for kw in ["clothing", "textile", "garments", "silks", "saree", "fashion", "boutique", "menswear", "apparel"]):
-        return {
-            "canonical_category": "Clothing & Fashion",
-            "search_keyword": "clothing textile store",
-            "positive_categories": ["clothing", "textile", "fashion", "apparel", "boutique", "garments", "saree"],
-            "negative_categories": ["restaurant", "cafe", "hospital", "grocery"]
-        }
-
-    # 14. Flour & Oil Mill
-    if any(kw in text for kw in ["mill", "flour mill", "oil mill", "atta"]):
-        return {
-            "canonical_category": "Oil & Flour Mill",
-            "search_keyword": "flour oil mill",
-            "positive_categories": ["mill", "flour", "oil", "grain", "processor"],
-            "negative_categories": ["clothing", "restaurant", "cafe", "hospital"]
-        }
-
-    # 15. General Restaurant / Dining / Food (Catch-all for sit-down & dining establishments)
-    restaurant_kw = [
-        "restaurant", "dining", "diner", "bistro", "eatery", "kitchen", "biryani",
-        "mandhi", "kuzhimandhi", "chammanti", "meals", "dhaba", "barbecue", "bbq",
-        "grill", "seafood", "south indian", "north indian", "chinese restaurant",
-        "arab restaurant", "family restaurant", "mess", "food court", "thali", "curry"
-    ]
-    is_restaurant = any(kw in text for kw in restaurant_kw) or (
-        raw_cat_lower in ("restaurant", "family-friendly", "family friendly") and any(kw in name_lower for kw in ("restaurant", "food", "dining", "grill", "kitchen", "bites", "bistro", "rasa", "chammanti"))
-    )
-    if is_restaurant:
-        return {
-            "canonical_category": "Restaurant",
-            "search_keyword": "restaurant",
-            "positive_categories": [
-                "restaurant", "dining", "barbecue", "bbq", "grill", "dhaba", "mandhi",
-                "biryani", "eatery", "bistro", "diner", "cuisine", "south indian",
-                "north indian", "arab restaurant", "chinese", "family restaurant",
-                "family-friendly", "buffet", "food court", "mess", "seafood", "food"
-            ],
-            "negative_categories": [
-                "amusement", "funzone", "fun zone", "theme park", "play area", "game",
-                "gaming", "arcade", "bowling", "clothing", "apparel", "textile", "fashion",
-                "boutique", "dress", "saree", "menswear", "jewell", "optical", "electronics",
-                "supermarket", "hypermarket", "grocery", "provision", "medical", "hospital",
-                "clinic", "pharmacy", "doctor", "dental", "gym", "fitness", "salon",
-                "beauty parlour", "spa", "real estate", "pet", "automobile", "car repair",
-                "service station", "tyre", "juice bar", "juice shop", "fruitbae", "fruit",
-                "ice cream parlour", "tea stall", "tea shop"
-            ]
-        }
-
-    # Default fallback
     clean_cat = (raw_category or "").strip()
-    if clean_cat and clean_cat.lower() not in ("local business", "point of interest", "establishment", "family-friendly", "business"):
+    name_clean = (name or "").strip()
+    target_text = f"{clean_cat} {name_clean}".lower()
+
+    # Industry root dictionary mapping with word-boundary matching
+    rules = [
+        # 1. Coworking & Office Spaces (Checked BEFORE general office, space, or spa)
+        (
+            ["coworking", "co-working", "cowork", "workspace", "work space", "shared office", "office space", "business center", "virtual office"],
+            "Coworking Space", "coworking space",
+            ["coworking", "co-working", "cowork", "workspace", "shared office", "office space", "business center", "virtual office", "desk space", "work space"],
+            ["salon", "spa", "restaurant", "hospital", "clinic", "dentist", "gym", "grocery", "clothing"],
+        ),
+        # 2. Spas & Wellness (Word boundary \bspa\b ensures 'space' never matches)
+        (
+            ["spa", "massage", "wellness", "ayurvedic spa", "reflexology", "aromatherapy"],
+            "Day Spa", "spa",
+            ["spa", "massage", "wellness", "ayurveda", "therapy", "relaxation", "reflexology"],
+            ["coworking", "office", "garage", "hospital", "food", "restaurant"],
+        ),
+        # 3. Salons & Parlours
+        (
+            ["salon", "beauty parlour", "hair salon", "barber", "parlour", "hair cut", "makeover", "grooming", "beauty"],
+            "Beauty Salon", "beauty salon",
+            ["salon", "beauty", "hair", "barber", "parlour", "makeover", "hairdressing", "styling", "grooming"],
+            ["food", "restaurant", "garage", "hospital", "coworking", "office"],
+        ),
+        # 4. Restaurants & Dining
+        (
+            ["restaurant", "diner", "eatery", "bistro", "kitchen", "dhaba", "mandi", "biryani", "veg", "non-veg", "grill", "fast food", "buffet", "mess", "thattukada"],
+            "Restaurant", "restaurant",
+            ["restaurant", "cafe", "food", "dining", "eatery", "bistro", "kitchen", "grill", "dhaba", "mandi", "biryani", "hotel", "bakes", "family", "indian", "arabian", "chinese", "south indian", "meals"],
+            ["grocery", "clothing", "salon", "spa", "gym", "pharmacy", "repair", "hospital", "workshop", "hardware", "coworking"],
+        ),
+        # 5. Cafes & Coffee Shops
+        (
+            ["cafe", "coffee", "tea", "espresso", "cappuccino", "roastery"],
+            "Cafe", "cafe",
+            ["cafe", "coffee", "tea", "bakes", "bakery", "pastry", "snacks", "restaurant", "eatery"],
+            ["grocery", "salon", "spa", "gym", "pharmacy", "repair", "hospital", "clothing", "coworking"],
+        ),
+        # 6. Bakeries & Confectionery
+        (
+            ["bakery", "cake", "pastry", "sweets", "bakehouse", "confectionery"],
+            "Bakery", "bakery",
+            ["bakery", "cake", "pastry", "bakes", "confectionery", "sweets", "cafe", "cookies"],
+            ["clinic", "hospital", "salon", "gym", "clothing", "repair", "coworking"],
+        ),
+        # 7. Dental Care
+        (
+            ["dental", "dentist", "orthodontist", "orthodontics", "teeth", "endodontist"],
+            "Dental Clinic", "dental clinic",
+            ["dental", "dentist", "orthodont", "teeth", "clinic", "oral", "dentistry", "implant", "smile"],
+            ["hotel", "restaurant", "food", "salon", "spa", "gym", "clothing"],
+        ),
+        # 8. Medical Clinics & Hospitals
+        (
+            ["clinic", "hospital", "doctor", "healthcare", "pediatric", "physician", "polyclinic", "diagnostic"],
+            "Clinic", "clinic",
+            ["clinic", "hospital", "doctor", "health", "medical", "care", "healthcare", "diagnostic", "polyclinic"],
+            ["hotel", "restaurant", "food", "clothing", "salon", "spa", "gym"],
+        ),
+        # 9. Gym & Fitness
+        (
+            ["gym", "fitness", "crossfit", "workout", "training center", "yoga", "pilates", "health club"],
+            "Gym", "gym",
+            ["gym", "fitness", "workout", "crossfit", "training", "yoga", "health club", "bodybuilding", "aerobics"],
+            ["food", "restaurant", "hotel", "spa", "salon", "coworking"],
+        ),
+        # 10. Automotive & Garages
+        (
+            ["car repair", "auto repair", "garage", "mechanic", "car service", "auto service", "workshop", "tire repair"],
+            "Car Repair", "car repair",
+            ["garage", "repair", "auto", "car", "mechanic", "workshop", "service center", "automobile", "motors"],
+            ["food", "restaurant", "hotel", "salon", "hospital"],
+        ),
+        # 11. Real Estate & Property
+        (
+            ["real estate", "property", "realtor", "builders", "developers", "housing"],
+            "Real Estate Agency", "real estate agency",
+            ["real estate", "realtor", "property", "builders", "developers", "housing", "apartments", "villas"],
+            ["restaurant", "salon", "hospital", "car repair"],
+        ),
+        # 12. Law & Legal
+        (
+            ["lawyer", "advocate", "law firm", "legal", "attorney", "solicitor"],
+            "Law Firm", "law firm",
+            ["lawyer", "advocate", "law firm", "legal", "attorney", "solicitor", "notary", "counsel"],
+            ["restaurant", "salon", "hospital", "gym"],
+        ),
+        # 13. Education, Schools & Coaching
+        (
+            ["school", "college", "academy", "institute", "coaching", "tuition", "training institute"],
+            "Coaching Institute", "coaching institute",
+            ["school", "college", "academy", "institute", "coaching", "tuition", "classes", "learning", "education"],
+            ["restaurant", "salon", "gym", "garage"],
+        ),
+        # 14. Flour & Grain Mills
+        (
+            ["flour mill", "oil mill", "rice mill", "grinding mill", "grain mill"],
+            "Flour Mill", "flour mill",
+            ["mill", "flour", "oil", "grinding", "grain", "rice mill", "oil mill"],
+            ["hotel", "restaurant", "salon", "hospital", "gym", "coworking"],
+        ),
+        # 15. Hotels & Lodging
+        (
+            ["resort", "lodge", "guest house", "inn", "homestay", "motel"],
+            "Hotel", "hotel",
+            ["hotel", "resort", "lodge", "stay", "inn", "guest house", "homestay", "motel", "accommodation"],
+            ["coworking", "garage", "salon", "gym"],
+        ),
+    ]
+
+    for triggers, default_title, kw, pos_cats, neg_cats in rules:
+        if has_category_match(triggers, target_text):
+            category_title = clean_cat.title() if clean_cat and clean_cat.lower() not in ("point_of_interest", "establishment", "local_business") else default_title
+            return {
+                "canonical_category": category_title,
+                "search_keyword": kw,
+                "positive_categories": pos_cats,
+                "negative_categories": neg_cats,
+            }
+
+    # Universal Dynamic Fallback for ANY other custom category
+    category_title = clean_cat.title() if clean_cat else "Local Business"
+    search_kw = clean_cat.lower() if clean_cat else "local business"
+    words = [w for w in search_kw.split() if len(w) >= 3 and w not in ("local", "business", "point", "interest", "center", "agency", "services")]
+    return {
+        "canonical_category": category_title,
+        "search_keyword": search_kw,
+        "positive_categories": words or [search_kw],
+        "negative_categories": [],
+    }
+
+
+# Generic type names that are NOT useful as competitor search keywords
+_USELESS_PLACE_TYPES = frozenset({
+    "point_of_interest", "establishment", "local_business", "premise",
+    "political", "geocode", "route", "street_address", "sublocality",
+    "locality", "administrative_area_level_1", "administrative_area_level_2",
+    "country", "postal_code", "plus_code", "store", "food",
+})
+
+# Broad industry-group negative category sets keyed by high-level industry group.
+# Used when the Google Places API category is valid but we still need to prevent
+# cross-contamination (e.g. a "Coworking Space" should never return salon competitors).
+_INDUSTRY_NEGATIVES: Dict[str, List[str]] = {
+    "food_and_drink": ["salon", "spa", "clinic", "hospital", "gym", "coworking", "garage", "clothing", "pharmacy", "real estate"],
+    "health_and_medical": ["restaurant", "food", "salon", "hotel", "coworking", "gym", "clothing", "garage"],
+    "beauty_and_personal": ["restaurant", "food", "hospital", "garage", "coworking", "office", "real estate"],
+    "fitness": ["restaurant", "food", "hotel", "salon", "coworking", "clinic", "hospital"],
+    "automotive": ["restaurant", "food", "hotel", "salon", "hospital", "coworking", "spa"],
+    "office_and_workspace": ["salon", "spa", "restaurant", "hospital", "clinic", "dentist", "gym", "grocery", "clothing"],
+    "lodging": ["coworking", "garage", "salon", "gym", "clinic", "hospital"],
+    "education": ["restaurant", "salon", "gym", "garage", "hospital", "spa"],
+    "legal": ["restaurant", "salon", "hospital", "gym", "food"],
+    "real_estate": ["restaurant", "salon", "hospital", "garage", "food"],
+    "retail": ["hospital", "clinic", "garage", "coworking", "gym"],
+}
+
+# Map Google Places API primaryType prefixes/keywords to broad industry groups
+_TYPE_TO_INDUSTRY: Dict[str, str] = {
+    # Food & Drink
+    "restaurant": "food_and_drink", "cafe": "food_and_drink", "coffee_shop": "food_and_drink", "coffee": "food_and_drink",
+    "bakery": "food_and_drink", "bar": "food_and_drink", "pub": "food_and_drink", "meal": "food_and_drink",
+    "food": "food_and_drink", "pizza_restaurant": "food_and_drink", "pizza": "food_and_drink", "ice_cream": "food_and_drink",
+    "tea_store": "food_and_drink", "tea": "food_and_drink", "juice": "food_and_drink", "sandwich": "food_and_drink",
+    "steak_house": "food_and_drink", "sushi": "food_and_drink", "seafood": "food_and_drink",
+    "fast_food": "food_and_drink", "brunch": "food_and_drink", "breakfast": "food_and_drink",
+    # Health & Medical
+    "dental_clinic": "health_and_medical", "dental": "health_and_medical", "dentist": "health_and_medical",
+    "doctor": "health_and_medical", "clinic": "health_and_medical", "hospital": "health_and_medical",
+    "pharmacy": "health_and_medical", "medical_clinic": "health_and_medical", "medical": "health_and_medical",
+    "health": "health_and_medical", "diagnostic": "health_and_medical", "physiotherapist": "health_and_medical",
+    "veterinary": "health_and_medical", "veterinary_care": "health_and_medical",
+    # Beauty & Personal
+    "beauty_salon": "beauty_and_personal", "hair_salon": "beauty_and_personal", "barber_shop": "beauty_and_personal",
+    "salon": "beauty_and_personal", "beauty": "beauty_and_personal", "hair": "beauty_and_personal",
+    "barber": "beauty_and_personal", "spa": "beauty_and_personal", "day_spa": "beauty_and_personal",
+    "nail_salon": "beauty_and_personal", "nail": "beauty_and_personal", "massage": "beauty_and_personal",
+    "wellness": "beauty_and_personal",
+    # Fitness
+    "fitness_center": "fitness", "gym": "fitness", "fitness": "fitness", "yoga_studio": "fitness", "yoga": "fitness",
+    "pilates": "fitness", "crossfit": "fitness", "martial_arts": "fitness", "sports_club": "fitness", "sports": "fitness",
+    # Automotive
+    "car_repair": "automotive", "car_dealer": "automotive", "car_wash": "automotive", "auto_repair": "automotive",
+    "auto": "automotive", "garage": "automotive", "mechanic": "automotive", "tire_shop": "automotive",
+    "tire": "automotive", "vehicle": "automotive", "gas_station": "automotive",
+    # Office & Workspace
+    "coworking_space": "office_and_workspace", "coworking": "office_and_workspace",
+    "shared_office": "office_and_workspace", "business_center": "office_and_workspace",
+    "office": "office_and_workspace", "workspace": "office_and_workspace",
+    # Lodging
+    "hotel": "lodging", "resort": "lodging", "lodge": "lodging", "motel": "lodging",
+    "guest_house": "lodging", "hostel": "lodging", "inn": "lodging",
+    # Education
+    "school": "education", "college": "education", "university": "education",
+    "academy": "education", "institute": "education", "coaching": "education",
+    # Legal
+    "law_firm": "legal", "lawyer": "legal", "attorney": "legal", "law": "legal", "legal": "legal",
+    # Real Estate
+    "real_estate_agency": "real_estate", "real_estate": "real_estate", "property": "real_estate", "realtor": "real_estate",
+    # Retail
+    "supermarket": "retail", "grocery_store": "retail", "shopping_mall": "retail", "store": "retail",
+    "shop": "retail", "mall": "retail", "market": "retail", "boutique": "retail",
+}
+
+
+def _identify_industry_group(primary_type: str) -> str:
+    """
+    Map a Google Places API primaryType to a broad industry group safely.
+    Uses whole-word token matching and regex word boundaries to prevent false positives
+    (such as 'spa' matching inside 'space' for coworking spaces, or 'bar' matching 'barber').
+    """
+    if not primary_type:
+        return ""
+    pt_clean = primary_type.lower().strip().replace("-", "_").replace(" ", "_")
+
+    # 1. Direct exact match
+    if pt_clean in _TYPE_TO_INDUSTRY:
+        return _TYPE_TO_INDUSTRY[pt_clean]
+
+    # 2. Token match (split by underscore and match whole tokens)
+    tokens = set(filter(None, pt_clean.split("_")))
+    # Sort keys by length descending so specific/longer phrases match first
+    sorted_keywords = sorted(_TYPE_TO_INDUSTRY.items(), key=lambda x: len(x[0]), reverse=True)
+    for keyword, group in sorted_keywords:
+        if "_" in keyword:
+            if keyword in pt_clean:
+                return group
+        else:
+            if keyword in tokens:
+                return group
+
+    # 3. Whole-word boundary match across human readable string
+    human_pt = pt_clean.replace("_", " ")
+    for keyword, group in sorted_keywords:
+        kw_human = keyword.replace("_", " ")
+        if re.search(rf"\b{re.escape(kw_human)}\b", human_pt):
+            return group
+
+    return ""
+
+
+def resolve_category_from_places_api(
+    primary_type: Optional[str] = None,
+    primary_type_display_name: Optional[str] = None,
+    business_name: Optional[str] = None,
+    raw_category: Optional[str] = None,
+    address: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Google Places API-first category resolution.
+
+    Priority order:
+    1. primaryTypeDisplayName from Google Places API (human-readable, e.g. "Coworking Space")
+    2. primaryType from Google Places API (snake_case, e.g. "coworking_space" -> "coworking space")
+    3. Fallback to legacy detect_canonical_category() heuristic
+    """
+    # Normalize inputs
+    display_name = (primary_type_display_name or "").strip()
+    raw_type = (primary_type or "").strip()
+
+    # Check if display_name is useful (not a generic placeholder)
+    display_name_useful = bool(
+        display_name
+        and display_name.lower().replace(" ", "_") not in _USELESS_PLACE_TYPES
+        and display_name.lower() not in ("local business", "business", "point of interest", "establishment")
+    )
+
+    # Check if raw_type is useful
+    raw_type_useful = bool(
+        raw_type
+        and raw_type.lower() not in _USELESS_PLACE_TYPES
+    )
+
+    # --- PRIMARY PATH: Use Google Places API category directly ---
+    if display_name_useful or raw_type_useful:
+        if display_name_useful:
+            canonical_category = display_name.title() if display_name else "Local Business"
+            search_keyword = display_name.lower()
+        else:
+            # Convert snake_case primaryType to human-readable
+            human_readable = raw_type.replace("_", " ").strip()
+            canonical_category = human_readable.title()
+            search_keyword = human_readable.lower()
+
+        # Derive positive categories from the search keyword words (and include the full search keyword)
+        words = [w for w in search_keyword.split() if len(w) >= 3 and w not in ("the", "and", "for")]
+        positive_categories = [search_keyword] + words if words else [search_keyword]
+
+        # Determine industry group for negative categories
+        source_type = raw_type if raw_type_useful else display_name
+        industry_group = _identify_industry_group(source_type)
+        raw_negatives = _INDUSTRY_NEGATIVES.get(industry_group, [])
+
+        # Safety Guardrail: NEVER allow words from the target business category to be in negative categories
+        category_words = set(re.findall(r"\w+", search_keyword.lower()))
+        safe_negatives = [
+            neg for neg in raw_negatives
+            if neg.lower() not in category_words and not any(cw in neg.lower() for cw in category_words if len(cw) >= 4)
+        ]
+
+        logger.info(
+            "Category resolved from Google Places API",
+            canonical_category=canonical_category,
+            search_keyword=search_keyword,
+            source="primaryTypeDisplayName" if display_name_useful else "primaryType",
+            industry_group=industry_group or "unknown",
+        )
+
         return {
-            "canonical_category": clean_cat.title(),
-            "search_keyword": clean_cat.lower(),
-            "positive_categories": [clean_cat.lower()],
-            "negative_categories": ["amusement", "funzone", "clothing"]
+            "canonical_category": canonical_category,
+            "search_keyword": search_keyword,
+            "positive_categories": positive_categories,
+            "negative_categories": safe_negatives,
         }
 
-    return {
-        "canonical_category": "Local Business",
-        "search_keyword": "local business",
-        "positive_categories": [],
-        "negative_categories": []
-    }
+    # --- FALLBACK: Use legacy keyword heuristic ---
+    logger.info(
+        "No useful Google Places API type, falling back to keyword heuristic",
+        primary_type=raw_type,
+        primary_type_display_name=display_name,
+        business_name=business_name,
+    )
+    return detect_canonical_category(
+        name=business_name or "",
+        raw_category=raw_category,
+        address=address,
+    )
 
 
 def calculate_haversine_distance_km(lat1: Optional[float], lon1: Optional[float], lat2: Optional[float], lon2: Optional[float]) -> Optional[float]:
@@ -547,8 +711,8 @@ class LeadService:
         Search for Google Places matching query.
         Uses Google Places API (New) when configured, with fallback to Serper Places and local database.
         """
-        query_clean = query.strip()
-        if not query_clean or len(query_clean) < 2:
+        query_clean = " ".join(query.strip().split())
+        if not query_clean or len(query_clean) < 3:
             return []
 
         # 1. Try official Google Places API (New)
@@ -557,8 +721,9 @@ class LeadService:
             google_places = GooglePlacesNewProvider()
             if google_places.is_configured():
                 gp_results = await google_places.search_places(query=query_clean, location=location, limit=8)
-                if gp_results:
-                    return gp_results
+                # Google Places API is active and authoritative.
+                # Never burn secondary Serper credits on empty keystroke results.
+                return gp_results
         except Exception as e:
             logger.warning("Google Places API (New) search failed, trying fallback", error=str(e))
 
@@ -589,7 +754,12 @@ class LeadService:
                                 else:
                                     p_addr = ""
                             p_raw_cat = p.get("category")
-                            cat_info = detect_canonical_category(p_title, p_raw_cat, p_addr)
+                            cat_info = resolve_category_from_places_api(
+                                primary_type_display_name=p_raw_cat,
+                                business_name=p_title,
+                                raw_category=p_raw_cat,
+                                address=p_addr,
+                            )
                             resolved_cat = cat_info["canonical_category"]
                             results.append(
                                 LeadPlacesSearchResult(
@@ -685,7 +855,12 @@ class LeadService:
             "description": f"Requested Google Profile audit for {data.business_name}",
         }
 
-        cat_info = detect_canonical_category(data.business_name, data.category, data.address)
+        cat_info = resolve_category_from_places_api(
+            primary_type_display_name=data.category,
+            business_name=data.business_name,
+            raw_category=data.category,
+            address=data.address,
+        )
         canonical = cat_info.get("canonical_category")
         if canonical and canonical != "Local Business":
             resolved_category = canonical
@@ -705,8 +880,11 @@ class LeadService:
             lng = data.raw_places_data.get("longitude")
 
         # Resolve authentic photo_url if not provided
+        # Do not waste an external Serper Images request for verified Google Place leads
+        # (The authentic photo is obtained from Google Places API details during report generation)
         photo_url = data.photo_url
-        if not photo_url:
+        is_google_place = bool(data.place_id and not data.place_id.startswith("db_") and not data.place_id.startswith("plc_"))
+        if not photo_url and not is_google_place:
             try:
                 provider = SEOProviderFactory.get_provider()
                 if hasattr(provider, "get_business_photo"):
@@ -954,67 +1132,49 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
         # 1. Gather live competitor data using Serper Places API
         provider = SEOProviderFactory.get_provider()
 
-        # Detect canonical category and clean locality
-        cat_info = detect_canonical_category(
-            name=lead.business_name,
-            raw_category=lead.category,
-            address=lead.address
-        )
-        canonical_category = cat_info["canonical_category"]
-        category_ctx = canonical_category
-        search_kw = cat_info["search_keyword"]
-        positive_cats = [c.lower() for c in cat_info["positive_categories"]]
-        negative_cats = [c.lower() for c in cat_info["negative_categories"]]
-
-        # Ensure lead.category reflects verified canonical category
-        if canonical_category and (
-            not lead.category
-            or lead.category != canonical_category
-            or lead.category.lower() in ("local business", "family-friendly", "family friendly", "point of interest", "establishment", "business", "hamburger restaurant", "restaurant")
-        ):
-            lead.category = canonical_category
-            await self.repo.save(lead)
-
         clean_locality = extract_clean_locality(lead.address, lead.business_name)
         primary_town = extract_primary_town(lead.address, lead.business_name)
         location_ctx = primary_town or clean_locality or "Local Area"
 
-        # 0. Enrich with Google Places API (New) details if place_id is available
+        # 0. Enrich with Google Places API (New) details if place_id is available (cache first)
         place_details: Optional[Dict[str, Any]] = None
-        try:
-            from app.providers.places.google_places import GooglePlacesNewProvider
-            google_places_prov = GooglePlacesNewProvider()
-            if google_places_prov.is_configured() and lead.place_id and not lead.place_id.startswith("db_"):
-                place_details = await google_places_prov.get_place_details(lead.place_id)
-                if place_details:
-                    # Update lead attributes with official verified data
-                    if place_details.get("photo_url") and (not lead.photo_url or "lookaside" in lead.photo_url):
-                        lead.photo_url = place_details["photo_url"]
-                    if place_details.get("address") and (not lead.address or lead.address.lower() in ("local street", "market road", "local area", "registered location")):
-                        lead.address = place_details["address"]
-                        clean_locality = extract_clean_locality(lead.address, lead.business_name)
-                        primary_town = extract_primary_town(lead.address, lead.business_name)
-                        location_ctx = primary_town or clean_locality or location_ctx
-                    if place_details.get("rating") is not None:
-                        lead.rating = place_details["rating"]
-                    if place_details.get("review_count") is not None:
-                        lead.review_count = place_details["review_count"]
-                    if place_details.get("phone") and not lead.phone:
-                        lead.phone = place_details["phone"]
-                    if place_details.get("website") and not lead.website:
-                        lead.website = place_details["website"]
-                    if place_details.get("latitude") and lead.latitude is None:
-                        lead.latitude = place_details["latitude"]
-                    if place_details.get("longitude") and lead.longitude is None:
-                        lead.longitude = place_details["longitude"]
+        if lead.raw_places_data and isinstance(lead.raw_places_data, dict) and "google_places_details" in lead.raw_places_data:
+            place_details = lead.raw_places_data["google_places_details"]
+        elif lead.place_id and not lead.place_id.startswith("db_"):
+            try:
+                from app.providers.places.google_places import GooglePlacesNewProvider
+                google_places_prov = GooglePlacesNewProvider()
+                if google_places_prov.is_configured():
+                    place_details = await google_places_prov.get_place_details(lead.place_id)
+                    if place_details:
+                        # Update lead attributes with official verified data
+                        if place_details.get("photo_url") and (not lead.photo_url or "lookaside" in lead.photo_url):
+                            lead.photo_url = place_details["photo_url"]
+                        if place_details.get("address") and (not lead.address or lead.address.lower() in ("local street", "market road", "local area", "registered location")):
+                            lead.address = place_details["address"]
+                            clean_locality = extract_clean_locality(lead.address, lead.business_name)
+                            primary_town = extract_primary_town(lead.address, lead.business_name)
+                            location_ctx = primary_town or clean_locality or location_ctx
+                        if place_details.get("rating") is not None:
+                            lead.rating = place_details["rating"]
+                        if place_details.get("review_count") is not None:
+                            lead.review_count = place_details["review_count"]
+                        if place_details.get("phone") and not lead.phone:
+                            lead.phone = place_details["phone"]
+                        if place_details.get("website") and not lead.website:
+                            lead.website = place_details["website"]
+                        if place_details.get("latitude") and lead.latitude is None:
+                            lead.latitude = place_details["latitude"]
+                        if place_details.get("longitude") and lead.longitude is None:
+                            lead.longitude = place_details["longitude"]
 
-                    # Merge into raw_places_data
-                    raw_data = lead.raw_places_data or {}
-                    raw_data["google_places_details"] = place_details
-                    lead.raw_places_data = raw_data
-                    await self.repo.save(lead)
-        except Exception as e:
-            logger.warning("Google Places API (New) details enrichment failed", error=str(e))
+                        # Merge into raw_places_data
+                        raw_data = lead.raw_places_data or {}
+                        raw_data["google_places_details"] = place_details
+                        lead.raw_places_data = raw_data
+                        await self.repo.save(lead)
+            except Exception as e:
+                logger.warning("Google Places API (New) details enrichment failed", error=str(e))
 
         # Fallback to existing saved Google Places details if available
         if not place_details and lead.raw_places_data and isinstance(lead.raw_places_data, dict) and "google_places_details" in lead.raw_places_data:
@@ -1025,12 +1185,45 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
             lead.address = clean_locality or primary_town or location_ctx
             await self.repo.save(lead)
 
+        # --- CATEGORY RESOLUTION (Google Places API-first) ---
+        # Must happen AFTER place_details enrichment so we have access to primaryType
+        places_primary_type = None
+        places_primary_type_display = None
+        if place_details:
+            places_primary_type = place_details.get("primary_type")
+            places_primary_type_display = place_details.get("category")
+        elif lead.category:
+            places_primary_type_display = lead.category
+
+        cat_info = resolve_category_from_places_api(
+            primary_type=places_primary_type,
+            primary_type_display_name=places_primary_type_display,
+            business_name=lead.business_name,
+            raw_category=lead.category,
+            address=lead.address,
+        )
+        canonical_category = cat_info["canonical_category"]
+        category_ctx = canonical_category
+        search_kw = cat_info["search_keyword"]
+        positive_cats = [c.lower() for c in cat_info["positive_categories"]]
+        negative_cats = [c.lower() for c in cat_info["negative_categories"]]
+
+        # Ensure lead.category reflects verified category without overwriting valid types
+        if canonical_category and (
+            not lead.category
+            or lead.category.lower() in ("local business", "point of interest", "establishment", "business")
+        ):
+            lead.category = canonical_category
+            await self.repo.save(lead)
+
         # Actual profile numbers from search/lead
         rating = float(lead.rating if lead.rating is not None else 4.0)
         review_count = int(lead.review_count if lead.review_count is not None else 5)
 
         # Extract authentic profile photo for lead if not already present or using hotlink-blocked URL
-        if (not lead.photo_url or "lookaside" in lead.photo_url) and hasattr(provider, "get_business_photo"):
+        # Only call Serper if Google Places details did not already yield a high-resolution photo
+        has_places_photo = bool(place_details and place_details.get("photo_url"))
+        if not has_places_photo and (not lead.photo_url or "lookaside" in lead.photo_url) and hasattr(provider, "get_business_photo"):
             try:
                 lead_photo = await provider.get_business_photo(
                     business_name=lead.business_name,
@@ -1051,6 +1244,37 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
             longitude=lead.longitude,
             limit=20,
         )
+
+        # Resilient fallback: If Serper returns 0 competitors, query official Google Places API (New)
+        if not competitors_raw:
+            try:
+                from app.providers.places.google_places import GooglePlacesNewProvider
+                places_prov = GooglePlacesNewProvider()
+                if places_prov.is_configured():
+                    fallback_query = f"{search_kw} {primary_town or clean_locality}".strip()
+                    logger.info("Serper returned 0 competitors, falling back to Google Places API (New)", query=fallback_query)
+                    google_places = await places_prov.search_places(query=fallback_query, limit=20)
+                    if google_places:
+                        competitors_raw = [
+                            {
+                                "name": gp.name,
+                                "rating": float(gp.rating if gp.rating is not None else 4.0),
+                                "reviews_count": int(gp.review_count if gp.review_count is not None else 10),
+                                "rank": i,
+                                "position": i,
+                                "address": gp.address or clean_locality or primary_town or location_ctx,
+                                "photo_url": gp.photo_url,
+                                "lat": gp.latitude,
+                                "lng": gp.longitude,
+                                "category": gp.category or canonical_category,
+                                "phone": gp.phone,
+                                "website": gp.website,
+                                "cid": gp.place_id,
+                            }
+                            for i, gp in enumerate(google_places, 1)
+                        ]
+            except Exception as fallback_err:
+                logger.error("Google Places fallback failed", error=repr(fallback_err), exc_info=True)
 
         # If lead has no coordinates or default coordinates, anchor to first local competitor
         if lead.latitude is None or lead.longitude is None:
@@ -1106,15 +1330,15 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
             ):
                 continue
 
-            c_cat = (c.get("category") or "").lower()
+            c_cat = (c.get("category") or canonical_category or "").lower()
             combined_text = f"{c_name_lower} {c_cat}"
 
-            # Strict negative category filtering (e.g. amusement, funzone, clothing, juice for restaurants)
-            if any(neg in combined_text for neg in negative_cats):
+            # Strict negative category filtering using word boundaries (prevents 'spa' matching 'space')
+            if has_category_match(negative_cats, combined_text):
                 continue
 
             # If positive categories are defined for this industry, candidate must match at least one
-            if positive_cats and not any(pos in combined_text for pos in positive_cats):
+            if positive_cats and not has_category_match(positive_cats, combined_text):
                 continue
 
             c_rating = float(c.get("rating", 4.0))
@@ -1148,6 +1372,47 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
                 "cid": c.get("cid"),
             })
 
+        # If strict filtering produced fewer than 5 competitors, backfill with remaining authentic discovered places
+        if len(filtered_candidates) < 5 and competitors_raw:
+            existing_names = {c["name"].lower() for c in filtered_candidates}
+            for idx, c in enumerate(competitors_raw, 1):
+                c_name = c.get("name", "").strip()
+                if not c_name or c_name.lower() in existing_names:
+                    continue
+                c_name_lower = c_name.lower()
+                if (
+                    lead_name_clean in c_name_lower or c_name_lower in lead_name_clean or
+                    (c.get("cid") and lead.place_id and str(c.get("cid")) == str(lead.place_id))
+                ):
+                    continue
+                c_cat = (c.get("category") or canonical_category or "").lower()
+                combined_text = f"{c_name_lower} {c_cat}"
+                if has_category_match(negative_cats, combined_text):
+                    continue
+                c_lat = c.get("lat")
+                c_lng = c.get("lng")
+                dist_km = calculate_haversine_distance_km(lead_lat, lead_lng, c_lat, c_lng)
+                if dist_km is not None and dist_km > 45.0:
+                    continue
+                c_pos = int(c.get("position") or c.get("rank") or idx)
+                comp_address = c.get("address") or clean_locality or primary_town or "Local Area"
+                filtered_candidates.append({
+                    "name": c_name,
+                    "rating": float(c.get("rating", 4.0)),
+                    "review_count": int(c.get("reviews_count", 10)),
+                    "category": c.get("category") or canonical_category,
+                    "dist_km": dist_km,
+                    "position": c_pos,
+                    "address": comp_address,
+                    "photo_url": c.get("photo_url"),
+                    "lat": c_lat,
+                    "lng": c_lng,
+                    "cid": c.get("cid"),
+                })
+                existing_names.add(c_name_lower)
+                if len(filtered_candidates) >= 5:
+                    break
+
         # Preserve authentic Google Maps ranking order
         filtered_candidates.sort(key=lambda x: x.get("position", 99))
 
@@ -1156,26 +1421,20 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
             user_rank = found_lead_rank
         else:
             # Business is outside the first page of Google Places results
-            user_rank = max(11, len(competitors_raw) + 2)
+            user_rank = max(11, len(competitors_raw) + 2) if competitors_raw else 11
 
         competitors_ahead_count = max(0, user_rank - 1)
 
-        # Real Google Local Call Volume Model based on Category Demand & Google GBP Benchmarks
+        # ── V3 Revenue-Loss Engine Integration ──────────────────────────
+        # Replaces the static rank→share table and point-multiply formula
+        # with Bayesian-shrunk pairwise decay shares + Monte Carlo simulation.
+
+        # 1. Search volume estimation (kept for report display)
         category_search_multipliers = {
-            "restaurant": 3800,
-            "dining": 3800,
-            "cafe": 2200,
-            "coffee": 2000,
-            "bakery": 1800,
-            "clinic": 1600,
-            "dental": 1400,
-            "hospital": 2200,
-            "salon": 1500,
-            "spa": 1200,
-            "supermarket": 2600,
-            "retail": 1600,
-            "auto": 1200,
-            "hotel": 2400,
+            "restaurant": 3800, "dining": 3800, "cafe": 2200, "coffee": 2000,
+            "bakery": 1800, "clinic": 1600, "dental": 1400, "hospital": 2200,
+            "salon": 1500, "spa": 1200, "supermarket": 2600, "retail": 1600,
+            "auto": 1200, "hotel": 2400,
         }
         base_monthly_searches = 2400
         for k, v in category_search_multipliers.items():
@@ -1191,40 +1450,126 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
                 base_monthly_searches = int(base_monthly_searches * 0.75)
 
         total_local_monthly_searches = max(900, base_monthly_searches)
-        # Google GBP official benchmark: 5.0% of local searchers click Call
-        total_local_calls = int(round(total_local_monthly_searches * 0.05))
 
-        def calc_call_share(rank_pos: int) -> float:
-            if rank_pos == 1:
-                return 0.42
-            elif rank_pos == 2:
-                return 0.26
-            elif rank_pos == 3:
-                return 0.16
-            elif rank_pos == 4:
-                return 0.05
-            elif rank_pos == 5:
-                return 0.038
-            elif rank_pos <= 10:
-                return 0.014
-            else:
-                return 0.005
+        # 2. Map canonical category to v4 vertical key & profile
+        vertical_key = map_canonical_to_vertical(canonical_category)
+        v4_profile = get_vertical_profile(vertical_key)
 
-        user_call_share = calc_call_share(user_rank)
-        user_estimated_calls = max(1, int(round(total_local_calls * user_call_share)))
-        rank1_calls = max(2, int(round(total_local_calls * 0.42)))
-
-        revenue_breakdown = calculate_unit_economics_and_revenue_loss(
-            category=canonical_category,
-            total_local_searches=total_local_monthly_searches,
-            total_local_calls=total_local_calls,
-            user_rank=user_rank,
-            user_call_share=user_call_share,
-            user_estimated_calls=user_estimated_calls,
-            rank1_calls=rank1_calls,
-            place_details=place_details,
+        # 3. Extract review timestamps for the lead
+        lead_reviews = place_details.get("reviews", []) if place_details else []
+        lead_review_days_ago = parse_review_timestamps_to_days_ago(lead_reviews)
+        lead_snapshot = ReviewSnapshot(
+            current_total=review_count,
+            recent_review_days_ago=lead_review_days_ago,
         )
-        estimated_missed_calls = revenue_breakdown["missed_calls"]
+
+        # 4. Use competitor total reviews for empirical Bayesian loss estimation without extra Places API calls
+        comp_snapshots: Dict[str, ReviewSnapshot] = {}
+
+        # 5. Build LossCompetitor objects (including the lead's own business)
+        loss_competitors = []
+        for idx, c in enumerate(filtered_candidates[:10], 1):
+            c_name = c["name"]
+            snap = comp_snapshots.get(c_name) or ReviewSnapshot(current_total=c["review_count"])
+            loss_competitors.append(LossCompetitor(
+                name=c_name,
+                rank=c["position"],
+                rating=c["rating"],
+                review_count=c["review_count"],
+                snapshot=snap,
+            ))
+        # Add the lead business itself
+        loss_competitors.append(LossCompetitor(
+            name=lead.business_name,
+            rank=user_rank,
+            rating=rating,
+            review_count=review_count,
+            snapshot=lead_snapshot,
+        ))
+
+        # 6. Estimate benchmark revenue for guardrail clamping
+        benchmark_revenue = estimate_benchmark_revenue(
+            vertical_key=vertical_key,
+            review_count=review_count,
+            rating=rating,
+            price_level=place_details.get("price_level") if place_details else None,
+            price_range=place_details.get("price_range") if place_details else None,
+        )
+
+        # 7. Build LocalMarket and run v4 Review-Velocity Engine
+        local_market = LocalMarket(
+            business_name=lead.business_name,
+            vertical=vertical_key,
+            decay_k=v4_profile.get("decay_k", 0.5),
+            competitors=loss_competitors,
+            benchmark_monthly_revenue=benchmark_revenue,
+        )
+        v4_result = run_loss_estimate(local_market, seed=42)
+
+        # 8. Extract v4 results
+        v4_loss = v4_result["loss_estimate"]
+        monthly_loss_low = max(0, int(round(v4_loss["p10"])))
+        monthly_loss_high = max(0, int(round(v4_loss["p90"])))
+        lost_cust_lo, lost_cust_hi = v4_result["lost_customers_range"]
+        lost_customers_monthly = v4_result["lost_customers_monthly"]
+        estimated_missed_calls = lost_customers_monthly
+        your_estimated_customers = v4_result["your_estimated_customers_per_month"]
+        target_estimated_customers = v4_result["target_estimated_customers_per_month"]
+        per_competitor_v4 = v4_result.get("per_competitor", {})
+
+        # Compute dynamic shares
+        v4_shares = pairwise_decay_shares(loss_competitors, local_market.decay_k)
+        total_market_vol = sum(v["p50"] for v in per_competitor_v4.values()) if per_competitor_v4 else 1000
+        user_share = v4_result.get("your_share", round(your_estimated_customers / max(1.0, total_market_vol), 3))
+
+        total_local_calls = int(round(total_market_vol))
+        user_estimated_calls = your_estimated_customers
+        rank1_calls = target_estimated_customers
+        user_call_share = user_share
+
+        aov_range = v4_profile.get("aov_range", (250, 550))
+        leave_rate_range = v4_profile.get("review_leave_rate", (0.015, 0.035))
+        avg_leave_rate = round((leave_rate_range[0] + leave_rate_range[1]) / 2, 3)
+
+        revenue_breakdown = {
+            "engine_version": ENGINE_VERSION,
+            "search_volume_est": total_local_monthly_searches,
+            "total_pack_calls": total_local_calls,
+            "business_rank": user_rank,
+            "business_share": round(user_call_share, 3),
+            "business_calls": your_estimated_customers,
+            "rank1_calls": target_estimated_customers,
+            "missed_calls": lost_customers_monthly,
+            "conversion_rate": avg_leave_rate,
+            "lost_customers_monthly": lost_customers_monthly,
+            "lost_customers_range": v4_result["lost_customers_range"],
+            "monthly_loss_low": monthly_loss_low,
+            "monthly_loss_high": monthly_loss_high,
+            "annual_loss_low": monthly_loss_low * 12,
+            "annual_loss_high": monthly_loss_high * 12,
+            "avg_ticket_low": aov_range[0],
+            "avg_ticket_high": aov_range[1],
+            # V4 specific fields
+            "your_estimated_customers_per_month": your_estimated_customers,
+            "target_estimated_customers_per_month": target_estimated_customers,
+            "per_competitor": per_competitor_v4,
+            "loss_estimate": v4_loss,
+            "confidence": v4_result["confidence"],
+            "lost_calls_range": (lost_cust_lo, lost_cust_hi),
+            "lost_directions_range": (round(lost_cust_lo * 1.5), round(lost_cust_hi * 1.5)),
+            "your_share": v4_result["your_share"],
+            "top3_avg_share": v4_result["top3_avg_share"],
+            "assumptions_used": v4_result["assumptions_used"],
+            "vertical_key": vertical_key,
+            "benchmark_monthly_revenue": benchmark_revenue,
+        }
+
+        # Helper for competitor card share/call computation using v4 shares
+        def calc_call_share(rank_pos: int) -> float:
+            for lc in loss_competitors:
+                if lc.rank == rank_pos:
+                    return v4_shares.get(lc.name, 0.05)
+            return max(0.01, 0.30 * math.exp(-0.5 * max(0, rank_pos - 1)))
 
         competitors = []
         for idx, c in enumerate(filtered_candidates[:5], 1):
@@ -1266,7 +1611,11 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
                 initials = words[0][:2].upper()
 
             comp_share = calc_call_share(comp_pos)
-            comp_calls = max(2, int(round(total_local_calls * comp_share)))
+            c_v4 = per_competitor_v4.get(c["name"], {})
+            if c_v4 and c_v4.get("p50"):
+                comp_calls = max(2, int(round(c_v4["p50"])))
+            else:
+                comp_calls = max(2, int(round(total_local_calls * comp_share)))
             comp_share_pct = int(round(comp_share * 100))
 
             competitors.append({
@@ -1278,10 +1627,12 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
                 "distance": dist_str,
                 "advantage": comp_advantage,
                 "address": c.get("address", location_ctx),
+                "category": c.get("category") or canonical_category,
                 "photo_url": c.get("photo_url"),
                 "lat": c_lat,
                 "lng": c_lng,
                 "estimated_monthly_calls": comp_calls,
+                "estimated_monthly_customers": comp_calls,
                 "call_share_pct": comp_share_pct,
             })
 
@@ -1304,37 +1655,6 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
                 except Exception as e:
                     logger.warning("Competitors batch photo extraction failed", error=str(e))
 
-        # Fallback if fewer than 5 competitors returned after filtering
-        fallback_names = [
-            f"Top Rated {canonical_category}",
-            f"Premier {canonical_category} Spot",
-            f"Elite {canonical_category} Hub",
-            f"City {canonical_category} Center",
-            f"Central {canonical_category}",
-        ]
-        while len(competitors) < 5:
-            idx = len(competitors)
-            comp_rank = idx + 1
-            offset_dist = 0.008 * comp_rank
-            f_name = fallback_names[idx] if idx < len(fallback_names) else f"Top {canonical_category} #{comp_rank}"
-            f_words = [w for w in f_name.split() if w]
-            f_initials = "".join([w[0].upper() for w in f_words[:2]]) if f_words else "CO"
-            comp_share = calc_call_share(comp_rank)
-            competitors.append({
-                "rank": comp_rank,
-                "name": f_name,
-                "initials": f_initials,
-                "rating": round(min(5.0, 4.8 - (idx * 0.1)), 1),
-                "review_count": max(75, review_count * 3 + (5 - idx) * 20),
-                "distance": f"{round(1.0 + idx * 0.4, 1)} km",
-                "advantage": "More Reviews",
-                "address": location_ctx,
-                "photo_url": lead.photo_url,
-                "lat": lead_lat + (offset_dist * 0.7),
-                "lng": lead_lng + (offset_dist * 0.8),
-                "estimated_monthly_calls": max(2, int(round(total_local_calls * comp_share))),
-                "call_share_pct": int(round(comp_share * 100)),
-            })
 
         # 2. Derive factual profile attributes
         unanswered_estimate = max(2, int(review_count * 0.65))
@@ -1571,7 +1891,22 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
             },
         ]
 
-        top_comp = competitors[0]
+        top_comp = competitors[0] if competitors else {
+            "name": f"Top Rated {category_ctx}",
+            "rank": 1,
+            "rating": 4.6,
+            "review_count": max(25, int(review_count * 1.5)),
+            "distance": "0.8 km",
+            "advantage": "Higher Local Rank",
+            "address": location_ctx,
+            "photo_url": None,
+            "lat": lead_lat,
+            "lng": lead_lng,
+            "estimated_monthly_calls": max(20, int(total_local_calls * 0.35)),
+            "estimated_monthly_customers": max(20, int(total_local_calls * 0.35)),
+            "call_share_pct": 35,
+            "initials": "TC",
+        }
         losing_alert = {
             "title": "You're losing customers to competitors.",
             "description": f"{competitors_ahead_count} nearby businesses are ranking higher on Google. Fix these issues to get back in front of your customers.",

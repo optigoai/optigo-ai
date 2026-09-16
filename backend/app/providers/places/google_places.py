@@ -65,14 +65,15 @@ class GooglePlacesNewProvider:
             logger.debug("Google Places API (New) not configured, skipping")
             return []
 
-        clean_query = query.strip()
-        if not clean_query or len(clean_query) < 2:
+        clean_query = " ".join(query.strip().split())
+        if not clean_query or len(clean_query) < 3:
             return []
 
-        search_query = f"{clean_query} {location.strip()}" if location and location.strip() else clean_query
+        clean_location = " ".join(location.strip().split()) if location and location.strip() else ""
+        search_query = f"{clean_query} {clean_location}".strip() if clean_location else clean_query
 
         # Check in-memory cache to save API credits on repeated queries/keystrokes
-        cache_key = f"{clean_query.lower()}|{(location or '').strip().lower()}|{limit}"
+        cache_key = f"{clean_query.lower()}|{clean_location.lower()}|{limit}"
         now = time.time()
         if cache_key in _search_cache:
             ts, cached_results = _search_cache[cache_key]
@@ -138,12 +139,7 @@ class GooglePlacesNewProvider:
                     if not raw_cat and p.get("primaryType"):
                         raw_cat = p.get("primaryType", "").replace("_", " ").title()
 
-                    try:
-                        from app.services.lead_service import detect_canonical_category
-                        cat_info = detect_canonical_category(name=title, raw_category=raw_cat, address=formatted_addr)
-                        category = cat_info["canonical_category"]
-                    except Exception:
-                        category = raw_cat or "Local Business"
+                    category = raw_cat or "Local Business"
 
                     # Extract coordinates
                     loc_obj = p.get("location") or {}
@@ -180,8 +176,8 @@ class GooglePlacesNewProvider:
                         )
                     )
 
-                if results:
-                    _search_cache[cache_key] = (time.time(), results)
+                # Cache both matching and empty results to prevent repeated external billing on non-matching queries
+                _search_cache[cache_key] = (time.time(), results)
 
                 logger.info(
                     "Google Places API (New) search succeeded",
@@ -296,20 +292,14 @@ class GooglePlacesNewProvider:
                 # Process category
                 cat_obj = p.get("primaryTypeDisplayName") or {}
                 raw_cat = cat_obj.get("text") or p.get("primaryType", "").replace("_", " ").title()
-                p_name = (p.get("displayName") or {}).get("text") or ""
-                p_addr = p.get("formattedAddress") or ""
-                try:
-                    from app.services.lead_service import detect_canonical_category
-                    cat_info = detect_canonical_category(name=p_name, raw_category=raw_cat, address=p_addr)
-                    category = cat_info["canonical_category"]
-                except Exception:
-                    category = raw_cat
+                category = raw_cat or "Local Business"
 
                 result_data = {
                     "place_id": clean_id,
                     "name": (p.get("displayName") or {}).get("text") or "",
                     "address": p.get("formattedAddress") or "",
                     "category": category,
+                    "primary_type": p.get("primaryType"),  # Raw snake_case type e.g. "coworking_space"
                     "rating": float(p.get("rating", 4.0)) if p.get("rating") is not None else None,
                     "review_count": int(p.get("userRatingCount", 0)) if p.get("userRatingCount") is not None else None,
                     "phone": p.get("nationalPhoneNumber") or p.get("internationalPhoneNumber"),

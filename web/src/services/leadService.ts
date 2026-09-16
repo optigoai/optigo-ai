@@ -168,6 +168,16 @@ export interface RevenueBreakdown {
   monthly_loss_high: number;
   annual_loss_low: number;
   annual_loss_high: number;
+  engine_version?: string;
+  your_estimated_customers_per_month?: number;
+  target_estimated_customers_per_month?: number;
+  lost_customers_range?: [number, number];
+  per_competitor?: Record<string, any>;
+  confidence?: {
+    label: string;
+    score: number;
+    breakdown: Record<string, number>;
+  };
 }
 
 export interface BusinessImpactData {
@@ -292,12 +302,32 @@ export interface BusinessReportData {
   generated_at: string;
 }
 
+// In-memory client cache to prevent excessive network and API calls on typing/backspacing
+const _placesSearchCache = new Map<string, { timestamp: number; data: PlaceSearchResult[] }>();
+const PLACES_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 export const leadService = {
   async searchPlaces(query: string, location?: string): Promise<PlaceSearchResult[]> {
-    if (!query || query.trim().length < 2) return [];
-    const params = new URLSearchParams({ query: query.trim() });
-    if (location) params.append('location', location.trim());
-    return await apiRequest<PlaceSearchResult[]>(`/leads/places/search?${params.toString()}`);
+    const cleanQ = query?.trim();
+    if (!cleanQ || cleanQ.length < 3) return [];
+
+    const cacheKey = `${cleanQ.toLowerCase()}|${(location || '').trim().toLowerCase()}`;
+    const cached = _placesSearchCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < PLACES_CACHE_TTL_MS) {
+      return cached.data;
+    }
+
+    const params = new URLSearchParams({ query: cleanQ });
+    if (location && location.trim()) params.append('location', location.trim());
+
+    try {
+      const results = await apiRequest<PlaceSearchResult[]>(`/leads/places/search?${params.toString()}`);
+      _placesSearchCache.set(cacheKey, { timestamp: Date.now(), data: results || [] });
+      return results || [];
+    } catch (err) {
+      // In case of error, return empty array without crashing
+      return [];
+    }
   },
 
   async createLead(payload: LeadCreatePayload): Promise<LeadResponse> {

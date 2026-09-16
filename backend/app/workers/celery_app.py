@@ -48,6 +48,11 @@ celery_app.conf.update(
             "task": "app.workers.tasks.scheduled_weekly_cmo_health_task",
             "schedule": crontab(day_of_week="sunday", hour=4, minute=0),
         },
+        # 4. Monthly v3 Engine Calibration (1st of every month, 05:00 UTC)
+        "scheduled-monthly-v3-calibration": {
+            "task": "app.workers.tasks.run_v3_calibration_task",
+            "schedule": crontab(day_of_month="1", hour=5, minute=0),
+        },
     },
 )
 

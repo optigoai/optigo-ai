@@ -338,4 +338,34 @@ def scheduled_weekly_cmo_health_task() -> Dict[str, Any]:
     return run_async(_audit_all())
 
 
+# --------------------------------------------------
+# 7. V3 Loss Engine Calibration Task
+# --------------------------------------------------
+@celery_app.task(name="app.workers.tasks.run_v3_calibration_task")
+def run_v3_calibration_task() -> Dict[str, Any]:
+    """Monthly calibration task for the v3 revenue-loss engine.
 
+    Reads real conversion data (call-tracking, POS, merchant-confirmed)
+    and uses Beta-Binomial updates to narrow the probability ranges
+    in vertical_profiles.
+
+    Currently a no-op placeholder — activate when a real data source
+    (call-tracking integration, POS webhook, or merchant CRM feedback)
+    is connected.
+    """
+    logger.info("V3 calibration task triggered (no-op — awaiting real data source)")
+
+    # TODO: When real data is available, implement:
+    # 1. Query conversion outcomes grouped by vertical_key
+    # 2. For each vertical with sufficient data (>= 20 trials):
+    #    a. Load current ranges from vertical_profiles table
+    #    b. Call calibrate_probability_range(old_range, successes, trials)
+    #    c. Write new ranges back to vertical_profiles
+    #    d. Insert a CalibrationLog row for audit trail
+    # 3. Invalidate any in-memory cache
+
+    return {
+        "status": "skipped",
+        "reason": "No real conversion data source connected yet",
+        "engine_version": "v3.0.0",
+    }

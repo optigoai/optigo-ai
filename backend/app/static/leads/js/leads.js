@@ -607,6 +607,7 @@ function getLeadEstimatedLoss(lead) {
         display: 'Rank #1 Leader',
         tableDisplay: 'Rank #1 (0 Loss)',
         isLeader: true,
+        confidence: null,
       };
     }
 
@@ -615,11 +616,22 @@ function getLeadEstimatedLoss(lead) {
 
     let min = 0;
     let max = 0;
+    let confidence = null;
 
-    if (rb && (rb.monthly_loss_low || rb.monthly_loss_high)) {
+    // V3 engine: read from loss_estimate percentiles (preferred)
+    if (rb && rb.loss_estimate && (rb.loss_estimate.p10 || rb.loss_estimate.p90)) {
+      min = Math.round(rb.loss_estimate.p10 || 0);
+      max = Math.round(rb.loss_estimate.p90 || min);
+      confidence = rb.confidence || null;
+    }
+    // V3/V2 backward compat: monthly_loss_low/high
+    else if (rb && (rb.monthly_loss_low || rb.monthly_loss_high)) {
       min = rb.monthly_loss_low || 0;
       max = rb.monthly_loss_high || min;
-    } else if (imp && (imp.estimated_revenue_loss_monthly_low || imp.estimated_revenue_loss_monthly_high)) {
+      confidence = rb.confidence || null;
+    }
+    // Legacy: business_impact fields
+    else if (imp && (imp.estimated_revenue_loss_monthly_low || imp.estimated_revenue_loss_monthly_high)) {
       min = imp.estimated_revenue_loss_monthly_low || 0;
       max = imp.estimated_revenue_loss_monthly_high || min;
     } else if (rd.revenue_loss && (rd.revenue_loss.loss_min || rd.revenue_loss.loss_max)) {
@@ -637,6 +649,7 @@ function getLeadEstimatedLoss(lead) {
       const avg = Math.round((min + max) / 2);
       const minK = Math.round(min / 1000);
       const maxK = Math.round(max / 1000);
+      const confLabel = confidence && confidence.label ? ` (${confidence.label})` : '';
       return {
         min,
         max,
@@ -644,6 +657,8 @@ function getLeadEstimatedLoss(lead) {
         display: minK === maxK ? `₹${minK}k/mo` : `₹${minK}k-${maxK}k/mo`,
         tableDisplay: `₹${min.toLocaleString('en-IN')}/mo`,
         isLeader: false,
+        confidence,
+        confLabel,
       };
     }
   }
@@ -656,6 +671,7 @@ function getLeadEstimatedLoss(lead) {
     display: isEarly ? 'Pending Audit' : '₹0/mo',
     tableDisplay: isEarly ? 'Pending Audit' : '₹0/mo',
     isLeader: false,
+    confidence: null,
   };
 }
 

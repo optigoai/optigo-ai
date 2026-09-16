@@ -14,6 +14,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any, List, Optional
 
+from app.core.logging import get_logger
 from app.api.v1.deps import get_db
 from app.services.lead_service import LeadService
 from app.schemas.lead import (
@@ -27,6 +28,8 @@ from app.schemas.lead import (
     LeadAddNoteRequest,
     LeadStatsResponse,
 )
+
+logger = get_logger("app.api.leads")
 
 router = APIRouter()
 
@@ -96,6 +99,7 @@ async def analyze_lead(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
+        logger.exception("Audit generation failed for lead", lead_id=lead_id, error=repr(e))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Audit generation failed: {str(e)}")
 
 

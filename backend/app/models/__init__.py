@@ -28,6 +28,8 @@ from app.models.gsc import GoogleSearchConsoleConnection, SearchConsoleMetric
 from app.models.website_audit import WebsiteAudit
 from app.models.business_website import BusinessWebsite
 from app.models.lead import Lead
+from app.models.vertical_profile import VerticalProfile
+from app.models.calibration_log import CalibrationLog
 
 __all__ = [
     "Organization",
@@ -36,6 +38,8 @@ __all__ = [
     "Business",
     "BusinessWebsite",
     "Lead",
+    "VerticalProfile",
+    "CalibrationLog",
     "Review",
     "ReviewSentiment",
     "Recommendation",
