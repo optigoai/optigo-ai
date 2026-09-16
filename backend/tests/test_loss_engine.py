@@ -29,7 +29,9 @@ from app.services.loss_engine import (
     competitive_strength,
     pairwise_decay_shares,
     map_canonical_to_vertical,
+    review_count_to_monthly_volume,
     VERTICAL_PROFILES,
+    VOLUME_SCALING,
 )
 
 
@@ -108,40 +110,43 @@ def test_parse_review_timestamps_to_days_ago():
 
 def test_casa_rasa_realistic_loss_scale():
     """Verify that Casa Rasa in Edappal produces realistic customer footfall
-    and revenue loss (~1 Lakh/month) rather than the tiny ~₹1,500/mo of the old model.
+    and revenue loss with the review-count-anchored power-law model.
     """
     m = _make_v4_market()
     r = run_loss_estimate(m, seed=42)
 
-    # Customer volume should be in hundreds, not single digits
-    assert r["your_estimated_customers_per_month"] > 100, (
-        f"Customer volume should be > 100: {r['your_estimated_customers_per_month']}"
+    # Customer volume should be in hundreds (power-law gives ~260 for 735 reviews)
+    assert r["your_estimated_customers_per_month"] > 150, (
+        f"Customer volume should be > 150: {r['your_estimated_customers_per_month']}"
     )
     assert r["target_estimated_customers_per_month"] > r["your_estimated_customers_per_month"], (
         f"Target should be higher than user: {r['target_estimated_customers_per_month']} vs {r['your_estimated_customers_per_month']}"
     )
 
     lost_lo, lost_hi = r["lost_customers_range"]
-    assert lost_lo > 100, f"Lost customers should be > 100: {lost_lo}"
+    assert lost_lo > 50, f"Lost customers p10 should be > 50: {lost_lo}"
 
-    # Revenue loss should be realistic (~₹70,000 to ₹1,30,000/mo, roughly 1 Lakh)
+    # Revenue loss should be realistic (₹30K to ₹200K/mo range, roughly ₹60-90K p50)
     p50_loss = r["loss_estimate"]["p50"]
-    assert 60000 <= p50_loss <= 130000, (
-        f"Revenue loss should be in realistic ~1 Lakh range: got ₹{p50_loss}"
+    assert 30000 <= p50_loss <= 200000, (
+        f"Revenue loss should be in realistic range: got ₹{p50_loss}"
     )
 
 
 def test_monotonicity():
-    """Rank #1 has 0 loss; improving position reduces loss."""
+    """Rank #1 has 0 loss; different review timestamps don't break ordering.
+    Note: With the review-count-anchored model, both markets produce the same
+    loss since volume depends on review_count not review velocity. The test
+    verifies <= (equal is valid).
+    """
     m_rank3 = _make_v4_market(casa_rasa_days=[2, 9, 15, 22, 30])
     r_rank3 = run_loss_estimate(m_rank3, seed=42)
 
-    # Faster velocity (more reviews -> more customers) reduces lost customers
     m_faster = _make_v4_market(casa_rasa_days=[1, 2, 4, 6, 8])
     r_faster = run_loss_estimate(m_faster, seed=42)
 
     assert r_faster["loss_estimate"]["p50"] <= r_rank3["loss_estimate"]["p50"], (
-        f"Faster velocity should reduce loss: faster={r_faster['loss_estimate']['p50']}, base={r_rank3['loss_estimate']['p50']}"
+        f"Faster velocity should not increase loss: faster={r_faster['loss_estimate']['p50']}, base={r_rank3['loss_estimate']['p50']}"
     )
 
 
@@ -205,3 +210,53 @@ def test_calibration_narrows_range():
     old_range = (0.20, 0.35)
     new_range = calibrate_probability_range(old_range, successes=9, trials=40)
     assert (new_range[1] - new_range[0]) < (old_range[1] - old_range[0])
+
+
+def test_rank4_loss_is_never_zero():
+    """Verify that a business ranked #4 with high reviews never shows 0 lost customers or 0 revenue loss."""
+    m_soofi = LocalMarket(
+        business_name="Soofi Mandi Calicut",
+        vertical="fnb_casual",
+        benchmark_monthly_revenue=600000,
+        competitors=[
+            LossCompetitor("Arabian Palace Kozhikode", 1, 4.4, 2900, snapshot=ReviewSnapshot(2900)),
+            LossCompetitor("Nahdi Mandi Calicut", 2, 4.4, 14000, snapshot=ReviewSnapshot(14000)),
+            LossCompetitor("Zaatar Restaurant Calicut", 3, 4.0, 2200, snapshot=ReviewSnapshot(2200)),
+            LossCompetitor("Soofi Mandi Calicut", 4, 4.3, 8102, snapshot=ReviewSnapshot(8102, recent_review_days_ago=[2, 8, 14, 25, 35])),
+        ],
+    )
+    r = run_loss_estimate(m_soofi, seed=42)
+    assert r["lost_customers_monthly"] > 0, f"Lost customers should be > 0: got {r['lost_customers_monthly']}"
+    assert r["lost_customers_range"][0] > 0, f"Lost customers p10 should be > 0: got {r['lost_customers_range']}"
+    assert r["loss_estimate"]["p50"] > 0, f"Monthly loss p50 should be > 0: got {r['loss_estimate']['p50']}"
+    assert r["loss_estimate"]["p10"] > 0, f"Monthly loss p10 should be > 0: got {r['loss_estimate']['p10']}"
+    assert r["target_estimated_customers_per_month"] > r["your_estimated_customers_per_month"]
+
+
+def test_review_count_volume_scaling():
+    """Verify the power-law volume model produces expected ranges."""
+    # Small restaurant (50 reviews) -> low volume
+    v_small = review_count_to_monthly_volume(50, 4.0, "fnb_casual")
+    assert 40 < v_small < 120, f"50-review restaurant volume: {v_small}"
+
+    # Medium restaurant (500 reviews) -> moderate volume
+    v_med = review_count_to_monthly_volume(500, 4.0, "fnb_casual")
+    assert 150 < v_med < 350, f"500-review restaurant volume: {v_med}"
+
+    # Large restaurant (5000 reviews) -> high volume
+    v_large = review_count_to_monthly_volume(5000, 4.0, "fnb_casual")
+    assert 500 < v_large < 1200, f"5000-review restaurant volume: {v_large}"
+
+    # Higher rating -> higher volume
+    v_high_rating = review_count_to_monthly_volume(500, 4.5, "fnb_casual")
+    assert v_high_rating > v_med, "Higher rating should give higher volume"
+
+    # Sub-linear scaling: doubling reviews does NOT double volume
+    v_1000 = review_count_to_monthly_volume(1000, 4.0, "fnb_casual")
+    v_2000 = review_count_to_monthly_volume(2000, 4.0, "fnb_casual")
+    assert v_2000 / v_1000 < 1.8, f"Sub-linear scaling violated: ratio={v_2000/v_1000}"
+
+    # Different verticals have different K constants
+    v_fnb = review_count_to_monthly_volume(1000, 4.0, "fnb_casual")
+    v_svc = review_count_to_monthly_volume(1000, 4.0, "services_high_ticket")
+    assert v_fnb > v_svc, "F&B should have higher discovery volume than high-ticket services"

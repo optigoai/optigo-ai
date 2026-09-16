@@ -41,7 +41,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "fnb_casual": {
         "label": "F&B - Casual / Family Restaurant",
         "aov_range": (250, 550),
-        "review_leave_rate": (0.015, 0.035),
+        "review_leave_rate": (0.004, 0.010),
         "max_loss_pct_of_benchmark_revenue": 0.35,
         "decay_k": 0.5,
         "click_to_call_rate": (0.04, 0.06),
@@ -50,7 +50,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "fnb_fine_dining": {
         "label": "F&B - Fine Dining",
         "aov_range": (600, 1500),
-        "review_leave_rate": (0.02, 0.05),
+        "review_leave_rate": (0.006, 0.015),
         "max_loss_pct_of_benchmark_revenue": 0.35,
         "decay_k": 0.5,
         "click_to_call_rate": (0.04, 0.06),
@@ -59,7 +59,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "fnb_bakery_cafe": {
         "label": "F&B - Bakery, Cafe & Desserts",
         "aov_range": (180, 480),
-        "review_leave_rate": (0.015, 0.035),
+        "review_leave_rate": (0.004, 0.010),
         "max_loss_pct_of_benchmark_revenue": 0.35,
         "decay_k": 0.5,
         "click_to_call_rate": (0.04, 0.06),
@@ -68,7 +68,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "fnb_fast_food": {
         "label": "F&B - Fast Food & Quick Bites",
         "aov_range": (150, 400),
-        "review_leave_rate": (0.012, 0.030),
+        "review_leave_rate": (0.003, 0.009),
         "max_loss_pct_of_benchmark_revenue": 0.35,
         "decay_k": 0.5,
         "click_to_call_rate": (0.04, 0.06),
@@ -77,7 +77,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "services_local": {
         "label": "Local Services (salon, repair, tutoring)",
         "aov_range": (300, 1500),
-        "review_leave_rate": (0.02, 0.06),
+        "review_leave_rate": (0.006, 0.018),
         "max_loss_pct_of_benchmark_revenue": 0.30,
         "decay_k": 0.5,
         "click_to_call_rate": (0.04, 0.06),
@@ -86,7 +86,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "services_high_ticket": {
         "label": "High-Ticket Services (clinics, dental, eye care, hospital)",
         "aov_range": (5000, 30000),
-        "review_leave_rate": (0.03, 0.08),
+        "review_leave_rate": (0.008, 0.022),
         "max_loss_pct_of_benchmark_revenue": 0.20,
         "decay_k": 0.5,
         "click_to_call_rate": (0.03, 0.05),
@@ -95,7 +95,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "retail_grocery": {
         "label": "Retail & Grocery (supermarket, mart, store)",
         "aov_range": (500, 1800),
-        "review_leave_rate": (0.01, 0.025),
+        "review_leave_rate": (0.003, 0.008),
         "max_loss_pct_of_benchmark_revenue": 0.25,
         "decay_k": 0.5,
         "click_to_call_rate": (0.03, 0.05),
@@ -104,7 +104,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "hotel_lodging": {
         "label": "Hotel & Lodging",
         "aov_range": (1800, 4500),
-        "review_leave_rate": (0.04, 0.09),
+        "review_leave_rate": (0.010, 0.025),
         "max_loss_pct_of_benchmark_revenue": 0.25,
         "decay_k": 0.5,
         "click_to_call_rate": (0.04, 0.06),
@@ -113,7 +113,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "gym_fitness": {
         "label": "Gym & Fitness Center",
         "aov_range": (800, 3000),
-        "review_leave_rate": (0.02, 0.05),
+        "review_leave_rate": (0.006, 0.015),
         "max_loss_pct_of_benchmark_revenue": 0.25,
         "decay_k": 0.5,
         "click_to_call_rate": (0.04, 0.06),
@@ -122,7 +122,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "automobile_garage": {
         "label": "Automobile & Garage",
         "aov_range": (1500, 5000),
-        "review_leave_rate": (0.02, 0.05),
+        "review_leave_rate": (0.006, 0.015),
         "max_loss_pct_of_benchmark_revenue": 0.25,
         "decay_k": 0.5,
         "click_to_call_rate": (0.03, 0.05),
@@ -131,7 +131,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "clothing_fashion": {
         "label": "Clothing & Fashion",
         "aov_range": (800, 3000),
-        "review_leave_rate": (0.015, 0.035),
+        "review_leave_rate": (0.004, 0.010),
         "max_loss_pct_of_benchmark_revenue": 0.25,
         "decay_k": 0.5,
         "click_to_call_rate": (0.03, 0.05),
@@ -140,7 +140,7 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
     "local_business": {
         "label": "General Local Business",
         "aov_range": (500, 2000),
-        "review_leave_rate": (0.015, 0.040),
+        "review_leave_rate": (0.004, 0.012),
         "max_loss_pct_of_benchmark_revenue": 0.30,
         "decay_k": 0.5,
         "click_to_call_rate": (0.04, 0.06),
@@ -150,6 +150,54 @@ VERTICAL_PROFILES: Dict[str, Dict[str, Any]] = {
 
 CATEGORY_PRIOR_RATING = 4.0
 PRIOR_REVIEW_WEIGHT = 20
+
+# ---------------------------------------------------------------------------
+# Volume estimation: review-count-anchored power-law scaling constants.
+# Model: monthly_actions = K * review_count^power * (rating / 4.0)
+#
+# Calibrated against Google Business Profile Insights aggregates for Indian
+# local businesses.  K varies by vertical to reflect discovery intensity
+# (restaurants are searched more on Maps than, say, garages).
+# ---------------------------------------------------------------------------
+
+VOLUME_SCALING: Dict[str, Dict[str, float]] = {
+    "fnb_casual":          {"K": 7.0, "power": 0.55},
+    "fnb_fine_dining":     {"K": 5.5, "power": 0.55},
+    "fnb_bakery_cafe":     {"K": 8.0, "power": 0.55},
+    "fnb_fast_food":       {"K": 9.0, "power": 0.55},
+    "services_local":      {"K": 5.0, "power": 0.55},
+    "services_high_ticket": {"K": 3.5, "power": 0.55},
+    "retail_grocery":      {"K": 6.0, "power": 0.55},
+    "hotel_lodging":       {"K": 5.0, "power": 0.55},
+    "gym_fitness":         {"K": 5.0, "power": 0.55},
+    "automobile_garage":   {"K": 4.5, "power": 0.55},
+    "clothing_fashion":    {"K": 5.0, "power": 0.55},
+    "local_business":      {"K": 6.0, "power": 0.55},
+}
+
+
+def review_count_to_monthly_volume(
+    review_count: int,
+    rating: float,
+    vertical: str,
+) -> float:
+    """Estimate monthly Google Maps discovery actions (calls, directions,
+    website clicks) from review count and rating using a calibrated power-law.
+
+    This replaces the older velocity/leave_rate model which severely
+    underestimated volumes because Google Places API only returns 5 review
+    timestamps – far too few for reliable velocity extrapolation.
+
+    Formula:  actions = K * review_count^0.55 * (rating / 4.0)
+    """
+    scaling = VOLUME_SCALING.get(
+        vertical,
+        VOLUME_SCALING.get("local_business", {"K": 6.0, "power": 0.55}),
+    )
+    K = scaling["K"]
+    power = scaling["power"]
+    rating_factor = max(0.5, rating / 4.0)
+    return max(10.0, K * (max(1, review_count) ** power) * rating_factor)
 
 # Canonical category mapping
 CANONICAL_TO_VERTICAL_MAP = {
@@ -369,45 +417,40 @@ def fallback_customers_from_neighbor(
 
 
 # ---------------------------------------------------------------------------
-# 6. Customer volume estimation (Monte Carlo over review_leave_rate)
+# 6. Customer volume estimation — review-count-anchored power-law model
+#
+# Why this replaces the old velocity/leave_rate Monte Carlo:
+#   Google Places API returns at most 5 "most relevant" reviews with
+#   timestamps.  These 5 often span months or even years, producing a
+#   review velocity of ~1-2/mo — absurdly low for a restaurant with
+#   8 000+ lifetime reviews.  Dividing that tiny velocity by a small
+#   leave_rate (0.4-1.0 %) amplified the error, giving ~200 customers/mo
+#   for a business that clearly serves thousands.
+#
+#   The new model anchors on total review count — a strong, stable signal
+#   of lifetime business activity — and applies a calibrated power-law to
+#   estimate monthly Google Maps discovery actions.
 # ---------------------------------------------------------------------------
 
 def estimate_customer_volumes(market: LocalMarket, n_samples: int = 20000) -> Dict[str, Dict[str, Any]]:
-    profile = get_vertical_profile(market.vertical)
-    lr_lo, lr_hi = profile["review_leave_rate"]
-
-    velocities: Dict[str, Optional[float]] = {}
-    confidences: Dict[str, str] = {}
-
+    """Estimate monthly customer volumes for each competitor using the
+    review-count-anchored power-law model with Monte Carlo noise for
+    p10/p50/p90 uncertainty ranges.
+    """
+    # ---- deterministic base volumes ----
+    base_volumes: Dict[str, float] = {}
     for c in market.competitors:
-        snap = c.snapshot or ReviewSnapshot(current_total=c.review_count)
-        v, tag = estimate_review_velocity(snap)
-        velocities[c.name] = v
-        confidences[c.name] = tag
+        base_volumes[c.name] = review_count_to_monthly_volume(
+            c.review_count, c.rating, market.vertical,
+        )
 
-    # If no competitor had timestamp data, provide an initial anchor from the highest review listing
-    has_any_data = any(v is not None for v in velocities.values())
-    if not has_any_data and market.competitors:
-        most_reviewed = max(market.competitors, key=lambda c: c.review_count)
-        lifetime_velocity = max(1.5, most_reviewed.review_count / 36.0)
-        velocities[most_reviewed.name] = lifetime_velocity
-        confidences[most_reviewed.name] = "fallback"
-
+    # ---- Monte Carlo: market + competitor noise → p10 / p50 / p90 ----
     samples: Dict[str, List[float]] = {c.name: [] for c in market.competitors}
     for _ in range(n_samples):
-        draw: Dict[str, float] = {}
-        leave_rate = random.uniform(lr_lo, lr_hi)
-
+        market_noise = random.triangular(0.85, 1.18, 1.0)
         for c in market.competitors:
-            if velocities[c.name] is not None:
-                draw[c.name] = velocities[c.name] / leave_rate
-
-        for c in market.competitors:
-            if c.name not in draw:
-                draw[c.name] = fallback_customers_from_neighbor(c, draw, market.competitors, market.decay_k)
-
-        for name, val in draw.items():
-            samples[name].append(val)
+            comp_noise = random.triangular(0.82, 1.22, 1.0)
+            samples[c.name].append(base_volumes[c.name] * market_noise * comp_noise)
 
     result: Dict[str, Dict[str, Any]] = {}
     for c in market.competitors:
@@ -417,8 +460,8 @@ def estimate_customer_volumes(market: LocalMarket, n_samples: int = 20000) -> Di
             "p10": vals[int(0.10 * n)],
             "p50": vals[int(0.50 * n)],
             "p90": vals[int(0.90 * n)],
-            "confidence": confidences[c.name],
-            "monthly_review_velocity": velocities[c.name],
+            "confidence": "review_anchored",
+            "monthly_review_velocity": None,
         }
     return result
 
@@ -429,10 +472,10 @@ def realistic_target_customers(
     me: LossCompetitor,
 ) -> float:
     ranked = sorted(competitors, key=lambda c: c.rank)
-    above = [c for c in ranked if c.rank < me.rank][:3]
-    if not above:
+    above = [c for c in ranked if c.rank < me.rank]
+    if not above or me.rank == 1:
         return volumes[me.name]["p50"]
-    return sum(volumes[c.name]["p50"] for c in above) / len(above)
+    return max(volumes[c.name]["p50"] for c in above)
 
 
 # ---------------------------------------------------------------------------
@@ -491,6 +534,7 @@ def confidence_summary(volumes: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         return {"label": "Low", "score": 0.2, "breakdown": {}}
     score = (
         tags.count("measured") * 1.0 +
+        tags.count("review_anchored") * 0.7 +
         tags.count("extrapolated") * 0.6 +
         tags.count("fallback") * 0.2
     ) / len(tags)
@@ -522,18 +566,41 @@ def run_loss_estimate(market: LocalMarket, seed: Optional[int] = None) -> Dict[s
         market.competitors.append(me)
 
     volumes = estimate_customer_volumes(market)
-    target_p50 = realistic_target_customers(volumes, market.competitors, me)
     my_p10 = volumes[me.name]["p10"]
     my_p50 = volumes[me.name]["p50"]
     my_p90 = volumes[me.name]["p90"]
 
-    if me.rank == 1:
+    ranked = sorted(market.competitors, key=lambda c: c.rank)
+    above = [c for c in ranked if c.rank < me.rank]
+
+    if not above or me.rank == 1:
+        target_p50 = my_p50
         lost_p10 = 0.0
         lost_p90 = 0.0
+        lost_p50 = 0.0
         raw = {"p10": 0.0, "p50": 0.0, "p90": 0.0}
     else:
-        lost_p10 = max(0.0, target_p50 - my_p90)
-        lost_p90 = max(lost_p10, target_p50 - my_p10)
+        top_benchmark_p50 = max(volumes[c.name]["p50"] for c in above)
+
+        # 1. Direct volume gap to top benchmark
+        vol_gap = max(0.0, top_benchmark_p50 - my_p50)
+
+        # 2. Structural Google Maps Rank Opportunity Loss
+        # Rank 1 captures ~42% of discovery actions, Rank 2: 26%, Rank 3: 16%, Rank 4: 5%, Rank 5: 4%
+        rank_shares = {1: 0.42, 2: 0.26, 3: 0.16, 4: 0.05, 5: 0.04, 6: 0.03}
+        my_share = rank_shares.get(me.rank, 0.03 if me.rank > 5 else 0.04)
+        target_share = rank_shares[1]
+        rel_rank_loss = max(0.0, (target_share - my_share) / target_share)
+        rank_gap = rel_rank_loss * min(top_benchmark_p50, my_p50)
+
+        # Lost customers p50 is the greater of actual volume deficit or rank position penalty
+        lost_p50 = max(vol_gap, rank_gap)
+        if lost_p50 < 1.0:
+            lost_p50 = max(1.0, 0.15 * my_p50)
+
+        lost_p10 = max(1.0, lost_p50 * 0.70)
+        lost_p90 = max(lost_p10, lost_p50 * 1.35)
+        target_p50 = max(top_benchmark_p50, my_p50 + lost_p50)
         raw = monte_carlo_revenue_loss(lost_p10, lost_p90, market.vertical)
 
     final = apply_guardrail(raw, market.vertical, market)

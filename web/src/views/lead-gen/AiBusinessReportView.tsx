@@ -1633,8 +1633,8 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                     ~{revenueBreakdown.engine_version?.startsWith('v4') ? userEstimatedCalls.toLocaleString('en-IN') : `${userCallSharePct}%`}
                     {revenueBreakdown.engine_version?.startsWith('v4') && <span className="kpi-card-unit">/mo</span>}
                   </div>
-                  <div className="kpi-card-badge badge-purple">
-                    {userRank === 1 ? 'Market Leader' : 'In Top 3 Pack'}
+                  <div className={`kpi-card-badge ${userRank <= 3 ? 'badge-purple' : 'badge-alert'}`}>
+                    {userRank === 1 ? 'Market Leader' : userRank <= 3 ? 'In Top 3 Pack' : 'Below Top 3'}
                   </div>
                 </div>
 
