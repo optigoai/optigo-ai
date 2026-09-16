@@ -10,8 +10,9 @@ Supports:
 - High-resolution photo media URL generation and proxying
 """
 
+import asyncio
 import time
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 import httpx
 
 from app.core.config import settings
@@ -26,8 +27,10 @@ PLACES_DETAILS_BASE_ENDPOINT = "https://places.googleapis.com/v1/places"
 # In-memory TTL caches to eliminate redundant Google API calls and prevent credit waste
 _search_cache: Dict[str, tuple[float, List[LeadPlacesSearchResult]]] = {}
 _details_cache: Dict[str, tuple[float, Dict[str, Any]]] = {}
+_photo_cdn_cache: Dict[str, tuple[float, str]] = {}
 SEARCH_CACHE_TTL = 900  # 15 minutes
 DETAILS_CACHE_TTL = 3600  # 1 hour
+PHOTO_CDN_CACHE_TTL = 86400  # 24 hours
 
 
 class GooglePlacesNewProvider:
@@ -149,32 +152,56 @@ class GooglePlacesNewProvider:
                     # Extract photo media URL if available
                     photos = p.get("photos") or []
                     photo_url = None
+                    photo_resource = None
                     if photos and isinstance(photos, list):
                         first_photo = photos[0]
                         photo_name = first_photo.get("name")
                         if photo_name:
-                            # Use secure backend photo proxy URL to protect Google Cloud API Key
+                            photo_resource = photo_name
+                            # Default fallback is backend proxy URL
                             photo_url = f"/api/v1/leads/places/photo?photo_name={photo_name}"
 
                     # Extract contact
                     phone = p.get("nationalPhoneNumber") or p.get("internationalPhoneNumber")
                     website = p.get("websiteUri")
 
-                    results.append(
-                        LeadPlacesSearchResult(
-                            place_id=place_id,
-                            name=title,
-                            address=formatted_addr,
-                            category=category or "Local Business",
-                            rating=float(p.get("rating", 4.0)) if p.get("rating") is not None else None,
-                            review_count=int(p.get("userRatingCount", 0)) if p.get("userRatingCount") is not None else None,
-                            photo_url=photo_url,
-                            latitude=lat,
-                            longitude=lng,
-                            phone=phone,
-                            website=website,
-                        )
+                    res_item = LeadPlacesSearchResult(
+                        place_id=place_id,
+                        name=title,
+                        address=formatted_addr,
+                        category=category or "Local Business",
+                        rating=float(p.get("rating", 4.0)) if p.get("rating") is not None else None,
+                        review_count=int(p.get("userRatingCount", 0)) if p.get("userRatingCount") is not None else None,
+                        photo_url=photo_url,
+                        latitude=lat,
+                        longitude=lng,
+                        phone=phone,
+                        website=website,
                     )
+                    # Stash photo resource temporarily for parallel resolution
+                    setattr(res_item, "_photo_resource", photo_resource)
+                    results.append(res_item)
+
+                # Concurrently resolve direct public Google CDN photo URLs for top results
+                # so the frontend (both localhost and deployed) can render images immediately
+                async def _resolve_item(item: LeadPlacesSearchResult):
+                    r_name = getattr(item, "_photo_resource", None)
+                    if r_name:
+                        cdn = await self.resolve_photo_cdn_url(r_name, max_height=400, max_width=600)
+                        if cdn:
+                            item.photo_url = cdn
+
+                top_items = [item for item in results[:5] if getattr(item, "_photo_resource", None)]
+                if top_items:
+                    try:
+                        await asyncio.gather(*[_resolve_item(it) for it in top_items], return_exceptions=True)
+                    except Exception:
+                        pass
+
+                # Clean up temporary attribute
+                for item in results:
+                    if hasattr(item, "_photo_resource"):
+                        delattr(item, "_photo_resource")
 
                 # Cache both matching and empty results to prevent repeated external billing on non-matching queries
                 _search_cache[cache_key] = (time.time(), results)
@@ -267,7 +294,9 @@ class GooglePlacesNewProvider:
                     if p_name:
                         photo_names.append(p_name)
                 if photo_names:
-                    photo_url = f"/api/v1/leads/places/photo?photo_name={photo_names[0]}"
+                    # Resolve direct Google usercontent CDN URL so client loads photo directly
+                    resolved_cdn = await self.resolve_photo_cdn_url(photo_names[0])
+                    photo_url = resolved_cdn or f"/api/v1/leads/places/photo?photo_name={photo_names[0]}"
 
                 # Format reviews
                 reviews_raw = p.get("reviews") or []
@@ -350,3 +379,43 @@ class GooglePlacesNewProvider:
             f"https://places.googleapis.com/v1/{clean_name}/media"
             f"?maxHeightPx={max_height}&maxWidthPx={max_width}&key={self.api_key.strip()}"
         )
+
+    async def resolve_photo_cdn_url(
+        self,
+        photo_name: str,
+        max_height: int = 800,
+        max_width: int = 1200,
+    ) -> Optional[str]:
+        """
+        Resolves the actual Google usercontent CDN URL from Google Places API (New) photo media redirect.
+        Returns direct public CDN URL (e.g. https://lh3.googleusercontent.com/place-photos/...)
+        so clients anywhere (localhost or deployed) can load the image with no API keys, no referrer
+        restrictions, and zero backend latency.
+        """
+        if not self.is_configured() or not photo_name:
+            return None
+
+        cache_key = f"{photo_name.strip()}:{max_height}x{max_width}"
+        cached = _photo_cdn_cache.get(cache_key)
+        if cached and (time.time() - cached[0] < PHOTO_CDN_CACHE_TTL):
+            return cached[1]
+
+        media_url = self.get_photo_media_url(photo_name, max_height=max_height, max_width=max_width)
+        if not media_url:
+            return None
+
+        try:
+            async with httpx.AsyncClient(timeout=4.0) as client:
+                resp = await client.get(media_url, follow_redirects=False)
+                if resp.status_code in (301, 302, 303, 307, 308):
+                    cdn_url = resp.headers.get("Location") or resp.headers.get("location")
+                    if cdn_url:
+                        _photo_cdn_cache[cache_key] = (time.time(), cdn_url)
+                        return cdn_url
+                elif resp.status_code == 200:
+                    _photo_cdn_cache[cache_key] = (time.time(), media_url)
+                    return media_url
+        except Exception as e:
+            logger.warning("Failed to resolve photo CDN URL", photo_name=photo_name, error=str(e))
+
+        return None

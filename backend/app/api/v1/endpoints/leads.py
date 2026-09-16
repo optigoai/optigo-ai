@@ -54,7 +54,8 @@ async def get_place_photo(
 ):
     """
     Secure backend proxy for Google Places API (New) photo media.
-    Prevents leaking Google Cloud API Key to client browsers.
+    Resolves the Google CDN redirect URL so the client is sent directly to Google CDN,
+    protecting the Google Cloud API key and avoiding client-side referrer restrictions.
     """
     from app.providers.places.google_places import GooglePlacesNewProvider
 
@@ -62,11 +63,23 @@ async def get_place_photo(
     if not provider.is_configured():
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Google Places API not configured")
 
+    cdn_url = await provider.resolve_photo_cdn_url(photo_name)
+    if cdn_url:
+        return RedirectResponse(
+            url=cdn_url,
+            status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
     media_url = provider.get_photo_media_url(photo_name)
     if not media_url:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid photo name")
 
-    return RedirectResponse(url=media_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+    return RedirectResponse(
+        url=media_url,
+        status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
 
 
 @router.post("", response_model=LeadResponse, status_code=status.HTTP_201_CREATED, summary="Create or Update Lead")

@@ -1148,7 +1148,7 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
                     place_details = await google_places_prov.get_place_details(lead.place_id)
                     if place_details:
                         # Update lead attributes with official verified data
-                        if place_details.get("photo_url") and (not lead.photo_url or "lookaside" in lead.photo_url):
+                        if place_details.get("photo_url") and (not lead.photo_url or "lookaside" in lead.photo_url or lead.photo_url.startswith("/api/")):
                             lead.photo_url = place_details["photo_url"]
                         if place_details.get("address") and (not lead.address or lead.address.lower() in ("local street", "market road", "local area", "registered location")):
                             lead.address = place_details["address"]
@@ -2102,6 +2102,30 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
             "daily_cost": 33,
         }
 
+        # Ensure authentic high-speed Google CDN photo is used (resolve on-the-fly if needed)
+        biz_photo = lead.photo_url
+        if (not biz_photo or biz_photo.startswith("/api/")) and place_details and place_details.get("photo_url"):
+            cdn_p = place_details.get("photo_url")
+            if cdn_p and cdn_p.startswith("http"):
+                biz_photo = cdn_p
+                lead.photo_url = cdn_p
+
+        if biz_photo and "/places/photo?photo_name=" in biz_photo:
+            try:
+                from urllib.parse import parse_qs, urlparse
+                parsed_u = urlparse(biz_photo)
+                qs = parse_qs(parsed_u.query)
+                p_name = qs.get("photo_name", [None])[0]
+                if p_name:
+                    from app.providers.places.google_places import GooglePlacesNewProvider
+                    gp_prov = GooglePlacesNewProvider()
+                    resolved_cdn = await gp_prov.resolve_photo_cdn_url(p_name)
+                    if resolved_cdn:
+                        biz_photo = resolved_cdn
+                        lead.photo_url = resolved_cdn
+            except Exception:
+                pass
+
         report = {
             "business": {
                 "name": lead.business_name,
@@ -2111,7 +2135,7 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
                 "review_count": review_count,
                 "website": lead.website or "Not linked",
                 "phone": lead.phone,
-                "photo_url": lead.photo_url,
+                "photo_url": biz_photo,
                 "is_verified": True,
                 "open_now": place_details.get("open_now") if place_details else None,
                 "weekday_descriptions": place_details.get("weekday_descriptions", []) if place_details else [],

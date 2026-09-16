@@ -56,6 +56,7 @@ import {
   RealSearchQuery,
   RevenueBreakdown,
 } from '../../services/leadService';
+import { resolveImageUrl } from '../../services/api';
 
 interface AiBusinessReportViewProps {
   leadId: string;
@@ -69,10 +70,11 @@ const SafeImage: React.FC<{
   className?: string;
 }> = ({ src, alt, style, fallback, className }) => {
   const [hasError, setHasError] = useState(false);
-  if (!src || hasError) return <>{fallback}</>;
+  const resolved = resolveImageUrl(src);
+  if (!resolved || hasError) return <>{fallback}</>;
   return (
     <img
-      src={src}
+      src={resolved}
       alt={alt}
       style={style}
       className={className}
@@ -1752,21 +1754,17 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                         <span className={`leaderboard-rank-tag rank-${slot.rank <= 3 ? slot.rank : 'other'}`}>
                           #{slot.rank}
                         </span>
-                        {slot.photo_url ? (
-                          <img
-                            src={slot.photo_url}
-                            alt={slot.name}
-                            referrerPolicy="no-referrer"
-                            className="leaderboard-photo"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="leaderboard-photo-fallback" style={{ background: slot.isUser ? '#EDE9FE' : '#F1F5F9' }}>
-                            <Building2 size={16} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
-                          </div>
-                        )}
+                        <SafeImage
+                          src={slot.photo_url}
+                          alt={slot.name}
+                          className="leaderboard-photo"
+                          style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '8px' }}
+                          fallback={
+                            <div className="leaderboard-photo-fallback" style={{ background: slot.isUser ? '#EDE9FE' : '#F1F5F9' }}>
+                              <Building2 size={16} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
+                            </div>
+                          }
+                        />
                         <div className="leaderboard-info">
                           <span className="leaderboard-name">
                             {formatShortName(slot.name, 24)}
@@ -1840,20 +1838,16 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                       <span className="h2h-side-tag you-tag">Your Business</span>
                       <div className="h2h-side-main">
                         <div className="h2h-avatar-wrap">
-                          {business.photo_url ? (
-                            <img
-                              src={business.photo_url}
-                              alt={business.name}
-                              referrerPolicy="no-referrer"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLElement).style.display = 'none';
-                              }}
-                            />
-                          ) : (
-                            <div className="h2h-avatar-fallback you-fallback">
-                              <Building2 size={20} color="#7C3AED" />
-                            </div>
-                          )}
+                          <SafeImage
+                            src={business.photo_url}
+                            alt={business.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            fallback={
+                              <div className="h2h-avatar-fallback you-fallback">
+                                <Building2 size={20} color="#7C3AED" />
+                              </div>
+                            }
+                          />
                         </div>
                         <div className="h2h-profile-meta-wrap">
                           <span className="h2h-profile-name" title={cleanBusinessName}>
@@ -1874,20 +1868,16 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                       <span className="h2h-side-tag rival-tag">#1 Competitor</span>
                       <div className="h2h-side-main">
                         <div className="h2h-avatar-wrap" style={{ background: '#DCFCE7' }}>
-                          {topRival.photo_url ? (
-                            <img
-                              src={topRival.photo_url}
-                              alt={topRival.name}
-                              referrerPolicy="no-referrer"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLElement).style.display = 'none';
-                              }}
-                            />
-                          ) : (
-                            <div className="h2h-avatar-fallback rival-fallback">
-                              <Building2 size={20} color="#059669" />
-                            </div>
-                          )}
+                          <SafeImage
+                            src={topRival.photo_url}
+                            alt={topRival.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            fallback={
+                              <div className="h2h-avatar-fallback rival-fallback">
+                                <Building2 size={20} color="#059669" />
+                              </div>
+                            }
+                          />
                         </div>
                         <div className="h2h-profile-meta-wrap">
                           <span className="h2h-profile-name" title={topRival.name}>

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import optigoLogo from '../../assets/optigoai-logo.png';
 import { leadService, PlaceSearchResult } from '../../services/leadService';
+import { resolveImageUrl } from '../../services/api';
 import './SinglePageOnboardingView.css';
 
 interface SinglePageOnboardingViewProps {
@@ -284,9 +285,9 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                   <div className="onboard-selected-card">
                     <div className="onboard-selected-info">
                       <div className="onboard-selected-thumb">
-                        {selectedPlace.photo_url ? (
+                        {resolveImageUrl(selectedPlace.photo_url) ? (
                           <img
-                            src={selectedPlace.photo_url}
+                            src={resolveImageUrl(selectedPlace.photo_url)}
                             alt={selectedPlace.name}
                             referrerPolicy="no-referrer"
                             onError={(e) => {
@@ -371,9 +372,9 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                         className="onboard-dropdown-item"
                       >
                         <div className="onboard-item-thumb">
-                          {place.photo_url ? (
+                          {resolveImageUrl(place.photo_url) ? (
                             <img
-                              src={place.photo_url}
+                              src={resolveImageUrl(place.photo_url)}
                               alt={place.name}
                               referrerPolicy="no-referrer"
                               onError={(e) => {

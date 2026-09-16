@@ -4,6 +4,27 @@
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL || ''}/api/v1`;
 
+/**
+ * Resolves an image URL safely. If the URL is a relative backend path (e.g. /api/v1/leads/places/photo?...),
+ * it prepends the configured backend VITE_API_URL so it loads correctly in deployed production environments.
+ */
+export function resolveImageUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  const trimmed = url.trim();
+  if (!trimmed) return undefined;
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:')
+  ) {
+    return trimmed;
+  }
+  const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+  const cleanUrl = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${apiBase}${cleanUrl}`;
+}
+
 export class ApiError extends Error {
   status: number;
   data: any;
