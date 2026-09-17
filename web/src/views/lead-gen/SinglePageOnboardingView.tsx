@@ -1,25 +1,24 @@
-// ==================================================
-// OptigoAI Enterprise — Single-Page Onboarding & Lead Gen
-// Fresh Light Theme (Crisp Blue & White)
-// ==================================================
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Search,
   Building2,
+  Store,
   Phone,
-  CheckCircle2,
-  AlertTriangle,
   ArrowRight,
-  Sparkles,
   MapPin,
   Star,
-  ShieldCheck,
-  Zap,
-  TrendingUp,
   Loader2,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  HelpCircle,
+  Lightbulb,
+  Rocket,
+  FileText,
+  Sparkles,
+  Users,
+  ShieldCheck,
 } from 'lucide-react';
-import optigoLogo from '../../assets/optigoai-logo.png';
 import { leadService, PlaceSearchResult } from '../../services/leadService';
 import { resolveImageUrl } from '../../services/api';
 import './SinglePageOnboardingView.css';
@@ -28,39 +27,28 @@ interface SinglePageOnboardingViewProps {
   onReportReady?: (leadId: string) => void;
 }
 
-const COUNTRY_CODES = [
-  { code: '+91', country: 'IN', label: '+91 (India)' },
-  { code: '+1', country: 'US', label: '+1 (USA / Canada)' },
-  { code: '+44', country: 'GB', label: '+44 (UK)' },
-  { code: '+971', country: 'AE', label: '+971 (UAE)' },
-  { code: '+61', country: 'AU', label: '+61 (Australia)' },
-  { code: '+65', country: 'SG', label: '+65 (Singapore)' },
-];
-
-const AUDIT_STEPS = [
-  { id: 1, label: 'Finding your business on Google Maps' },
-  { id: 2, label: 'Checking nearby competitors in your area' },
-  { id: 3, label: 'Checking customer reviews and replies' },
-  { id: 4, label: 'Finding missing details on your Google profile' },
-  { id: 5, label: 'Preparing your simple business report' },
+const TRUSTED_BUSINESSES = [
+  { name: 'Casa Raza Restaurant', logo: '/casaraza_restaurant.png' },
+  { name: 'Chinese Wok', logo: '/chinese_wok.png' },
+  { name: "Fahin's Interiors", logo: '/Fahins_Interiors.png' },
+  { name: 'Focus Eye Hospital', logo: '/focus_eye_hospital.png' },
+  { name: 'Mouzy Avilmilk', logo: '/mouzy_avilmilk.png' },
+  { name: 'RVS Cleaning Service', logo: '/rvs_cleaning_service.png' },
 ];
 
 export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> = ({ onReportReady }) => {
   // Form State
   const [searchQuery, setSearchQuery] = useState('');
-  const [locationQuery, setLocationQuery] = useState('');
   const [selectedPlace, setSelectedPlace] = useState<PlaceSearchResult | null>(null);
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const [countryCode, setCountryCode] = useState('+91');
+  // Phone State (10 digits)
   const [phone, setPhone] = useState('');
 
   // Execution State
   const [isAuditing, setIsAuditing] = useState(false);
-  const [auditStepIndex, setAuditStepIndex] = useState(0);
-  const [auditProgress, setAuditProgress] = useState(10);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const searchTimeoutRef = useRef<any>(null);
@@ -68,7 +56,6 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Debounced Place Search (Google Places API Autocomplete)
-  // Utilizes 500ms debounce and 3-char threshold to eliminate redundant Google Places API quota consumption
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
@@ -84,7 +71,7 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
       const currentSeq = ++searchSeqRef.current;
       setIsSearching(true);
       try {
-        const results = await leadService.searchPlaces(q, locationQuery.trim() || undefined);
+        const results = await leadService.searchPlaces(q);
         if (currentSeq === searchSeqRef.current) {
           setSearchResults(results || []);
           setShowDropdown((results || []).length > 0);
@@ -99,10 +86,10 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
           setIsSearching(false);
         }
       }
-    }, 500);
+    }, 450);
 
     return () => clearTimeout(searchTimeoutRef.current);
-  }, [searchQuery, locationQuery, selectedPlace]);
+  }, [searchQuery, selectedPlace]);
 
   // Click outside to dismiss dropdown
   useEffect(() => {
@@ -119,13 +106,10 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
     setIsAuditing(false);
     setSelectedPlace(null);
     setSearchQuery('');
-    setLocationQuery('');
     setSearchResults([]);
     setShowDropdown(false);
     setPhone('');
     setErrorMessage(null);
-    setAuditStepIndex(0);
-    setAuditProgress(10);
   };
 
   // Reset form and cancel loading whenever page is restored from bfcache or shown
@@ -135,7 +119,6 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
     };
 
     const handlePageHide = () => {
-      // Ensure the snapshot frozen into browser history/bfcache is clean
       resetFormState();
     };
 
@@ -160,21 +143,25 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
 
     const businessName = selectedPlace ? selectedPlace.name : searchQuery.trim();
     if (!businessName) {
-      setErrorMessage('Please search or enter your business name.');
+      setErrorMessage('Please enter your business name.');
       return;
     }
 
-    const cleanPhone = phone.trim().replace(/[^0-9]/g, '');
-    if (!cleanPhone || cleanPhone.length < 8) {
-      setErrorMessage('Please provide a valid phone number so we can deliver your audit.');
+    const cleanDigits = phone.trim().replace(/\D/g, '');
+    // Allow standard 10-digit mobile number
+    const nationalDigits = cleanDigits.startsWith('91') && cleanDigits.length === 12
+      ? cleanDigits.slice(2)
+      : cleanDigits;
+
+    if (nationalDigits.length !== 10) {
+      setErrorMessage('Please enter a valid 10-digit mobile number.');
       return;
     }
 
     setIsAuditing(true);
 
     try {
-      // Extract locality if business name was typed with a comma (e.g. "Casa Rasa Family Restaurant, Edappal")
-      let inferredAddress = selectedPlace?.address || locationQuery || '';
+      let inferredAddress = selectedPlace?.address || '';
       if (!inferredAddress && businessName.includes(',')) {
         const parts = businessName.split(',').map((s) => s.trim());
         if (parts.length > 1) {
@@ -182,12 +169,12 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
         }
       }
 
-      // 1. Create or update lead record
+      // 1. Create lead record
       const lead = await leadService.createLead({
         business_name: businessName,
         place_id: selectedPlace?.place_id,
-        phone: `${countryCode}${cleanPhone}`,
-        country_code: countryCode,
+        phone: `+91${nationalDigits}`,
+        country_code: '+91',
         address: inferredAddress,
         category: selectedPlace?.category,
         rating: selectedPlace?.rating,
@@ -199,7 +186,7 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
         raw_places_data: selectedPlace,
       });
 
-      // 2. Navigate immediately to report page with in-page generation flow
+      // 2. Navigate immediately to report page
       const reportUrl = `/report/${lead.id}?generating=true`;
       if (onReportReady) {
         onReportReady(lead.id);
@@ -207,8 +194,6 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
         window.location.href = reportUrl;
       }
 
-      // Proactively reset state so that if this page is preserved in history/bfcache,
-      // returning to it will immediately display a fresh, clean search form without stuck loading.
       setTimeout(() => {
         resetFormState();
       }, 100);
@@ -219,116 +204,114 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
   };
 
   return (
-    <div className="onboard-page-wrapper">
-      {/* Background Subtle Luminous Glow */}
-      <div className="onboard-ambient-glow" />
-
-      {/* Top Header */}
-      <header className="onboard-nav-header">
-        <div className="onboard-brand">
-          <img src={optigoLogo} alt="Optigo AI" className="onboard-brand-logo" />
-          <span className="onboard-brand-name">
-            Optigo<span className="onboard-brand-accent">AI</span>
-          </span>
+    <div className="onboard-mockup-viewport">
+      {/* Top Header Navigation */}
+      <header className="onboard-header-bar">
+        {/* Brand Logo & Tagline matching mockup */}
+        <div className="onboard-brand-container">
+          <div className="onboard-brand-row">
+            <img
+              src="/optigoai-logo.png"
+              alt="OptigoAI"
+              className="onboard-brand-logo-img"
+            />
+            <div className="onboard-brand-title">
+              <span className="onboard-brand-title-optigo">Optigo</span>
+              <span className="onboard-brand-title-ai"> AI</span>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <a href="/login" className="onboard-login-btn">
-            Customer Login →
-          </a>
-        </div>
+        {/* Help Button (Pill button with question circle icon) */}
+        <a
+          href="tel:+917909188271"
+          className="onboard-help-pill-btn"
+          title="Customer Help: +91 7909188271"
+          aria-label="Customer Help"
+        >
+          <HelpCircle size={16} className="onboard-help-icon" />
+          <span className="onboard-help-text">Help</span>
+        </a>
       </header>
 
-      {/* Main Content Area */}
-      <main className="onboard-main-shell">
-        <div className="onboard-card-container">
-          {/* Clean, Open Header */}
-          <div className="onboard-header-block">
-            <h1 className="onboard-title">
-              Audit Your Business <span className="onboard-title-gradient">Visibility</span>
+      <div className="onboard-mockup-canvas">
+        {/* Hero Section */}
+        <div className="onboard-hero-area">
+          <div className="onboard-hero-title-wrap">
+            <h1 className="onboard-main-title">
+              Get Your Free<br />
+              <span className="onboard-title-purple">Business Audit</span>
             </h1>
-            <p className="onboard-subtitle">
-              See your Google Maps ranking, rivals, and diverted customer calls.
-            </p>
+          </div>
+          <p className="onboard-hero-tagline">
+            Let AI find new ways to grow your business
+          </p>
+        </div>
+
+        {/* Three Circular Feature Badges */}
+        <div className="onboard-features-grid">
+          {/* Feature 1: Find Opportunities */}
+          <div className="onboard-feature-card">
+            <div className="onboard-feature-circle">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" className="onboard-feature-icon">
+                <rect x="2.5" y="13" width="4.5" height="9" rx="2.25" />
+                <rect x="9.75" y="7" width="4.5" height="15" rx="2.25" />
+                <rect x="17" y="2" width="4.5" height="20" rx="2.25" />
+              </svg>
+            </div>
+            <span className="onboard-feature-label">
+              Find<br />Opportunities
+            </span>
           </div>
 
-            <form onSubmit={handleStartAudit} className="onboard-form" autoComplete="off">
-              {/* Error Banner */}
-              {errorMessage && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    background: '#FEF2F2',
-                    border: '1px solid #FECACA',
-                    color: '#B91C1C',
-                    fontSize: '0.88rem',
-                  }}
-                >
-                  <AlertTriangle size={18} color="#DC2626" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
+          {/* Feature 2: Get Simple Recommendations */}
+          <div className="onboard-feature-card">
+            <div className="onboard-feature-circle">
+              <Lightbulb size={24} className="onboard-feature-icon" />
+            </div>
+            <span className="onboard-feature-label">
+              Get Simple<br />Recommendations
+            </span>
+          </div>
 
-              {/* Step 1: Business Search Input */}
-              <div style={{ position: 'relative' }} ref={dropdownRef}>
-                <label className="onboard-step-label">
-                  <span className="onboard-step-badge">1</span>
-                  <span>Type Your Business or Shop Name</span>
-                </label>
+          {/* Feature 3: Grow Faster */}
+          <div className="onboard-feature-card">
+            <div className="onboard-feature-circle">
+              <Rocket size={24} className="onboard-feature-icon" />
+            </div>
+            <span className="onboard-feature-label">
+              Grow<br />Faster
+            </span>
+          </div>
+        </div>
+
+        {/* White Elevated Form Card */}
+        <div className="onboard-form-card">
+          <form onSubmit={handleStartAudit} className="onboard-card-form" autoComplete="off">
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="onboard-error-alert">
+                <AlertTriangle size={17} color="#DC2626" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            {/* Field 1: Business Name */}
+            <div className="onboard-form-row">
+              <div className="onboard-field-icon-badge">
+                <Store size={20} className="onboard-field-icon" />
+              </div>
+              <div className="onboard-field-content" ref={dropdownRef}>
+                <label className="onboard-field-title">Business Name</label>
 
                 {selectedPlace ? (
-                  /* Single Unified Selected Business Card (Fixes 2-time duplicate bug) */
-                  <div className="onboard-selected-card">
-                    <div className="onboard-selected-info">
-                      <div className="onboard-selected-thumb">
-                        {resolveImageUrl(selectedPlace.photo_url) ? (
-                          <img
-                            src={resolveImageUrl(selectedPlace.photo_url)}
-                            alt={selectedPlace.name}
-                            referrerPolicy="no-referrer"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <Building2 size={20} color="#7C3AED" />
-                        )}
-                        <CheckCircle2
-                          size={14}
-                          color="#7C3AED"
-                          style={{
-                            position: 'absolute',
-                            bottom: '-2px',
-                            right: '-2px',
-                            background: '#FFFFFF',
-                            borderRadius: '50%',
-                          }}
-                        />
-                      </div>
-                      <div className="onboard-selected-texts">
-                        <div className="onboard-selected-title-row">
-                          <span className="onboard-selected-name">
-                            {selectedPlace.name}
-                          </span>
-                          {selectedPlace.category && (
-                            <span className="onboard-selected-cat">
-                              {selectedPlace.category}
-                            </span>
-                          )}
-                        </div>
-                        {selectedPlace.address && (
-                          <div className="onboard-selected-addr">
-                            <MapPin size={12} color="#7C3AED" />
-                            <span>{selectedPlace.address}</span>
-                          </div>
-                        )}
-                      </div>
+                  <div className="onboard-pill-selected">
+                    <div className="onboard-pill-info">
+                      <span className="onboard-pill-name">{selectedPlace.name}</span>
+                      {selectedPlace.address && (
+                        <span className="onboard-pill-address">{selectedPlace.address}</span>
+                      )}
                     </div>
-
                     <button
                       type="button"
                       onClick={() => {
@@ -337,32 +320,45 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                         setSearchResults([]);
                         setShowDropdown(false);
                       }}
-                      className="onboard-change-btn"
+                      className="onboard-pill-change-btn"
                     >
                       Change
                     </button>
                   </div>
                 ) : (
-                  /* Standard Search Input (when no place is selected) */
-                  <div className="onboard-input-box">
-                    <Search size={18} className="onboard-input-icon" />
+                  <div className="onboard-text-input-wrap">
                     <input
                       type="text"
                       value={searchQuery}
                       autoComplete="off"
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                      }}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                       onFocus={() => {
                         if (searchResults.length > 0) setShowDropdown(true);
                       }}
-                      placeholder="e.g., Royal Bakery & Cafe, Apollo Dental..."
+                      placeholder="e.g. Paragon Restaurant"
+                      className="onboard-text-input"
                     />
-                    {isSearching && <Loader2 size={18} color="#7C3AED" style={{ animation: 'spin 1s linear infinite' }} />}
+                    {isSearching && (
+                      <Loader2 size={16} className="onboard-input-spinner" />
+                    )}
+                    {!isSearching && searchQuery.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setSearchResults([]);
+                          setShowDropdown(false);
+                        }}
+                        className="onboard-input-clear-btn"
+                        aria-label="Clear"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
                   </div>
                 )}
 
-                {/* Autocomplete Dropdown with Star Ratings (hidden when a place is selected) */}
+                {/* Autocomplete Dropdown */}
                 {!selectedPlace && showDropdown && searchResults.length > 0 && (
                   <div className="onboard-dropdown-menu">
                     {searchResults.map((place) => (
@@ -386,14 +382,14 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                           )}
                         </div>
                         <div className="onboard-item-details">
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                          <div className="onboard-item-header">
                             <span className="onboard-item-name">{place.name}</span>
                             {place.rating ? (
                               <span className="onboard-item-stars">
                                 <Star size={11} fill="#F59E0B" color="#F59E0B" />
                                 <span>{place.rating.toFixed(1)}</span>
                                 {place.review_count !== undefined && place.review_count > 0 && (
-                                  <span style={{ color: '#94A3B8', fontWeight: 500, fontSize: '0.7rem' }}>
+                                  <span className="onboard-item-count">
                                     ({place.review_count})
                                   </span>
                                 )}
@@ -410,96 +406,217 @@ export const SinglePageOnboardingView: React.FC<SinglePageOnboardingViewProps> =
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Optional City/Area Filter if not selected from Google Place */}
-              {!selectedPlace && (
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '0.84rem',
-                      fontWeight: 600,
-                      color: '#475569',
-                      marginBottom: '8px',
+            {/* Field 2: Phone Number */}
+            <div className="onboard-form-row">
+              <div className="onboard-field-icon-badge">
+                <Phone size={20} className="onboard-field-icon" />
+              </div>
+              <div className="onboard-field-content">
+                <label className="onboard-field-title">Phone Number</label>
+                <div className="onboard-text-input-wrap">
+                  <input
+                    type="tel"
+                    value={phone}
+                    autoComplete="tel-national"
+                    onChange={(e) => {
+                      // Keep only digits, up to 10
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setPhone(digits);
+                      if (errorMessage) setErrorMessage(null);
                     }}
-                  >
-                    City / Area (Optional)
-                  </label>
-                  <div className="onboard-input-box">
-                    <MapPin size={18} className="onboard-input-icon" />
-                    <input
-                      type="text"
-                      value={locationQuery}
-                      onChange={(e) => setLocationQuery(e.target.value)}
-                      placeholder="e.g., Kochi, Bengaluru, Mumbai..."
-                    />
-                  </div>
+                    placeholder="e.g. 7909188271"
+                    maxLength={10}
+                    inputMode="numeric"
+                    className="onboard-text-input"
+                  />
+                  {phone.length === 10 && (
+                    <CheckCircle2 size={16} color="#16A34A" style={{ flexShrink: 0 }} />
+                  )}
                 </div>
+              </div>
+            </div>
+
+            {/* Submit Audit Button */}
+            <button
+              type="submit"
+              disabled={isAuditing}
+              className="onboard-submit-pill-btn"
+            >
+              {isAuditing ? (
+                <>
+                  <Loader2 size={18} className="onboard-btn-spinner" />
+                  <span>Submitting Audit...</span>
+                </>
+              ) : (
+                <>
+                  <span>Submit Audit</span>
+                  <ArrowRight size={18} className="onboard-submit-arrow" />
+                </>
               )}
+            </button>
+          </form>
+        </div>
 
-              {/* Step 2: Phone Number Input */}
-              <div>
-                <label className="onboard-step-label">
-                  <span className="onboard-step-badge">2</span>
-                  <span>Business Phone Number</span>
-                </label>
+        {/* Social Proof Section Below Card */}
+        <div className="onboard-social-proof-section">
+          <h2 className="onboard-proof-headline">
+            1,000+ Businesses Onboarded
+          </h2>
+          <p className="onboard-proof-subtext">
+            Trusted by businesses like yours
+          </p>
 
-                <div className="onboard-phone-row">
-                  {/* Country Code Selector */}
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="onboard-country-select"
-                  >
-                    {COUNTRY_CODES.map((item) => (
-                      <option key={item.code} value={item.code}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
+          {/* Floating Horizontal Business Logos */}
+          <div className="onboard-logos-carousel-wrap">
+            <div className="onboard-logos-track">
+              {[...TRUSTED_BUSINESSES, ...TRUSTED_BUSINESSES].map((biz, idx) => (
+                <div key={`${biz.name}-${idx}`} className="onboard-logo-card" title={biz.name}>
+                  <img
+                    src={biz.logo}
+                    alt={biz.name}
+                    loading="lazy"
+                    className="onboard-logo-img"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
 
-                  {/* Phone Input */}
-                  <div className="onboard-input-box" style={{ flex: 1 }}>
-                    <Phone size={18} className="onboard-input-icon" />
-                    <input
-                      type="tel"
-                      value={phone}
-                      autoComplete="off"
-                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
-                      placeholder="9876543210"
-                      maxLength={12}
-                      required
-                    />
-                  </div>
+          {/* Slider bar indicator matching mockup */}
+          <div className="onboard-slider-track">
+            <div className="onboard-slider-thumb" />
+          </div>
+        </div>
+
+        {/* "What happens next?" Section matching mockup */}
+        <section className="onboard-next-steps-section">
+          <h2 className="onboard-next-headline">What happens next?</h2>
+          <p className="onboard-next-subtext">It's quick and easy. Here's how it works:</p>
+
+          {/* 3-Step Process List with dotted timeline */}
+          <div className="onboard-steps-timeline">
+            <div className="onboard-timeline-line" />
+
+            {/* Step 1 */}
+            <div className="onboard-step-row">
+              <div className="onboard-step-badge">1</div>
+              <div className="onboard-step-icon-circle">
+                <Search size={20} className="onboard-step-icon" />
+              </div>
+              <div className="onboard-step-content">
+                <h3 className="onboard-step-heading">We review your business</h3>
+                <p className="onboard-step-description">Our AI analyzes your online presence</p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="onboard-step-row">
+              <div className="onboard-step-badge">2</div>
+              <div className="onboard-step-icon-circle">
+                <FileText size={20} className="onboard-step-icon" />
+              </div>
+              <div className="onboard-step-content">
+                <h3 className="onboard-step-heading">AI finds growth opportunities</h3>
+                <p className="onboard-step-description">Get clear, personalized recommendations</p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="onboard-step-row">
+              <div className="onboard-step-badge">3</div>
+              <div className="onboard-step-icon-circle">
+                <Sparkles size={20} className="onboard-step-icon" />
+              </div>
+              <div className="onboard-step-content">
+                <h3 className="onboard-step-heading">You get practical next steps</h3>
+                <p className="onboard-step-description">Simple actions to grow your business</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Example Audit Preview Card */}
+          <div className="onboard-preview-card">
+            <div className="onboard-preview-header">
+              <span className="onboard-preview-title">Example audit preview</span>
+              <span className="onboard-preview-pill">Sample Report</span>
+            </div>
+
+            {/* 3 Metric Preview Boxes */}
+            <div className="onboard-preview-metrics-grid">
+              {/* Metric 1: Online Presence */}
+              <div className="onboard-metric-card">
+                <div className="onboard-metric-icon-wrap onboard-metric-green">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="3" y="13" width="4.5" height="9" rx="2.25" />
+                    <rect x="10" y="8" width="4.5" height="14" rx="2.25" />
+                    <rect x="17" y="3" width="4.5" height="19" rx="2.25" />
+                  </svg>
+                </div>
+                <span className="onboard-metric-label">Online Presence</span>
+                <span className="onboard-metric-val onboard-val-green">Good</span>
+                <div className="onboard-metric-bar-track">
+                  <div className="onboard-metric-bar-fill onboard-fill-green" style={{ width: '70%' }} />
                 </div>
               </div>
 
-              {/* Primary CTA Button */}
-              <button
-                type="submit"
-                disabled={isAuditing}
-                className="onboard-submit-btn"
-              >
-                {isAuditing ? (
-                  <>
-                    <Loader2 size={19} color="#FFFFFF" style={{ animation: 'spin 1s linear infinite' }} />
-                    <span>Opening Audit Report...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Audit My Business</span>
-                    <ArrowRight size={19} />
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-        </main>
+              {/* Metric 2: Customer Reach */}
+              <div className="onboard-metric-card">
+                <div className="onboard-metric-icon-wrap onboard-metric-amber">
+                  <Users size={18} />
+                </div>
+                <span className="onboard-metric-label">Customer Reach</span>
+                <span className="onboard-metric-val onboard-val-amber">Needs Improvement</span>
+                <div className="onboard-metric-bar-track">
+                  <div className="onboard-metric-bar-fill onboard-fill-amber" style={{ width: '45%' }} />
+                </div>
+              </div>
 
-      {/* Modern Simple Footer */}
-      <footer className="onboard-footer">
-        © {new Date().getFullYear()} Optigo AI. Helping local businesses get found and chosen on Google.
-      </footer>
+              {/* Metric 3: Growth Ideas */}
+              <div className="onboard-metric-card">
+                <div className="onboard-metric-icon-wrap onboard-metric-purple">
+                  <Lightbulb size={18} />
+                </div>
+                <span className="onboard-metric-label">Growth Ideas</span>
+                <span className="onboard-metric-val onboard-val-purple">5+ Opportunities</span>
+                <div className="onboard-metric-bar-track">
+                  <div className="onboard-metric-bar-fill onboard-fill-purple" style={{ width: '60%' }} />
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Button: Start My Free Audit */}
+            <button
+              type="button"
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => {
+                  const input = document.querySelector<HTMLInputElement>('.onboard-text-input');
+                  if (input) input.focus();
+                }, 350);
+              }}
+              className="onboard-preview-cta-btn"
+            >
+              <span>Start My Free Audit</span>
+              <ArrowRight size={18} className="onboard-submit-arrow" />
+            </button>
+
+            {/* Trust Footer below button */}
+            <div className="onboard-preview-trust">
+              <ShieldCheck size={16} className="onboard-trust-shield-icon" />
+              <span>Join 1,000+ businesses growing with OptigoAI</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Bottom Tagline matching mockup */}
+        <div className="onboard-tagline-footer">
+          <span className="onboard-tagline-line1">BETTER BUSINESSES</span>
+          <span className="onboard-tagline-line2">A BRIGHTER TOMORROW</span>
+        </div>
+      </div>
     </div>
   );
 };
+
