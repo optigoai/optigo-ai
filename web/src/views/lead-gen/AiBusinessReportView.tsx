@@ -1052,20 +1052,23 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           });
         }
       }
-      // Position 4+ blurred (only if a 4th competitor exists)
-      const comp4 = competitorsList[compIdx] || (competitorsList.length >= 4 ? competitorsList[3] : undefined);
-      if (comp4) {
-        slots.push({
-          rank: Math.max(4, comp4.rank || 4),
-          name: comp4.name || 'Competitor #4',
-          photo_url: comp4.photo_url,
-          rating: comp4.rating ?? 4.0,
-          review_count: comp4.review_count ?? 350,
-          isUser: false,
-          estimatedCalls: comp4.estimated_monthly_calls ?? Math.round(totalLocalCalls * 0.05),
-          callSharePct: comp4.call_share_pct ?? 5,
-          isBlurred: true,
-        });
+      // Position 4 and 5 competitors if available
+      for (let pos = 4; pos <= 5; pos++) {
+        const comp = competitorsList[compIdx];
+        if (comp) {
+          compIdx++;
+          slots.push({
+            rank: pos,
+            name: comp.name || `Competitor #${pos}`,
+            photo_url: comp.photo_url,
+            rating: comp.rating ?? 4.0,
+            review_count: comp.review_count ?? 300,
+            isUser: false,
+            estimatedCalls: comp.estimated_monthly_calls ?? Math.round(totalLocalCalls * (callDistribution[pos - 1] || 0.03)),
+            callSharePct: comp.call_share_pct ?? Math.round((callDistribution[pos - 1] || 0.03) * 100),
+            isBlurred: false,
+          });
+        }
       }
     } else {
       // User outside top 3
@@ -1082,6 +1085,21 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           isBlurred: false,
         });
       });
+      // 4th competitor if userRank > 4 and 4th competitor exists
+      if (userRank > 4 && competitorsList[3]) {
+        const comp4 = competitorsList[3];
+        slots.push({
+          rank: 4,
+          name: comp4.name,
+          photo_url: comp4.photo_url,
+          rating: comp4.rating ?? 4.0,
+          review_count: comp4.review_count ?? 250,
+          isUser: false,
+          estimatedCalls: comp4.estimated_monthly_calls ?? Math.round(totalLocalCalls * 0.05),
+          callSharePct: comp4.call_share_pct ?? 5,
+          isBlurred: false,
+        });
+      }
       // User's position
       slots.push({
         rank: userRank,
@@ -1096,7 +1114,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
       });
     }
 
-    return slots;
+    return slots.sort((a, b) => a.rank - b.rank);
   })();
 
   // Interface for simplified, de-congested audit issue cards
@@ -1903,84 +1921,83 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                 <span className="section-header-pill green">84% calls → Top 3</span>
               </div>
 
-              <div className="leaderboard-table">
-                {rankLadderSlots.map((slot, sIdx) => {
-                  const maxCalls = Math.max(...rankLadderSlots.map(s => s.estimatedCalls), 1);
-                  const barWidth = Math.max(15, Math.round((slot.estimatedCalls / maxCalls) * 80));
+              <div className="rankings-bargraph-card">
+                {/* Visual Bar Graph Area matching user reference image */}
+                <div className="rankings-chart-stage">
+                  {rankLadderSlots.map((slot, sIdx) => {
+                    const maxCalls = Math.max(...rankLadderSlots.map((s) => s.estimatedCalls), 1);
+                    // Proportional height with minimum 14% so the bar is always visible and tactile
+                    const heightPercent = Math.max(14, Math.round((slot.estimatedCalls / maxCalls) * 100));
 
-                  return (
-                    <div
-                      key={`slot-${slot.rank}-${slot.isUser ? 'u' : 'c'}-${slot.isBlurred ? 'b' : 'v'}-${sIdx}`}
-                      className={`leaderboard-row ${slot.isUser ? 'is-user-row' : ''} ${slot.isBlurred ? 'is-blurred-row' : ''}`}
-                    >
-                      {slot.isBlurred && (
-                        <div className="leaderboard-lock-overlay" onClick={() => setIsPlanModalOpen(true)}>
-                          <div className="leaderboard-lock-icon-wrap">
-                            <Lock size={13} strokeWidth={2.2} color="#6366F1" />
-                          </div>
-                          <span className="leaderboard-lock-text">Unlock all competitors</span>
+                    return (
+                      <div
+                        key={`bar-${slot.rank}-${slot.isUser ? 'u' : 'c'}-${sIdx}`}
+                        className={`rankings-bar-col ${slot.isUser ? 'is-user-col' : ''}`}
+                      >
+                        {/* Top Number: Call/Customer count */}
+                        <div
+                          className="rankings-bar-val"
+                          style={{
+                            color: slot.isUser ? '#7C3AED' : '#0F172A',
+                          }}
+                        >
+                          {slot.estimatedCalls.toLocaleString('en-IN')}
                         </div>
-                      )}
-                      <div className="leaderboard-row-content">
-                        <span className={`leaderboard-rank-tag rank-${slot.rank <= 3 ? slot.rank : 'other'}`}>
-                          #{slot.rank}
-                        </span>
-                        <SafeImage
-                          src={slot.photo_url}
-                          alt={slot.name}
-                          className="leaderboard-photo"
-                          style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '8px' }}
-                          fallback={
-                            <div className="leaderboard-photo-fallback" style={{ background: slot.isUser ? '#EDE9FE' : '#F1F5F9' }}>
-                              <Building2 size={16} strokeWidth={2.2} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
-                            </div>
-                          }
-                        />
-                        <div className="leaderboard-info">
-                          <span className="leaderboard-name">
-                            {formatShortName(slot.name, 24)}
-                            {slot.isUser && <span className="leaderboard-you-badge">You</span>}
-                          </span>
-                          <div className="leaderboard-meta">
-                            <span className="leaderboard-rating">★ {slot.rating.toFixed(1)}</span>
-                            <span className="leaderboard-reviews">({slot.review_count.toLocaleString()})</span>
-                          </div>
-                        </div>
-                        <div className="leaderboard-calls">
-                          <span
-                            className="leaderboard-calls-number"
-                            style={{ color: slot.isUser ? '#7C3AED' : slot.rank === 1 ? '#059669' : '#475569' }}
-                          >
-                            ~{slot.estimatedCalls}/mo
-                          </span>
+
+                        {/* Bar Track & Fill */}
+                        <div className="rankings-bar-track">
                           <div
-                            className="leaderboard-calls-bar"
-                            style={{
-                              width: `${barWidth}px`,
-                              background: slot.isUser
-                                ? '#7C3AED'
-                                : slot.rank === 1
-                                  ? '#10B981'
-                                  : slot.rank === 2
-                                    ? '#3B82F6'
-                                    : '#94A3B8',
-                            }}
+                            className={`rankings-bar-fill ${slot.isUser ? 'fill-user' : slot.rank === 1 ? 'fill-leader' : 'fill-competitor'}`}
+                            style={{ height: `${heightPercent}%` }}
+                          >
+                            <div className="rankings-bar-gloss" />
+                          </div>
+                        </div>
+
+                        {/* Business Thumbnail Image */}
+                        <div className={`rankings-bar-photo-wrap ${slot.isUser ? 'photo-user-wrap' : ''}`}>
+                          <SafeImage
+                            src={slot.photo_url}
+                            alt={slot.name}
+                            className="rankings-bar-photo"
+                            style={{ width: '34px', height: '34px', objectFit: 'cover', borderRadius: '8px' }}
+                            fallback={
+                              <div className="rankings-bar-photo-fallback" style={{ background: slot.isUser ? '#EDE9FE' : '#F1F5F9' }}>
+                                <Building2 size={16} strokeWidth={2.2} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
+                              </div>
+                            }
                           />
+                          {slot.isUser && <span className="rankings-you-indicator" />}
+                        </div>
+
+                        {/* Rank */}
+                        <div className={`rankings-bar-rank ${slot.isUser ? 'rank-user' : slot.rank <= 3 ? `rank-${slot.rank}` : 'rank-other'}`}>
+                          #{slot.rank}
+                        </div>
+
+                        {/* Name ("You" or formatted short name) */}
+                        <div className={`rankings-bar-name ${slot.isUser ? 'name-user' : ''}`} title={slot.name}>
+                          {slot.isUser ? 'You' : formatShortName(slot.name, 12)}
+                        </div>
+
+                        {/* Star Rating */}
+                        <div className="rankings-bar-rating">
+                          ★ {slot.rating.toFixed(1)}
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
 
-                {/* Invisibility cutoff line between top 3 and user if outside */}
-                {!isInTop3 && rankLadderSlots.length >= 4 && (
-                  <div className="leaderboard-cutoff-line">
-                    <div className="cutoff-divider" />
-                    <span className="cutoff-badge">
-                      <AlertTriangle size={11} strokeWidth={2.2} color="#DC2626" style={{ display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
-                      84% OF CALLS GO TO TOP 3
+                {/* Bottom Callout Banner when outside Top 3 */}
+                {!isInTop3 && (
+                  <div className="rankings-cutoff-banner">
+                    <div className="cutoff-alert-icon">
+                      <AlertTriangle size={13} strokeWidth={2.3} color="#DC2626" />
+                    </div>
+                    <span className="cutoff-alert-text">
+                      <strong>84% of local customers call the Top 3.</strong> At rank #{userRank}, most calls go to competitors above.
                     </span>
-                    <div className="cutoff-divider" />
                   </div>
                 )}
               </div>
