@@ -91,6 +91,168 @@ const WhatsAppIcon: React.FC<{ size?: number }> = ({ size = 18 }) => (
   </svg>
 );
 
+// Realistic 3D Apple-style KPI Icons with Depth & Highlights
+const RealisticMapPinIcon: React.FC<{ size?: number }> = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="realistic-kpi-icon">
+    <defs>
+      <linearGradient id="appleMapPinGrad" x1="12" y1="2.5" x2="12" y2="21" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#FF6464" />
+        <stop offset="0.55" stopColor="#EE2A47" />
+        <stop offset="1" stopColor="#B91C1C" />
+      </linearGradient>
+      <radialGradient id="appleMapPinSheen" cx="35%" cy="30%" r="55%">
+        <stop stopColor="#FFFFFF" stopOpacity="0.8" />
+        <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+      <filter id="applePinShadow" x="-20%" y="-10%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="1.5" stdDeviation="1" floodColor="#991B1B" floodOpacity="0.32" />
+      </filter>
+    </defs>
+    <ellipse cx="12" cy="21" rx="4.8" ry="1.6" fill="rgba(0,0,0,0.18)" />
+    <path
+      d="M12 2.5C7.86 2.5 4.5 5.86 4.5 10c0 5.2 6.7 10.3 7.05 10.55.28.2.62.2.9 0 .35-.25 7.05-5.35 7.05-10.55 0-4.14-3.36-7.5-7.5-7.5z"
+      fill="url(#appleMapPinGrad)"
+      filter="url(#applePinShadow)"
+    />
+    <path
+      d="M12 3.5C8.4 3.5 5.5 6.4 5.5 10c0 1.5.5 2.8 1.3 4 1.2-4.5 3.2-8.5 5.2-10.5z"
+      fill="url(#appleMapPinSheen)"
+      opacity="0.85"
+    />
+    <circle cx="12" cy="10" r="3.2" fill="#FFFFFF" />
+    <circle cx="12" cy="10" r="1.9" fill="#DC2626" />
+  </svg>
+);
+
+const RealisticTrophyIcon: React.FC<{ size?: number }> = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="realistic-kpi-icon">
+    <defs>
+      <linearGradient id="appleTrophyGold" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#FDE68A" />
+        <stop offset="0.35" stopColor="#F59E0B" />
+        <stop offset="0.75" stopColor="#D97706" />
+        <stop offset="1" stopColor="#B45309" />
+      </linearGradient>
+      <radialGradient id="appleTrophySheen" cx="35%" cy="30%" r="50%">
+        <stop stopColor="#FFFFFF" stopOpacity="0.85" />
+        <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+      <filter id="appleTrophyShadow" x="-10%" y="-5%" width="120%" height="120%">
+        <feDropShadow dx="0" dy="1.2" stdDeviation="0.8" floodColor="#B45309" floodOpacity="0.3" />
+      </filter>
+    </defs>
+    <g filter="url(#appleTrophyShadow)">
+      <path d="M6 3h12v6c0 3.31-2.69 6-6 6s-6-2.69-6-6V3z" fill="url(#appleTrophyGold)" />
+      <path d="M7 4h10v5c0 2.76-2.24 5-5 5s-5-2.24-5-5V4z" fill="url(#appleTrophySheen)" opacity="0.65" />
+      <path d="M6 5H3.5C2.67 5 2 5.67 2 6.5v1C2 9.5 3.6 11 5.5 11H6" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M18 5h2.5c.83 0 1.5.67 1.5 1.5v1c0 2-1.6 3.5-3.5 3.5H18" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M10 15h4v3h-4z" fill="#D97706" />
+      <path d="M7 18h10a1 1 0 011 1v2H6v-2a1 1 0 011-1z" fill="url(#appleTrophyGold)" />
+    </g>
+  </svg>
+);
+
+const RealisticCustomerGroupIcon: React.FC<{ size?: number }> = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="realistic-kpi-icon">
+    <defs>
+      <linearGradient id="custCenterGrad" x1="12" y1="4" x2="12" y2="21" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#10B981" />
+        <stop offset="0.5" stopColor="#059669" />
+        <stop offset="1" stopColor="#047857" />
+      </linearGradient>
+      <linearGradient id="custSideGrad" x1="12" y1="6" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#34D399" />
+        <stop offset="0.6" stopColor="#10B981" />
+        <stop offset="1" stopColor="#059669" />
+      </linearGradient>
+      <radialGradient id="custHeadSheen" cx="35%" cy="30%" r="55%">
+        <stop stopColor="#FFFFFF" stopOpacity="0.6" />
+        <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+      <filter id="custDropShadow" x="-10%" y="-5%" width="120%" height="120%">
+        <feDropShadow dx="0" dy="1" stdDeviation="0.9" floodColor="#065F46" floodOpacity="0.25" />
+      </filter>
+    </defs>
+    {/* Left Silhouette */}
+    <g opacity="0.92">
+      <circle cx="6" cy="9.5" r="2.5" fill="url(#custSideGrad)" />
+      <path d="M2.5 18c0-2.4 1.8-3.8 3.5-3.8s3.5 1.4 3.5 3.8" fill="url(#custSideGrad)" />
+    </g>
+    {/* Right Silhouette */}
+    <g opacity="0.92">
+      <circle cx="18" cy="9.5" r="2.5" fill="url(#custSideGrad)" />
+      <path d="M14.5 18c0-2.4 1.8-3.8 3.5-3.8s3.5 1.4 3.5 3.8" fill="url(#custSideGrad)" />
+    </g>
+    {/* Center Leader Avatar (with 3D Apple specular lighting) */}
+    <g filter="url(#custDropShadow)">
+      <circle cx="12" cy="7.5" r="3.4" fill="url(#custCenterGrad)" />
+      <circle cx="12" cy="7.5" r="3.4" fill="url(#custHeadSheen)" />
+      <path d="M6.8 19.5c0-3.3 2.3-5.2 5.2-5.2s5.2 1.9 5.2 5.2" fill="url(#custCenterGrad)" />
+      <path d="M12 14.3c-2.4 0-4.5 1.5-5 3.8.5-1.5 2.2-2.6 4.2-2.6s3.7 1.1 4.2 2.6c-.5-2.3-2.6-3.8-5-3.8z" fill="#FFFFFF" opacity="0.28" />
+    </g>
+  </svg>
+);
+
+const RealisticCustomerLostIcon: React.FC<{ size?: number }> = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="realistic-kpi-icon">
+    <defs>
+      <linearGradient id="custLostBodyGrad" x1="8.5" y1="4" x2="8.5" y2="20" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#F87171" />
+        <stop offset="0.6" stopColor="#EF4444" />
+        <stop offset="1" stopColor="#DC2626" />
+      </linearGradient>
+      <linearGradient id="custLostArrowGrad" x1="14" y1="12" x2="22" y2="20" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#EF4444" />
+        <stop offset="1" stopColor="#B91C1C" />
+      </linearGradient>
+      <radialGradient id="custLostHeadSheen" cx="35%" cy="30%" r="55%">
+        <stop stopColor="#FFFFFF" stopOpacity="0.55" />
+        <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+      <filter id="custLostShadow" x="-10%" y="-5%" width="120%" height="120%">
+        <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#991B1B" floodOpacity="0.25" />
+      </filter>
+    </defs>
+    <g filter="url(#custLostShadow)">
+      <circle cx="8.5" cy="8" r="3.2" fill="url(#custLostBodyGrad)" />
+      <circle cx="8.5" cy="8" r="3.2" fill="url(#custLostHeadSheen)" />
+      <path d="M3.5 19.2c0-3.1 2.2-4.9 5-4.9s5 1.8 5 4.9" fill="url(#custLostBodyGrad)" />
+    </g>
+    <path
+      d="M14 13.5l6.5 6.5m0 0h-5m5 0v-5"
+      stroke="url(#custLostArrowGrad)"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const RealisticCustomerWonIcon: React.FC<{ size?: number }> = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className="realistic-kpi-icon">
+    <defs>
+      <linearGradient id="custWonBodyGrad" x1="8.5" y1="4" x2="8.5" y2="20" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#34D399" />
+        <stop offset="0.6" stopColor="#10B981" />
+        <stop offset="1" stopColor="#059669" />
+      </linearGradient>
+      <linearGradient id="custWonArrowGrad" x1="14" y1="20" x2="22" y2="12" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#34D399" />
+        <stop offset="1" stopColor="#047857" />
+      </linearGradient>
+    </defs>
+    <circle cx="8.5" cy="8" r="3.2" fill="url(#custWonBodyGrad)" />
+    <path d="M3.5 19.2c0-3.1 2.2-4.9 5-4.9s5 1.8 5 4.9" fill="url(#custWonBodyGrad)" />
+    <path
+      d="M14 18.5l6.5-6.5m0 0h-5m5 0v5"
+      stroke="url(#custWonArrowGrad)"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 // ChatGPT-Style Character-by-Character Typewriter Component
 const TypewriterText: React.FC<{
   text: string;
@@ -167,7 +329,6 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
   const [selectedIssue, setSelectedIssue] = useState<AuditIssue | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [animatedScore, setAnimatedScore] = useState(0);
-  const [isMathBreakdownOpen, setIsMathBreakdownOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -622,28 +783,29 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
     { icon_type: 'time_lag', text: 'It will get harder to catch up as competitors keep improving.' },
   ];
 
-  // Icon mapping helper
-  const renderItemIcon = (type?: string, color?: string) => {
-    const size = 18;
+  // Icon mapping helper with professional depth styling
+  const renderItemIcon = (type?: string, customColor?: string) => {
+    const size = 19;
+    const strokeWidth = 2.2;
     switch (type) {
       case 'reviews':
-        return <MessageSquare size={size} color={color || '#EF4444'} />;
+        return <MessageSquare size={size} strokeWidth={strokeWidth} color={customColor} />;
       case 'services':
-        return <ListOrdered size={size} color={color || '#F97316'} />;
+        return <ListOrdered size={size} strokeWidth={strokeWidth} color={customColor} />;
       case 'description':
-        return <FileText size={size} color={color || '#F59E0B'} />;
+        return <FileText size={size} strokeWidth={strokeWidth} color={customColor} />;
       case 'categories':
-        return <Grid size={size} color={color || '#EAB308'} />;
+        return <Grid size={size} strokeWidth={strokeWidth} color={customColor} />;
       case 'photos':
-        return <Camera size={size} color={color || '#EC4899'} />;
+        return <Camera size={size} strokeWidth={strokeWidth} color={customColor} />;
       case 'seo':
-        return <Link2 size={size} color={color || '#3B82F6'} />;
+        return <Link2 size={size} strokeWidth={strokeWidth} color={customColor} />;
       case 'keywords':
-        return <Search size={size} color={color || '#8B5CF6'} />;
+        return <Search size={size} strokeWidth={strokeWidth} color={customColor} />;
       case 'posts':
-        return <Megaphone size={size} color={color || '#10B981'} />;
+        return <Megaphone size={size} strokeWidth={strokeWidth} color={customColor} />;
       default:
-        return <Sparkles size={size} color={color || '#7C3AED'} />;
+        return <Sparkles size={size} strokeWidth={strokeWidth} color={customColor} />;
     }
   };
 
@@ -1355,7 +1517,11 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   src={business.photo_url}
                   alt={business.name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }}
-                  fallback={<Building2 size={24} color="#7C3AED" />}
+                  fallback={
+                    <div className="masthead-photo-fallback">
+                      <Building2 size={24} strokeWidth={2.2} color="#7C3AED" />
+                    </div>
+                  }
                 />
               </div>
               <div className="masthead-info">
@@ -1368,7 +1534,9 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   <span>{cleanDisplayAddress}</span>
                 </div>
                 <div className="masthead-rating-row">
-                  <Star size={13} fill="#F59E0B" color="#F59E0B" />
+                  <div className="masthead-star-wrap">
+                    <Star size={13} fill="#F59E0B" color="#F59E0B" strokeWidth={1.5} />
+                  </div>
                   <span className="masthead-rating-val">
                     {business.rating !== undefined && business.rating !== null ? business.rating.toFixed(1) : '4.0'}
                   </span>
@@ -1414,7 +1582,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                 {/* Live Ready Badge when generation completes */}
                 {!isGenerating && auditReady && animationStage < 99 && (
                   <div className="audit-live-ready-badge">
-                    <CheckCircle2 size={13} color="#059669" />
+                    <CheckCircle2 size={13} strokeWidth={2.2} color="#059669" />
                     <span>Audit Complete</span>
                   </div>
                 )}
@@ -1436,169 +1604,173 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
               </div>
             )}
 
-            {/* Revenue Loss Statement */}
+            {/* Revenue Loss Statement / Your Growth Opportunity */}
             {animationStage >= 1 && report && !isGenerating && (
-              <div className="wound-hero-statement">
-                {userRank === 1 ? (
-                  <>
-                    <div className="wound-money-stat" style={{ color: '#059669' }}>
-                      {animationStage === 1 ? (
-                        <TypewriterText
-                          text={`~${userEstimatedCalls} calls/mo captured`}
-                          speed={16}
-                          onComplete={() => {
-                            setTimeout(() => setAnimationStage(2), 200);
-                          }}
-                        />
-                      ) : (
-                        `~${userEstimatedCalls} calls/mo captured`
-                      )}
-                    </div>
-                    <p className="wound-money-label" style={{ color: '#047857' }}>
-                      {animationStage === 1 ? (
-                        <TypewriterText
-                          text="You hold the #1 spot — but competitors are closing the gap"
-                          speed={12}
-                          startDelay={200}
-                        />
-                      ) : (
-                        "You hold the #1 spot — but competitors are closing the gap"
-                      )}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div className="wound-money-stat">
-                      {animationStage === 1 ? (
-                        <TypewriterText
-                          text={`₹${estimatedLowRevenue.toLocaleString('en-IN')}–₹${estimatedHighRevenue.toLocaleString('en-IN')}/mo`}
-                          speed={16}
-                          onComplete={() => {
-                            setTimeout(() => setAnimationStage(2), 200);
-                          }}
-                        />
-                      ) : (
-                        `₹${estimatedLowRevenue.toLocaleString('en-IN')}–₹${estimatedHighRevenue.toLocaleString('en-IN')}/mo`
-                      )}
-                    </div>
-                    <p className="wound-money-label">
-                      {animationStage === 1 ? (
-                        <TypewriterText
-                          text={`going to competitors because you're ranked #${userRank} on Google Maps`}
-                          speed={12}
-                          startDelay={200}
-                        />
-                      ) : (
-                        <>
-                          <span className="editorial-serif">going to competitors</span> because you're ranked #{userRank} on Google Maps
-                        </>
-                      )}
-                    </p>
-                  </>
-                )}
-
-                {/* Transparent Math Breakdown Toggle */}
-                {animationStage >= 2 && (
-                  <div className="wound-math-toggle-wrap typewriter-section-enter">
-                    <button
-                      type="button"
-                      className="wound-math-toggle-btn"
-                      onClick={() => setIsMathBreakdownOpen(!isMathBreakdownOpen)}
-                      aria-expanded={isMathBreakdownOpen}
-                    >
-                      <HelpCircle size={14} color="#7C3AED" />
-                      <span>How is this calculated?</span>
-                      {isMathBreakdownOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-                  </div>
-                )}
-
-                {/* Expandable Transparent Breakdown Card */}
-                {isMathBreakdownOpen && (
-                  <div className="wound-math-breakdown-card">
-                    <div className="math-card-header">
-                      <div className="math-card-badge">
-                        <Sparkles size={13} color="#7C3AED" />
-                        <span>Live Unit Economics & Local Search Math</span>
+              <div className="wound-hero-statement-card">
+                <div className="growth-opp-card-inner">
+                  {/* Top Row: Revenue info on Left, Shop Vector on Right */}
+                  <div className="growth-opp-top-row">
+                    {/* Left: Data & Narrative */}
+                    <div className="growth-opp-content-col">
+                      {/* Badge */}
+                      <div className="growth-opp-badge">
+                        <div className="growth-opp-badge-icon-wrap">
+                          <TrendingUp size={11} strokeWidth={2.5} />
+                        </div>
+                        <span>{userRank === 1 ? 'Your Market Leadership' : 'Your Growth Opportunity'}</span>
                       </div>
-                      <span className="math-card-source">
-                        Data Source: {revenueBreakdown.price_source}
-                      </span>
+
+                      {/* Headline */}
+                      <div className="growth-opp-headline-block">
+                        <div className="growth-opp-lead">
+                          {userRank === 1 ? "You're capturing" : "You're losing"}
+                        </div>
+                        <div className="growth-opp-amount-row">
+                          {userRank === 1 ? (
+                            <span className="growth-opp-amount" style={{ color: '#059669' }}>
+                              ~{userEstimatedCalls} calls
+                            </span>
+                          ) : estimatedLowRevenue !== estimatedHighRevenue ? (
+                            <>
+                              <span className="growth-opp-amount growth-opp-amount-start">
+                                ₹{estimatedLowRevenue.toLocaleString('en-IN')} –
+                              </span>
+                              <span className="growth-opp-amount growth-opp-amount-end">
+                                ₹{estimatedHighRevenue.toLocaleString('en-IN')}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="growth-opp-amount growth-opp-amount-start">
+                              ₹{estimatedLowRevenue.toLocaleString('en-IN')}
+                            </span>
+                          )}
+                          <span className="growth-opp-period">every month</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="math-steps-grid">
-                      {/* Step 1: Volume / Review Velocity */}
-                      <div className="math-step-item">
-                        <div className="math-step-num">Step 1</div>
-                        <div className="math-step-title">
-                          {revenueBreakdown.engine_version?.startsWith('v4') ? 'Review Velocity & Customers' : 'Local Search Demand'}
-                        </div>
-                        <div className="math-step-val">
-                          {revenueBreakdown.engine_version?.startsWith('v4')
-                            ? `~${(revenueBreakdown.your_estimated_customers_per_month ?? userEstimatedCalls).toLocaleString('en-IN')} customers/mo`
-                            : `~${revenueBreakdown.search_volume_est.toLocaleString('en-IN')} searches/mo`
-                          }
-                        </div>
-                        <p className="math-step-desc">
-                          {revenueBreakdown.engine_version?.startsWith('v4')
-                            ? `Calculated from verified Google Places review velocity (${business.review_count ?? 0} reviews) at vertical conversion rate. Estimated current monthly customers.`
-                            : `Local ${business.category || 'industry'} demand in ${locationLabel}. At Google's verified 5.2% Local 3-Pack CTR, that generates ~${revenueBreakdown.total_pack_calls} monthly calls.`
-                          }
-                        </p>
-                      </div>
+                    {/* Right: Storefront Illustration right next to the amount */}
+                    <div className="growth-opp-illustration-col">
+                      <div className="growth-opp-storefront-wrapper">
+                        <svg className="growth-opp-store-svg" viewBox="0 0 290 195" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <defs>
+                            <filter id="bubble-shadow" x="180" y="2" width="108" height="74" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                              <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#1E40AF" floodOpacity="0.1" />
+                            </filter>
+                          </defs>
 
-                      {/* Step 2: Position & Rival Footfall Gap */}
-                      <div className="math-step-item">
-                        <div className="math-step-num">Step 2</div>
-                        <div className="math-step-title">
-                          {revenueBreakdown.engine_version?.startsWith('v4') ? 'Competitive Volume Gap' : '3-Pack Ranking Call Share'}
-                        </div>
-                        <div className="math-step-val">
-                          {userRank === 1
-                            ? 'Rank #1 (Market Leader)'
-                            : `~${(revenueBreakdown.lost_customers_monthly ?? revenueBreakdown.missed_calls).toLocaleString('en-IN')} customers/mo gap`
-                          }
-                        </div>
-                        <p className="math-step-desc">
-                          {userRank === 1
-                            ? `You lead the local market in customer volume at #1. Top rivals are actively competing for your position.`
-                            : `Top competitors ahead of you capture ~${(revenueBreakdown.target_estimated_customers_per_month ?? revenueBreakdown.rank1_calls).toLocaleString('en-IN')} customers/mo. Gap of ~${(revenueBreakdown.lost_customers_monthly ?? revenueBreakdown.missed_calls).toLocaleString('en-IN')} customers lost to rivals every month.`
-                          }
-                        </p>
-                      </div>
+                          {/* Background Aura */}
+                          <ellipse cx="120" cy="115" rx="98" ry="68" fill="#EEF2FF" />
 
-                      {/* Step 3: Verified Pricing & Conversion */}
-                      <div className="math-step-item">
-                        <div className="math-step-num">Step 3</div>
-                        <div className="math-step-title">Average Order Value (AOV)</div>
-                        <div className="math-step-val">
-                          ₹{revenueBreakdown.avg_ticket_low.toLocaleString('en-IN')}–₹{revenueBreakdown.avg_ticket_high.toLocaleString('en-IN')} avg spend
-                        </div>
-                        <p className="math-step-desc">
-                          {revenueBreakdown.google_price_range
-                            ? `Verified from Google Places API (${revenueBreakdown.currency} ${revenueBreakdown.google_price_range.start_price}–${revenueBreakdown.google_price_range.end_price}/person). Party dining order: ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high}.`
-                            : `Standard ${business.category || 'category'} benchmark spend: ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high}.`
-                          }
-                        </p>
-                      </div>
+                          {/* Sunburst rays */}
+                          <path d="M120 14 L120 4" stroke="#93C5FD" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M142 20 L150 11" stroke="#93C5FD" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M98 20 L90 11" stroke="#93C5FD" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M72 34 L64 28" stroke="#93C5FD" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M168 34 L176 28" stroke="#93C5FD" strokeWidth="2.5" strokeLinecap="round" />
 
-                      {/* Step 4: Net Impact */}
-                      <div className="math-step-item math-step-highlight">
-                        <div className="math-step-num">Result</div>
-                        <div className="math-step-title">{userRank === 1 ? 'Monthly Captured Value' : 'Net Monthly & Annual Loss'}</div>
-                        <div className="math-step-val math-val-loss" style={{ color: userRank === 1 ? '#059669' : '#DC2626' }}>
-                          ₹{revenueBreakdown.monthly_loss_low.toLocaleString('en-IN')}–₹{revenueBreakdown.monthly_loss_high.toLocaleString('en-IN')}/mo
-                        </div>
-                        <p className="math-step-desc">
-                          {userRank === 1
-                            ? `Capturing ~₹${(revenueBreakdown.annual_loss_low).toLocaleString('en-IN')}–₹${(revenueBreakdown.annual_loss_high).toLocaleString('en-IN')}/yr in local revenue at #1.`
-                            : `~${(revenueBreakdown.lost_customers_monthly ?? revenueBreakdown.missed_calls).toLocaleString('en-IN')} lost customers/mo × ₹${revenueBreakdown.avg_ticket_low}–₹${revenueBreakdown.avg_ticket_high} = ₹${revenueBreakdown.monthly_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.monthly_loss_high.toLocaleString('en-IN')}/mo (annualized: ₹${revenueBreakdown.annual_loss_low.toLocaleString('en-IN')}–₹${revenueBreakdown.annual_loss_high.toLocaleString('en-IN')}/yr).`
-                          }
-                        </p>
+                          {/* Store Upper Facade */}
+                          <rect x="42" y="32" width="156" height="152" rx="10" fill="#1E3A5F" />
+
+                          {/* Business Name Signboard */}
+                          <text
+                            x="120"
+                            y="56"
+                            textAnchor="middle"
+                            fill="#FFFFFF"
+                            fontSize="13"
+                            fontWeight="800"
+                            fontFamily="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+                          >
+                            {cleanBusinessName.length > 18 ? cleanBusinessName.slice(0, 16) + '…' : cleanBusinessName}
+                          </text>
+
+                          {/* Striped Awning */}
+                          <polygon points="30,68 210,68 218,104 22,104" fill="#EA580C" />
+                          <polygon points="22,104 30,68 52,68 46,104" fill="#FB923C" />
+                          <polygon points="46,104 52,68 74,68 68,104" fill="#FEF3C7" />
+                          <polygon points="68,104 74,68 96,68 90,104" fill="#F97316" />
+                          <polygon points="90,104 96,68 118,68 112,104" fill="#FEF3C7" />
+                          <polygon points="112,104 118,68 140,68 134,104" fill="#FB923C" />
+                          <polygon points="134,104 140,68 162,68 156,104" fill="#FEF3C7" />
+                          <polygon points="156,104 162,68 184,68 178,104" fill="#F97316" />
+                          <polygon points="178,104 184,68 206,68 200,104" fill="#FEF3C7" />
+                          <polygon points="200,104 206,68 210,68 218,104" fill="#FB923C" />
+
+                          {/* Lower Facade Wall */}
+                          <rect x="42" y="104" width="156" height="80" fill="#F8FAFC" />
+
+                          {/* Door Frame & Glass */}
+                          <rect x="56" y="112" width="46" height="72" rx="3" fill="#E0F2FE" stroke="#0284C7" strokeWidth="2.5" />
+                          <line x1="79" y1="112" x2="79" y2="184" stroke="#0284C7" strokeWidth="1.5" />
+                          <line x1="56" y1="148" x2="102" y2="148" stroke="#0284C7" strokeWidth="1.5" />
+                          <circle cx="75" cy="150" r="2.5" fill="#D97706" />
+                          <circle cx="83" cy="150" r="2.5" fill="#D97706" />
+
+                          {/* Display Window */}
+                          <rect x="112" y="112" width="70" height="52" rx="3" fill="#BAE6FD" opacity="0.6" stroke="#0284C7" strokeWidth="2.5" />
+                          <line x1="147" y1="112" x2="147" y2="164" stroke="#0284C7" strokeWidth="1.5" />
+                          <line x1="112" y1="138" x2="182" y2="138" stroke="#0284C7" strokeWidth="1.5" />
+
+                          {/* Bench below window */}
+                          <rect x="110" y="168" width="74" height="16" rx="3" fill="#94A3B8" />
+
+                          {/* Potted Plants on Left */}
+                          <polygon points="24,166 36,166 34,184 26,184" fill="#C2410C" />
+                          <rect x="29" y="142" width="2.5" height="24" fill="#78350F" />
+                          <circle cx="30" cy="138" r="14" fill="#22C55E" />
+                          <circle cx="35" cy="134" r="10" fill="#16A34A" />
+
+                          {/* Potted Plants on Right */}
+                          <polygon points="204,166 216,166 214,184 206,184" fill="#C2410C" />
+                          <ellipse cx="212" cy="154" rx="14" ry="18" fill="#22C55E" transform="rotate(15 212 154)" />
+                          <ellipse cx="204" cy="156" rx="12" ry="16" fill="#16A34A" transform="rotate(-15 204 156)" />
+
+                          {/* Base Ground Step */}
+                          <rect x="14" y="184" width="212" height="8" rx="4" fill="#CBD5E1" />
+
+                          {/* Integrated Speech Bubble */}
+                          <g filter="url(#bubble-shadow)">
+                            <rect x="186" y="8" width="96" height="52" rx="12" fill="#FFFFFF" stroke="#BFDBFE" strokeWidth="1.5" />
+                            <polygon points="194,59 204,59 188,68" fill="#FFFFFF" stroke="#BFDBFE" strokeWidth="1.5" strokeLinejoin="round" />
+                            <polygon points="194,58 203,58 190,65" fill="#FFFFFF" />
+                          </g>
+
+                          {/* Speech Bubble Text */}
+                          <text
+                            x="234"
+                            y="22"
+                            textAnchor="middle"
+                            fill="#1E40AF"
+                            fontSize="8.5"
+                            fontWeight="700"
+                            fontFamily="'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+                          >
+                            <tspan x="234" dy="0">More people</tspan>
+                            <tspan x="234" dy="11">finding you =</tspan>
+                            <tspan x="234" dy="11">More customers</tspan>
+                            <tspan x="234" dy="11">= More revenue</tspan>
+                          </text>
+
+                          {/* Hand-drawn Style Curved Blue Arrow swooping to store entrance */}
+                          <path d="M266 74 C268 96 250 106 230 114" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round" />
+                          <path d="M238 107 L228 115 L234 122" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                          <line x1="250" y1="122" x2="258" y2="122" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round" />
+                        </svg>
                       </div>
                     </div>
                   </div>
-                )}
+
+                  {/* Bottom Row: Description */}
+                  <div className="growth-opp-bottom-row">
+                    <p className="growth-opp-description">
+                      {userRank === 1
+                        ? 'You hold the #1 spot on Google Maps. Maintain your profile optimization and review velocity to protect your lead.'
+                        : 'This is the potential revenue you could get by improving your online visibility and customer reach.'
+                      }
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1609,7 +1781,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                 <div className={`kpi-card ${userRank <= 3 ? 'kpi-card-good' : 'kpi-card-alert'}`}>
                   <div className="kpi-card-header">
                     <div className={`kpi-card-icon-wrap ${userRank <= 3 ? 'rank-icon-good' : 'rank-icon-alert'}`}>
-                      {userRank <= 3 ? <Trophy size={13} /> : <MapPin size={13} />}
+                      {userRank <= 3 ? <RealisticTrophyIcon /> : <RealisticMapPinIcon />}
                     </div>
                     <span className="kpi-card-label">Google Maps</span>
                   </div>
@@ -1621,21 +1793,21 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   </div>
                 </div>
 
-                {/* Card 2: Local Customer Share / Inquiries */}
-                <div className="kpi-card kpi-card-purple">
+                {/* Card 2: Local Customer Share / Inquiries (With Person Avatar) */}
+                <div className={`kpi-card ${userRank <= 3 ? 'kpi-card-customer' : 'kpi-card-customer-alert'}`}>
                   <div className="kpi-card-header">
-                    <div className="kpi-card-icon-wrap share-icon">
-                      <Phone size={13} />
+                    <div className="kpi-card-icon-wrap customer-icon">
+                      <RealisticCustomerGroupIcon />
                     </div>
                     <span className="kpi-card-label">
                       {revenueBreakdown.engine_version?.startsWith('v4') ? 'Your Customers' : 'Calls You Get'}
                     </span>
                   </div>
-                  <div className="kpi-card-val" style={{ color: '#7C3AED' }}>
+                  <div className="kpi-card-val" style={{ color: '#059669' }}>
                     ~{revenueBreakdown.engine_version?.startsWith('v4') ? userEstimatedCalls.toLocaleString('en-IN') : `${userCallSharePct}%`}
                     {revenueBreakdown.engine_version?.startsWith('v4') && <span className="kpi-card-unit">/mo</span>}
                   </div>
-                  <div className={`kpi-card-badge ${userRank <= 3 ? 'badge-purple' : 'badge-alert'}`}>
+                  <div className={`kpi-card-badge ${userRank <= 3 ? 'badge-customer' : 'badge-alert'}`}>
                     {userRank === 1 ? 'Market Leader' : userRank <= 3 ? 'In Top 3 Pack' : 'Below Top 3'}
                   </div>
                 </div>
@@ -1644,7 +1816,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                 <div className={`kpi-card ${userRank === 1 ? 'kpi-card-good' : 'kpi-card-loss'}`}>
                   <div className="kpi-card-header">
                     <div className={`kpi-card-icon-wrap ${userRank === 1 ? 'loss-icon-good' : 'loss-icon-alert'}`}>
-                      {userRank === 1 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                      {userRank === 1 ? <RealisticCustomerWonIcon /> : <RealisticCustomerLostIcon />}
                     </div>
                     <span className="kpi-card-label">
                       {userRank === 1
@@ -1668,27 +1840,25 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
               <div className="wound-completeness-banner typewriter-section-enter">
                 <div className="completeness-bar-header">
                   <div className="completeness-bar-title-wrap">
-                    <span className="completeness-bar-label">Profile Completeness:</span>
-                    <strong
-                      className="completeness-bar-pct"
-                      style={{
-                        color:
-                          profileCompleteness.percentage >= 75
-                            ? '#10B981'
-                            : profileCompleteness.percentage >= 60
-                              ? '#D97706'
-                              : '#DC2626',
-                      }}
+                    <div className={`completeness-icon-depth ${profileCompleteness.percentage >= 75 ? 'icon-good' : profileCompleteness.percentage >= 60 ? 'icon-warn' : 'icon-alert'}`}>
+                      <ShieldCheck
+                        size={16}
+                        strokeWidth={2.3}
+                      />
+                    </div>
+                    <span className="completeness-bar-label">Profile Completeness</span>
+                    <span
+                      className={`completeness-pct-pill ${profileCompleteness.percentage >= 75 ? 'pill-good' : profileCompleteness.percentage >= 60 ? 'pill-warn' : 'pill-alert'}`}
                     >
                       {animatedScore}% Setup
-                    </strong>
+                    </span>
                   </div>
                   <span
                     className="completeness-bar-badge"
                     style={{
-                      color: profileCompleteness.missingCount > 4 ? '#DC2626' : '#D97706',
-                      background: profileCompleteness.missingCount > 4 ? '#FEF2F2' : '#FFFBEB',
-                      border: `1px solid ${profileCompleteness.missingCount > 4 ? '#FECACA' : '#FDE68A'}`,
+                      color: profileCompleteness.missingCount > 4 ? '#B91C1C' : '#B45309',
+                      background: profileCompleteness.missingCount > 4 ? 'rgba(254, 226, 226, 0.9)' : 'rgba(254, 243, 199, 0.9)',
+                      border: `1px solid ${profileCompleteness.missingCount > 4 ? 'rgba(252, 165, 165, 0.8)' : 'rgba(251, 191, 36, 0.7)'}`,
                     }}
                   >
                     {profileCompleteness.missingCount} Gaps Found
@@ -1696,24 +1866,18 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                 </div>
                 <div className="completeness-track">
                   <div
-                    className="completeness-fill"
+                    className={`completeness-fill ${profileCompleteness.percentage >= 75 ? 'fill-good' : profileCompleteness.percentage >= 60 ? 'fill-warn' : 'fill-alert'}`}
                     style={{
                       width: `${animatedScore}%`,
-                      background:
-                        profileCompleteness.percentage >= 75
-                          ? '#10B981'
-                          : profileCompleteness.percentage >= 60
-                            ? '#F59E0B'
-                            : '#DC2626',
                     }}
                   />
                 </div>
-                <p className="completeness-bar-desc">
-                  <strong style={{ color: '#DC2626' }}>
-                    {profileCompleteness.missingCount} of {profileCompleteness.total} profile elements missing
-                  </strong>{' '}
-                  — why competitors rank ahead
-                </p>
+                <div className="completeness-bar-footer">
+                  <span className="completeness-missing-text">
+                    <strong>{profileCompleteness.missingCount} of {profileCompleteness.total} elements missing</strong>
+                  </span>
+                  <span className="completeness-hint-text">Why competitors rank ahead</span>
+                </div>
               </div>
             )}
           </section>
@@ -1725,11 +1889,16 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
             <section id="section-proof" className="report-section section-proof-flow typewriter-section-enter">
               {/* Rank Leaderboard */}
               <div className="section-title-wrap">
-                <div className="section-title-left">
-                  <h3 className="section-title">
-                    <span className="editorial-serif">Google Maps</span> Rankings
-                  </h3>
-                  <p className="section-subtitle">Live positions in {locationLabel}</p>
+                <div className="section-title-row-with-badge">
+                  <div className="section-title-icon-badge proof">
+                    <Trophy size={16} strokeWidth={2.2} />
+                  </div>
+                  <div className="section-title-left">
+                    <h3 className="section-title">
+                      <span className="editorial-serif">Google Maps</span> Rankings
+                    </h3>
+                    <p className="section-subtitle">Live positions in {locationLabel}</p>
+                  </div>
                 </div>
                 <span className="section-header-pill green">84% calls → Top 3</span>
               </div>
@@ -1746,7 +1915,9 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                     >
                       {slot.isBlurred && (
                         <div className="leaderboard-lock-overlay" onClick={() => setIsPlanModalOpen(true)}>
-                          <Lock size={14} color="#6366F1" />
+                          <div className="leaderboard-lock-icon-wrap">
+                            <Lock size={13} strokeWidth={2.2} color="#6366F1" />
+                          </div>
                           <span className="leaderboard-lock-text">Unlock all competitors</span>
                         </div>
                       )}
@@ -1761,7 +1932,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                           style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '8px' }}
                           fallback={
                             <div className="leaderboard-photo-fallback" style={{ background: slot.isUser ? '#EDE9FE' : '#F1F5F9' }}>
-                              <Building2 size={16} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
+                              <Building2 size={16} strokeWidth={2.2} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
                             </div>
                           }
                         />
@@ -1806,7 +1977,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   <div className="leaderboard-cutoff-line">
                     <div className="cutoff-divider" />
                     <span className="cutoff-badge">
-                      <AlertTriangle size={10} color="#DC2626" style={{ display: 'inline', verticalAlign: '-1px', marginRight: '3px' }} />
+                      <AlertTriangle size={11} strokeWidth={2.2} color="#DC2626" style={{ display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
                       84% OF CALLS GO TO TOP 3
                     </span>
                     <div className="cutoff-divider" />
@@ -1821,7 +1992,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   <div className="h2h-module-header">
                     <div className="h2h-module-title-row">
                       <div className="h2h-icon-box">
-                        <Swords size={16} color="#DC2626" />
+                        <Swords size={18} strokeWidth={2.2} color="#DC2626" />
                       </div>
                       <div>
                         <h4 className="h2h-module-title">Head-to-Head Battle</h4>
@@ -1844,7 +2015,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             fallback={
                               <div className="h2h-avatar-fallback you-fallback">
-                                <Building2 size={20} color="#7C3AED" />
+                                <Building2 size={20} strokeWidth={2.2} color="#7C3AED" />
                               </div>
                             }
                           />
@@ -1874,7 +2045,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             fallback={
                               <div className="h2h-avatar-fallback rival-fallback">
-                                <Building2 size={20} color="#059669" />
+                                <Building2 size={20} strokeWidth={2.2} color="#059669" />
                               </div>
                             }
                           />
@@ -1884,7 +2055,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                             {formatShortName(topRival.name, 15)}
                           </span>
                           <span className="h2h-profile-rank-chip rank-rival">
-                            <Crown size={11} color="#059669" style={{ verticalAlign: 'middle', marginRight: '3px' }} />
+                            <Crown size={12} strokeWidth={2.2} color="#059669" style={{ verticalAlign: 'middle', marginRight: '3px' }} />
                             Rank #1 Leader
                           </span>
                         </div>
@@ -1963,7 +2134,9 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
 
                   {/* Bottom Impact Takeaway */}
                   <div className="h2h-takeaway-banner">
-                    <Flame size={14} color="#DC2626" style={{ flexShrink: 0 }} />
+                    <div className="h2h-flame-icon-wrap">
+                      <Flame size={14} strokeWidth={2.2} color="#DC2626" />
+                    </div>
                     <span>
                       <strong>{formatShortName(topRival.name, 20)}</strong> captures ~<strong>{Math.max(15, topRivalCalls - userEstimatedCalls)} more calls every month</strong> simply by claiming Google's #1 spot.
                     </span>
@@ -1979,11 +2152,16 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           {animationStage >= 4 && report && !isGenerating && (
             <section id="section-searches" className="report-section section-searches-flow typewriter-section-enter">
               <div className="section-title-wrap">
-                <div className="section-title-left">
-                  <h3 className="section-title">
-                    <span className="editorial-serif">Real Customer</span> Searches
-                  </h3>
-                  <p className="section-subtitle">High-intent searches in {locationLabel} — and where you rank</p>
+                <div className="section-title-row-with-badge">
+                  <div className="section-title-icon-badge searches">
+                    <Search size={16} strokeWidth={2.2} />
+                  </div>
+                  <div className="section-title-left">
+                    <h3 className="section-title">
+                      <span className="editorial-serif">Real Customer</span> Searches
+                    </h3>
+                    <p className="section-subtitle">High-intent searches in {locationLabel} — and where you rank</p>
+                  </div>
                 </div>
                 <span className="section-header-pill indigo">
                   {realSearchesList.length} Searches Tracked
@@ -1997,7 +2175,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                     <div key={idx} className={`search-clean-row ${item.is_critical ? 'is-critical-query' : ''}`}>
                       <div className="search-query-left">
                         <div className="search-pill-icon">
-                          <Search size={13} color="#64748B" />
+                          <Search size={14} strokeWidth={2.2} color="#4F46E5" />
                         </div>
                         <div className="search-query-text-wrap">
                           <span className="search-query-phrase">"{item.query}"</span>
@@ -2032,13 +2210,16 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   <span>{showAllSearches ? 'Show fewer searches' : `View all ${realSearchesList.length} local searches (${realSearchesList.length - 3} more)`}</span>
                   <ChevronDown
                     size={14}
+                    strokeWidth={2.2}
                     style={{ transform: showAllSearches ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}
                   />
                 </button>
               )}
 
               <div className="searches-insight-footer">
-                <Sparkles size={14} color="#7C3AED" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div className="searches-sparkles-wrap">
+                  <Sparkles size={14} strokeWidth={2.2} color="#7C3AED" />
+                </div>
                 <span>
                   <strong>Optigo AI Auto-Indexing:</strong> We inject these local keywords into your Google Business Profile categories, bio, and geotagged photos so nearby customers call you first.
                 </span>
@@ -2052,13 +2233,18 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           {animationStage >= 5 && report && !isGenerating && (
             <section id="section-reason" className="report-section section-reason-flow typewriter-section-enter">
               <div className="section-title-wrap">
-                <div className="section-title-left">
-                  <h3 className="section-title">
-                    {mergedFixList.length} Issues Holding You Back
-                  </h3>
-                  <p className="section-subtitle">
-                    These are directly causing Google to rank rivals above you.
-                  </p>
+                <div className="section-title-row-with-badge">
+                  <div className="section-title-icon-badge reason">
+                    <Zap size={16} strokeWidth={2.2} />
+                  </div>
+                  <div className="section-title-left">
+                    <h3 className="section-title">
+                      {mergedFixList.length} Issues Holding You Back
+                    </h3>
+                    <p className="section-subtitle">
+                      These are directly causing Google to rank rivals above you.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -2073,13 +2259,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                       onClick={() => setExpandedIssueId(isExpanded ? null : item.id)}
                     >
                       <div className="fix-list-main-row">
-                        <div
-                          className="fix-list-icon"
-                          style={{
-                            background: item.badgeVariant === 'critical' ? '#FEF2F2' : item.badgeVariant === 'quick_win' ? '#FFFBEB' : '#EEF2FF',
-                            border: `1px solid ${item.badgeVariant === 'critical' ? '#FEE2E2' : item.badgeVariant === 'quick_win' ? '#FEF3C7' : '#E0E7FF'}`,
-                          }}
-                        >
+                        <div className={`fix-list-icon fix-icon-${item.icon_type || 'default'}`}>
                           {renderItemIcon(item.icon_type, item.color)}
                         </div>
                         <div className="fix-list-body">
@@ -2091,7 +2271,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                             {item.badgeText}
                           </span>
                           <div className="fix-list-chevron">
-                            <ChevronRight size={14} />
+                            <ChevronRight size={14} strokeWidth={2.2} />
                           </div>
                         </div>
                       </div>
@@ -2104,13 +2284,13 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                         >
                           {item.competitorBenchmark && (
                             <div className="fix-benchmark-row">
-                              <Flame size={13} color="#DC2626" />
+                              <Flame size={13} strokeWidth={2.2} color="#DC2626" />
                               <span><strong>Rival Benchmark:</strong> {item.competitorBenchmark}</span>
                             </div>
                           )}
                           <div className="fix-ai-box">
                             <div className="fix-ai-icon-wrap">
-                              <Sparkles size={14} color="#7C3AED" />
+                              <Sparkles size={14} strokeWidth={2.2} color="#7C3AED" />
                             </div>
                             <div className="fix-ai-content">
                               <span className="fix-ai-label">How Optigo AI Solves This</span>
@@ -2129,6 +2309,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   <span>{showAllIssues ? 'Show fewer issues' : `+${mergedFixList.length - 3} more issues`}</span>
                   <ChevronRight
                     size={14}
+                    strokeWidth={2.2}
                     style={{
                       transform: showAllIssues ? 'rotate(-90deg)' : 'rotate(90deg)',
                       transition: 'transform 0.15s ease',
@@ -2145,11 +2326,16 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           {animationStage >= 5 && report && !isGenerating && (
             <section id="section-cost" className="report-section section-cost-flow typewriter-section-enter">
               <div className="section-title-wrap">
-                <div className="section-title-left">
-                  <h3 className="section-title">
-                    <span className="editorial-serif">What happens</span> if you do nothing?
-                  </h3>
-                  <p className="section-subtitle">Delaying optimization compounds rival advantage over time</p>
+                <div className="section-title-row-with-badge">
+                  <div className="section-title-icon-badge cost">
+                    <TrendingDown size={16} strokeWidth={2.2} />
+                  </div>
+                  <div className="section-title-left">
+                    <h3 className="section-title">
+                      <span className="editorial-serif">What happens</span> if you do nothing?
+                    </h3>
+                    <p className="section-subtitle">Delaying optimization compounds rival advantage over time</p>
+                  </div>
                 </div>
               </div>
 
@@ -2157,11 +2343,11 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                 {inactionConsequences.map((item, idx) => (
                   <div key={idx} className="inaction-row">
                     <div className="inaction-bullet-icon">
-                      {item.icon_type === 'down_trend' && <TrendingDown size={14} color="#DC2626" />}
-                      {item.icon_type === 'lost_customers' && <Users size={14} color="#DC2626" />}
-                      {item.icon_type === 'time_lag' && <Clock size={14} color="#DC2626" />}
+                      {item.icon_type === 'down_trend' && <TrendingDown size={15} strokeWidth={2.2} color="#DC2626" />}
+                      {item.icon_type === 'lost_customers' && <Users size={15} strokeWidth={2.2} color="#DC2626" />}
+                      {item.icon_type === 'time_lag' && <Clock size={15} strokeWidth={2.2} color="#DC2626" />}
                       {!['down_trend', 'lost_customers', 'time_lag'].includes(item.icon_type) && (
-                        <AlertTriangle size={14} color="#DC2626" />
+                        <AlertTriangle size={15} strokeWidth={2.2} color="#DC2626" />
                       )}
                     </div>
                     <p className="inaction-text">{item.text}</p>
@@ -2178,30 +2364,30 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   <div className="fvp-col free-col">
                     <div className="fvp-col-header">Free Report</div>
                     <div className="fvp-row free-row">
-                      <Minus size={12} color="#94A3B8" />
+                      <span className="fvp-icon-wrap minus"><Minus size={11} strokeWidth={3} /></span>
                       <span>One-time snapshot</span>
                     </div>
                     <div className="fvp-row free-row">
-                      <Minus size={12} color="#94A3B8" />
+                      <span className="fvp-icon-wrap minus"><Minus size={11} strokeWidth={3} /></span>
                       <span>See issues only</span>
                     </div>
                     <div className="fvp-row free-row">
-                      <Minus size={12} color="#94A3B8" />
+                      <span className="fvp-icon-wrap minus"><Minus size={11} strokeWidth={3} /></span>
                       <span>Manual effort required</span>
                     </div>
                   </div>
                   <div className="fvp-col paid-col">
                     <div className="fvp-col-header">Optigo AI Paid</div>
                     <div className="fvp-row paid-row">
-                      <Check size={12} color="#16A34A" />
+                      <span className="fvp-icon-wrap check"><Check size={11} strokeWidth={3} /></span>
                       <span>Continuous monitoring</span>
                     </div>
                     <div className="fvp-row paid-row">
-                      <Check size={12} color="#16A34A" />
+                      <span className="fvp-icon-wrap check"><Check size={11} strokeWidth={3} /></span>
                       <span>AI fixes automatically</span>
                     </div>
                     <div className="fvp-row paid-row">
-                      <Check size={12} color="#16A34A" />
+                      <span className="fvp-icon-wrap check"><Check size={11} strokeWidth={3} /></span>
                       <span>Hands-free optimization</span>
                     </div>
                   </div>
@@ -2217,7 +2403,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
             <section id="section-fix" className="report-section section-fix-flow typewriter-section-enter">
               <div className="solution-conversion-card">
                 <div className="solution-icon-wrap">
-                  <Zap size={22} color="#FFFFFF" />
+                  <Zap size={26} strokeWidth={2.3} color="#FFFFFF" />
                 </div>
 
                 <h3 className="solution-card-title">
@@ -2230,7 +2416,9 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                 {/* Revenue Recovery Stat — Integrated, no inner box */}
                 {userRank !== 1 && (
                   <div className="solution-recovery-highlight">
-                    <BarChart3 size={20} color="#4ADE80" style={{ flexShrink: 0 }} />
+                    <div className="solution-recovery-icon-wrap">
+                      <BarChart3 size={20} strokeWidth={2.2} color="#22C55E" />
+                    </div>
                     <div>
                       <span className="solution-recovery-val">
                         +₹{estimatedLowRevenue.toLocaleString('en-IN')}–₹{estimatedHighRevenue.toLocaleString('en-IN')}/mo
@@ -2247,11 +2435,11 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   className="solution-card-btn"
                 >
                   <span>View Plans & Pricing</span>
-                  <ArrowRight size={16} />
+                  <ArrowRight size={16} strokeWidth={2.5} />
                 </button>
 
                 <div className="solution-card-trust">
-                  <ShieldCheck size={16} color="rgba(255, 255, 255, 0.85)" />
+                  <ShieldCheck size={16} strokeWidth={2.2} color="rgba(255, 255, 255, 0.9)" />
                   <span>Trusted by local businesses</span>
                 </div>
               </div>
@@ -2278,7 +2466,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                     className={`rail-item ${isActive ? 'active' : ''}`}
                   >
                     <div className="rail-item-bullet">
-                      <Icon size={12} color={isActive ? '#FFFFFF' : step.color} />
+                      <Icon size={12} strokeWidth={2.2} color={isActive ? '#FFFFFF' : step.color} />
                     </div>
                     <span className="rail-item-label">{step.label}</span>
                   </button>
@@ -2335,9 +2523,9 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
             onClick={() => setIsPlanModalOpen(true)}
             className="mobile-floating-cta-btn"
           >
-            <Sparkles size={13} />
+            <Sparkles size={13} strokeWidth={2.2} />
             <span>{isInTop3 ? (userRank === 1 ? 'Defend #1' : 'Claim #1') : 'Fix Now'}</span>
-            <ArrowRight size={13} />
+            <ArrowRight size={13} strokeWidth={2.5} />
           </button>
         </div>
       )}
@@ -2350,17 +2538,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           <div className="report-modal-dialog" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '8px',
-                    background: '#F1F0FB',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
+                <div className={`fix-modal-icon-wrap fix-icon-${selectedIssue.icon_type || 'default'}`}>
                   {renderItemIcon(selectedIssue.icon_type, selectedIssue.color)}
                 </div>
                 <span
