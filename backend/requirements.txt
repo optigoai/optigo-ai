@@ -51,3 +51,6 @@ httpx==0.28.1
 
 # ---- Rate Limiting ----
 slowapi==0.1.9
+
+# ---- Payment Gateway (Razorpay) ----
+razorpay==1.4.2

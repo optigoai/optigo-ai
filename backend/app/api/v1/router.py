@@ -24,12 +24,16 @@ from app.api.v1.endpoints import (
     websites,
     public_sites,
     leads,
+    payments,
 )
 
 api_router = APIRouter(prefix="/api/v1")
 
 # Single-Page Onboarding, Places Search & Lead Generation (Public)
 api_router.include_router(leads.router, prefix="/leads", tags=["Leads & Onboarding"])
+
+# Razorpay Payments & Webhook Gateway
+api_router.include_router(payments.router)
 
 # Public Website Engine (Unauthenticated public business pages & sitemaps)
 api_router.include_router(public_sites.router)

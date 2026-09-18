@@ -65,6 +65,11 @@ class Settings(BaseSettings):
     # ---- Google Places API (New) ----
     google_places_api_key: str = ""
 
+    # ---- Razorpay Payment Gateway ----
+    razorpay_key_id: str = "rzp_test_TdSKA1rf2jR1p6"
+    razorpay_key_secret: str = ""
+    razorpay_webhook_secret: str = ""
+
     # ---- Website Crawler & Intelligence ----
     website_crawler_provider: str = "firecrawl"  # firecrawl, beautifulsoup, playwright
     firecrawl_api_key: str = ""

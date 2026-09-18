@@ -63,6 +63,8 @@ class LeadResponse(BaseModel):
     plan_duration: Optional[str] = "monthly"
     payment_status: str = "unpaid"
     payment_id: Optional[str] = None
+    payment_amount: Optional[float] = None
+    payment_currency: Optional[str] = "INR"
     notes: Optional[str] = None
     timeline: Optional[List[Dict[str, Any]]] = None
     user_id: Optional[str] = None
@@ -77,22 +79,47 @@ class LeadResponse(BaseModel):
 
 
 class LeadSelectPlanRequest(BaseModel):
-    plan_id: str = Field(..., description="starter, growth, or pro")
+    plan_id: Optional[str] = Field(None, description="starter, growth, or pro")
+    plan: Optional[str] = Field(None, description="Alternative field for plan_id")
     duration: str = Field(default="monthly", description="monthly or annual")
+
+    @property
+    def resolved_plan_id(self) -> str:
+        return self.plan_id or self.plan or "growth"
 
 
 class LeadCreateOrderRequest(BaseModel):
-    plan_id: str
+    plan_id: Optional[str] = None
+    plan: Optional[str] = None
     duration: str = "monthly"
+
+    @property
+    def resolved_plan_id(self) -> str:
+        return self.plan_id or self.plan or "growth"
 
 
 class LeadVerifyPaymentRequest(BaseModel):
     razorpay_order_id: Optional[str] = None
+    order_id: Optional[str] = None
     razorpay_payment_id: Optional[str] = None
+    payment_id: Optional[str] = None
     razorpay_signature: Optional[str] = None
+    signature: Optional[str] = None
     user_email: Optional[str] = None
     user_full_name: Optional[str] = None
     password: Optional[str] = None
+
+    @property
+    def resolved_order_id(self) -> Optional[str]:
+        return self.razorpay_order_id or self.order_id
+
+    @property
+    def resolved_payment_id(self) -> Optional[str]:
+        return self.razorpay_payment_id or self.payment_id
+
+    @property
+    def resolved_signature(self) -> Optional[str]:
+        return self.razorpay_signature or self.signature
 
 
 class LeadStatusUpdateRequest(BaseModel):

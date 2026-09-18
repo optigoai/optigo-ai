@@ -268,12 +268,13 @@ async def select_plan(
     """Track that the lead selected a plan tier and duration."""
     service = LeadService(db)
     try:
+        plan_id = data.resolved_plan_id
         lead = await service.record_stage(
             lead_id,
             "plan_selected",
-            metadata={"plan_id": data.plan_id, "duration": data.duration},
+            metadata={"plan_id": plan_id, "duration": data.duration},
         )
-        return {"status": "ok", "stage": lead.status, "plan_id": data.plan_id}
+        return {"status": "ok", "stage": lead.status, "plan_id": plan_id}
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -287,7 +288,7 @@ async def create_payment_order(
     """Create Razorpay order for plan checkout."""
     service = LeadService(db)
     try:
-        order = await service.create_payment_order(lead_id, plan_id=data.plan_id, duration=data.duration)
+        order = await service.create_payment_order(lead_id, plan_id=data.resolved_plan_id, duration=data.duration)
         return order
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

@@ -39,6 +39,8 @@ import {
   Zap,
   Lock,
   ShieldCheck,
+  CreditCard,
+  Smartphone,
   Loader2,
   X,
   Minus,
@@ -534,40 +536,91 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
     }
   };
 
-  // Handle Plan Checkout
-  const handleSelectAndCheckout = async (planSlug: string) => {
+  // Helper to guarantee Razorpay checkout script is loaded
+  const ensureRazorpayLoaded = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (typeof (window as any).Razorpay !== 'undefined') {
+        return resolve(true);
+      }
+      const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (existingScript) {
+        existingScript.addEventListener('load', () => resolve(true));
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // Handle Plan Checkout via Razorpay
+  const handleSelectAndCheckout = async (planSlug: string = 'growth') => {
     try {
       setSelectedPlanSlug(planSlug);
       setIsProcessingCheckout(true);
 
-      await leadService.selectPlan(leadId, planSlug, billingCycle);
-      const order = await leadService.createPaymentOrder(leadId, planSlug, billingCycle);
+      await leadService.selectPlan(leadId, planSlug, 'monthly');
+      const order = await leadService.createPaymentOrder(leadId, planSlug, 'monthly');
 
-      if (typeof (window as any).Razorpay !== 'undefined' && order.key_id && !order.is_mock) {
+      // Ensure Razorpay SDK is loaded
+      await ensureRazorpayLoaded();
+
+      const rzpAvailable = typeof (window as any).Razorpay !== 'undefined';
+
+      if (rzpAvailable && order.key_id && !order.is_mock) {
         const options = {
           key: order.key_id,
-          amount: order.amount,
-          currency: order.currency,
+          amount: order.amount_paise || Math.round((order.amount || 2999) * 100),
+          currency: order.currency || 'INR',
           name: 'Optigo AI',
-          description: `${order.plan_name} (${billingCycle}) for ${report?.business?.name || 'Your Business'}`,
+          description: `Growth Plan for ${report?.business?.name || leadMeta?.business_name || 'Your Business'}`,
           order_id: order.order_id,
           prefill: {
+            name: leadMeta?.business_name || '',
             contact: leadMeta?.phone || '',
             email: leadMeta?.email || '',
           },
+          config: {
+            display: {
+              blocks: {
+                preferred: {
+                  name: 'Pay using UPI or Card',
+                  instruments: [
+                    { method: 'upi' },
+                    { method: 'card' },
+                  ],
+                },
+              },
+              sequence: ['block.preferred'],
+              preferences: {
+                show_default_blocks: true,
+              },
+            },
+          },
           theme: {
             color: '#7C3AED',
+            backdrop_color: 'rgba(15, 23, 42, 0.75)',
           },
           handler: async (response: any) => {
             try {
+              setIsProcessingCheckout(true);
               const verifyRes = await leadService.verifyPayment(leadId, {
-                order_id: response.razorpay_order_id,
+                order_id: response.razorpay_order_id || order.order_id,
+                razorpay_order_id: response.razorpay_order_id || order.order_id,
                 payment_id: response.razorpay_payment_id,
+                razorpay_payment_id: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
+                razorpay_signature: response.razorpay_signature,
+                user_email: leadMeta?.email,
+                user_full_name: leadMeta?.business_name,
               });
+              setIsPlanModalOpen(false);
               setConversionSuccess(verifyRes);
             } catch (err: any) {
-              alert('Payment verification failed: ' + (err?.message || 'Unknown error'));
+              alert('Payment verification failed: ' + (err?.message || 'Please contact support.'));
             } finally {
               setIsProcessingCheckout(false);
             }
@@ -580,13 +633,25 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
         };
 
         const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', function (resp: any) {
+          const detail = resp?.error?.description || resp?.error?.reason || 'Payment could not be completed';
+          alert(`Payment Failed: ${detail}`);
+          setIsProcessingCheckout(false);
+        });
         rzp.open();
       } else {
+        // Fallback simulation for sandbox testing when secret is not configured
         const verifyRes = await leadService.verifyPayment(leadId, {
           order_id: order.order_id,
-          payment_id: `pay_mock_${Date.now()}`,
+          razorpay_order_id: order.order_id,
+          payment_id: `pay_test_${Date.now().toString().slice(-8)}`,
+          razorpay_payment_id: `pay_test_${Date.now().toString().slice(-8)}`,
           signature: 'sandbox_verified_signature',
+          razorpay_signature: 'sandbox_verified_signature',
+          user_email: leadMeta?.email,
+          user_full_name: leadMeta?.business_name,
         });
+        setIsPlanModalOpen(false);
         setConversionSuccess(verifyRes);
         setIsProcessingCheckout(false);
       }
@@ -1052,23 +1117,20 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           });
         }
       }
-      // Position 4 and 5 competitors if available
-      for (let pos = 4; pos <= 5; pos++) {
-        const comp = competitorsList[compIdx];
-        if (comp) {
-          compIdx++;
-          slots.push({
-            rank: pos,
-            name: comp.name || `Competitor #${pos}`,
-            photo_url: comp.photo_url,
-            rating: comp.rating ?? 4.0,
-            review_count: comp.review_count ?? 300,
-            isUser: false,
-            estimatedCalls: comp.estimated_monthly_calls ?? Math.round(totalLocalCalls * (callDistribution[pos - 1] || 0.03)),
-            callSharePct: comp.call_share_pct ?? Math.round((callDistribution[pos - 1] || 0.03) * 100),
-            isBlurred: false,
-          });
-        }
+      // Position 4+ blurred (only if a 4th competitor exists)
+      const comp4 = competitorsList[compIdx] || (competitorsList.length >= 4 ? competitorsList[3] : undefined);
+      if (comp4) {
+        slots.push({
+          rank: Math.max(4, comp4.rank || 4),
+          name: comp4.name || 'Competitor #4',
+          photo_url: comp4.photo_url,
+          rating: comp4.rating ?? 4.0,
+          review_count: comp4.review_count ?? 350,
+          isUser: false,
+          estimatedCalls: comp4.estimated_monthly_calls ?? Math.round(totalLocalCalls * 0.05),
+          callSharePct: comp4.call_share_pct ?? 5,
+          isBlurred: true,
+        });
       }
     } else {
       // User outside top 3
@@ -1085,21 +1147,6 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           isBlurred: false,
         });
       });
-      // 4th competitor if userRank > 4 and 4th competitor exists
-      if (userRank > 4 && competitorsList[3]) {
-        const comp4 = competitorsList[3];
-        slots.push({
-          rank: 4,
-          name: comp4.name,
-          photo_url: comp4.photo_url,
-          rating: comp4.rating ?? 4.0,
-          review_count: comp4.review_count ?? 250,
-          isUser: false,
-          estimatedCalls: comp4.estimated_monthly_calls ?? Math.round(totalLocalCalls * 0.05),
-          callSharePct: comp4.call_share_pct ?? 5,
-          isBlurred: false,
-        });
-      }
       // User's position
       slots.push({
         rank: userRank,
@@ -1114,7 +1161,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
       });
     }
 
-    return slots.sort((a, b) => a.rank - b.rank);
+    return slots;
   })();
 
   // Interface for simplified, de-congested audit issue cards
@@ -1921,83 +1968,84 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                 <span className="section-header-pill green">84% calls → Top 3</span>
               </div>
 
-              <div className="rankings-bargraph-card">
-                {/* Visual Bar Graph Area matching user reference image */}
-                <div className="rankings-chart-stage">
-                  {rankLadderSlots.map((slot, sIdx) => {
-                    const maxCalls = Math.max(...rankLadderSlots.map((s) => s.estimatedCalls), 1);
-                    // Proportional height with minimum 14% so the bar is always visible and tactile
-                    const heightPercent = Math.max(14, Math.round((slot.estimatedCalls / maxCalls) * 100));
+              <div className="leaderboard-table">
+                {rankLadderSlots.map((slot, sIdx) => {
+                  const maxCalls = Math.max(...rankLadderSlots.map(s => s.estimatedCalls), 1);
+                  const barWidth = Math.max(15, Math.round((slot.estimatedCalls / maxCalls) * 80));
 
-                    return (
-                      <div
-                        key={`bar-${slot.rank}-${slot.isUser ? 'u' : 'c'}-${sIdx}`}
-                        className={`rankings-bar-col ${slot.isUser ? 'is-user-col' : ''}`}
-                      >
-                        {/* Top Number: Call/Customer count */}
-                        <div
-                          className="rankings-bar-val"
-                          style={{
-                            color: slot.isUser ? '#7C3AED' : '#0F172A',
-                          }}
-                        >
-                          {slot.estimatedCalls.toLocaleString('en-IN')}
+                  return (
+                    <div
+                      key={`slot-${slot.rank}-${slot.isUser ? 'u' : 'c'}-${slot.isBlurred ? 'b' : 'v'}-${sIdx}`}
+                      className={`leaderboard-row ${slot.isUser ? 'is-user-row' : ''} ${slot.isBlurred ? 'is-blurred-row' : ''}`}
+                    >
+                      {slot.isBlurred && (
+                        <div className="leaderboard-lock-overlay" onClick={() => setIsPlanModalOpen(true)}>
+                          <div className="leaderboard-lock-icon-wrap">
+                            <Lock size={13} strokeWidth={2.2} color="#6366F1" />
+                          </div>
+                          <span className="leaderboard-lock-text">Unlock all competitors</span>
                         </div>
-
-                        {/* Bar Track & Fill */}
-                        <div className="rankings-bar-track">
-                          <div
-                            className={`rankings-bar-fill ${slot.isUser ? 'fill-user' : slot.rank === 1 ? 'fill-leader' : 'fill-competitor'}`}
-                            style={{ height: `${heightPercent}%` }}
-                          >
-                            <div className="rankings-bar-gloss" />
+                      )}
+                      <div className="leaderboard-row-content">
+                        <span className={`leaderboard-rank-tag rank-${slot.rank <= 3 ? slot.rank : 'other'}`}>
+                          #{slot.rank}
+                        </span>
+                        <SafeImage
+                          src={slot.photo_url}
+                          alt={slot.name}
+                          className="leaderboard-photo"
+                          style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '8px' }}
+                          fallback={
+                            <div className="leaderboard-photo-fallback" style={{ background: slot.isUser ? '#EDE9FE' : '#F1F5F9' }}>
+                              <Building2 size={16} strokeWidth={2.2} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
+                            </div>
+                          }
+                        />
+                        <div className="leaderboard-info">
+                          <span className="leaderboard-name">
+                            {formatShortName(slot.name, 24)}
+                            {slot.isUser && <span className="leaderboard-you-badge">You</span>}
+                          </span>
+                          <div className="leaderboard-meta">
+                            <span className="leaderboard-rating">★ {slot.rating.toFixed(1)}</span>
+                            <span className="leaderboard-reviews">({slot.review_count.toLocaleString()})</span>
                           </div>
                         </div>
-
-                        {/* Business Thumbnail Image */}
-                        <div className={`rankings-bar-photo-wrap ${slot.isUser ? 'photo-user-wrap' : ''}`}>
-                          <SafeImage
-                            src={slot.photo_url}
-                            alt={slot.name}
-                            className="rankings-bar-photo"
-                            style={{ width: '34px', height: '34px', objectFit: 'cover', borderRadius: '8px' }}
-                            fallback={
-                              <div className="rankings-bar-photo-fallback" style={{ background: slot.isUser ? '#EDE9FE' : '#F1F5F9' }}>
-                                <Building2 size={16} strokeWidth={2.2} color={slot.isUser ? '#7C3AED' : '#94A3B8'} />
-                              </div>
-                            }
+                        <div className="leaderboard-calls">
+                          <span
+                            className="leaderboard-calls-number"
+                            style={{ color: slot.isUser ? '#7C3AED' : slot.rank === 1 ? '#059669' : '#475569' }}
+                          >
+                            ~{slot.estimatedCalls}/mo
+                          </span>
+                          <div
+                            className="leaderboard-calls-bar"
+                            style={{
+                              width: `${barWidth}px`,
+                              background: slot.isUser
+                                ? '#7C3AED'
+                                : slot.rank === 1
+                                  ? '#10B981'
+                                  : slot.rank === 2
+                                    ? '#3B82F6'
+                                    : '#94A3B8',
+                            }}
                           />
-                          {slot.isUser && <span className="rankings-you-indicator" />}
-                        </div>
-
-                        {/* Rank */}
-                        <div className={`rankings-bar-rank ${slot.isUser ? 'rank-user' : slot.rank <= 3 ? `rank-${slot.rank}` : 'rank-other'}`}>
-                          #{slot.rank}
-                        </div>
-
-                        {/* Name ("You" or formatted short name) */}
-                        <div className={`rankings-bar-name ${slot.isUser ? 'name-user' : ''}`} title={slot.name}>
-                          {slot.isUser ? 'You' : formatShortName(slot.name, 12)}
-                        </div>
-
-                        {/* Star Rating */}
-                        <div className="rankings-bar-rating">
-                          ★ {slot.rating.toFixed(1)}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-
-                {/* Bottom Callout Banner when outside Top 3 */}
-                {!isInTop3 && (
-                  <div className="rankings-cutoff-banner">
-                    <div className="cutoff-alert-icon">
-                      <AlertTriangle size={13} strokeWidth={2.3} color="#DC2626" />
                     </div>
-                    <span className="cutoff-alert-text">
-                      <strong>84% of local customers call the Top 3.</strong> At rank #{userRank}, most calls go to competitors above.
+                  );
+                })}
+
+                {/* Invisibility cutoff line between top 3 and user if outside */}
+                {!isInTop3 && rankLadderSlots.length >= 4 && (
+                  <div className="leaderboard-cutoff-line">
+                    <div className="cutoff-divider" />
+                    <span className="cutoff-badge">
+                      <AlertTriangle size={11} strokeWidth={2.2} color="#DC2626" style={{ display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
+                      84% OF CALLS GO TO TOP 3
                     </span>
+                    <div className="cutoff-divider" />
                   </div>
                 )}
               </div>
@@ -2600,207 +2648,264 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
       )}
 
       {/* ================================================== */}
-      {/* MODAL 2: PLANS & RAZORPAY CHECKOUT */}
+      {/* MODAL 2: SINGLE PLAN & RAZORPAY CHECKOUT */}
       {/* ================================================== */}
       {isPlanModalOpen && (
         <div className="report-modal-backdrop" onClick={() => setIsPlanModalOpen(false)}>
-          <div className="report-modal-dialog" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+          <div className="report-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px', borderRadius: '24px', padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                  Select an Optigo AI Plan
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(99, 102, 241, 0.12) 100%)',
+                  color: '#7C3AED',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  padding: '4px 10px',
+                  borderRadius: '999px',
+                  marginBottom: '6px',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase'
+                }}>
+                  <Sparkles size={12} color="#7C3AED" />
+                  <span>All-In-One Local Growth Engine</span>
+                </div>
+                <h3 style={{ fontSize: '1.28rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+                  Optigo AI Growth Plan
                 </h3>
-                <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                  Automate reviews, rank higher, and outrank rivals
+                <span style={{ fontSize: '0.82rem', color: '#64748B' }}>
+                  Outrank nearby rivals, automate reviews, and win local customers.
                 </span>
               </div>
               <button
                 onClick={() => setIsPlanModalOpen(false)}
-                style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px' }}
+                style={{ background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', padding: '6px', borderRadius: '50%', display: 'flex' }}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            {/* Billing Cycle Toggle */}
+            {/* Single Plan Pricing Card */}
             <div
               style={{
-                display: 'flex',
-                background: '#F1F0FB',
-                padding: '3px',
-                borderRadius: '10px',
+                background: 'linear-gradient(145deg, #FFFFFF 0%, #FAF8FF 100%)',
+                border: '2px solid #7C3AED',
+                borderRadius: '20px',
+                padding: '20px',
                 marginBottom: '16px',
+                boxShadow: '0 8px 24px -4px rgba(124, 58, 237, 0.12)',
+                position: 'relative',
               }}
             >
-              <button
-                onClick={() => setBillingCycle('monthly')}
-                style={{
-                  flex: 1,
-                  padding: '7px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: billingCycle === 'monthly' ? '#FFFFFF' : 'transparent',
-                  color: billingCycle === 'monthly' ? '#0F172A' : '#64748B',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  cursor: 'pointer',
-                  boxShadow: billingCycle === 'monthly' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-                }}
-              >
-                Monthly Billing
-              </button>
-              <button
-                onClick={() => setBillingCycle('annual')}
-                style={{
-                  flex: 1,
-                  padding: '7px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: billingCycle === 'annual' ? '#FFFFFF' : 'transparent',
-                  color: billingCycle === 'annual' ? '#0F172A' : '#64748B',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  cursor: 'pointer',
-                  boxShadow: billingCycle === 'annual' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-                }}
-              >
-                Annual (Save 20%)
-              </button>
-            </div>
+              <div style={{
+                position: 'absolute',
+                top: '-11px',
+                right: '18px',
+                background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)',
+                color: '#FFFFFF',
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                padding: '3px 10px',
+                borderRadius: '999px',
+                boxShadow: '0 2px 8px rgba(124, 58, 237, 0.4)',
+                letterSpacing: '0.03em',
+              }}>
+                TEST MODE • 50% OFF
+              </div>
 
-            {/* Plan Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '18px' }}>
-              {(report?.plans || []).map((plan: PlanData) => {
-                const isSelected = selectedPlanSlug === (plan.slug || plan.id);
-                const price =
-                  billingCycle === 'annual'
-                    ? plan.price_annual || plan.annual_price || 28790
-                    : plan.price_monthly || plan.monthly_price || 2999;
-                const currency = plan.currency === 'INR' ? '₹' : '$';
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '1.9rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.03em' }}>
+                  ₹2,999
+                </span>
+                <span style={{ fontSize: '1.05rem', color: '#94A3B8', textDecoration: 'line-through', fontWeight: 500 }}>
+                  ₹5,999
+                </span>
+                <span style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>
+                  /month
+                </span>
+              </div>
 
-                return (
-                  <div
-                    key={plan.slug || plan.name}
-                    onClick={() => setSelectedPlanSlug(plan.slug || plan.id || 'growth')}
-                    style={{
-                      border: isSelected ? '2px solid #7C3AED' : '1px solid #EBE9F5',
-                      borderRadius: '16px',
-                      padding: '12px 14px',
-                      background: isSelected ? '#FAF8FF' : '#FFFFFF',
-                      cursor: 'pointer',
-                      position: 'relative',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    {plan.recommended && (
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: '-8px',
-                          right: '12px',
-                          background: '#7C3AED',
-                          color: '#FFFFFF',
-                          fontSize: '0.64rem',
-                          fontWeight: 800,
-                          padding: '2px 7px',
-                          borderRadius: '999px',
-                        }}
-                      >
-                        MOST POPULAR
-                      </span>
-                    )}
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <h4 style={{ margin: 0, fontSize: '0.94rem', fontWeight: 800, color: '#0F172A' }}>
-                        {plan.name}
-                      </h4>
-                      <span style={{ fontSize: '1rem', fontWeight: 900, color: '#0F172A' }}>
-                        {currency}
-                        {price.toLocaleString()}
-                        <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 500 }}>
-                          /{billingCycle === 'annual' ? 'yr' : 'mo'}
-                        </span>
-                      </span>
+              {/* Feature Checklist */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                {[
+                  'Google Maps 3-Pack Rank Booster & Keyword Injection',
+                  'AI Automated Review Responder (Up to 100 reviews/mo)',
+                  'Full Competitor Threat Radar (Track top 5 local competitors)',
+                  'Weekly Optimized Google Business Profile Posts & Photos',
+                  '24/7 Conversational AI CMO for Custom Growth Strategies',
+                  'WhatsApp & SMS Instant Lead & Review Alerts',
+                ].map((feature, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: '#334155' }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: '#DCFCE7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={12} color="#16A34A" strokeWidth={3} />
                     </div>
-
-                    <p style={{ margin: '0 0 8px', fontSize: '0.74rem', color: '#64748B' }}>
-                      {plan.description}
-                    </p>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {(plan.features || []).slice(0, 3).map((f, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: '#334155' }}>
-                          <Check size={12} color="#16A34A" />
-                          <span>{f}</span>
-                        </div>
-                      ))}
-                    </div>
+                    <span style={{ fontWeight: idx === 0 ? 700 : 500 }}>{feature}</span>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+
+              {/* Supported Payment Methods Banner */}
+              <div style={{
+                background: '#F8FAFC',
+                borderRadius: '12px',
+                padding: '10px 12px',
+                border: '1px solid #E2E8F0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Smartphone size={15} color="#7C3AED" />
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#1E293B' }}>UPI: GPay, PhonePe, Paytm</span>
+                </div>
+                <div style={{ width: '1px', height: '14px', background: '#CBD5E1' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CreditCard size={15} color="#7C3AED" />
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#1E293B' }}>Cards: Visa, MC, RuPay</span>
+                </div>
+              </div>
             </div>
 
             {/* Checkout Button */}
             <button
-              onClick={() => handleSelectAndCheckout(selectedPlanSlug)}
+              onClick={() => handleSelectAndCheckout('growth')}
               disabled={isProcessingCheckout}
               className="vibrant-purple-btn"
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '14px',
+                fontSize: '0.94rem',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                background: 'linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)',
+                color: '#FFFFFF',
+                border: 'none',
+                cursor: isProcessingCheckout ? 'not-allowed' : 'pointer',
+                boxShadow: '0 4px 16px rgba(124, 58, 237, 0.3)',
+              }}
             >
               {isProcessingCheckout ? (
                 <>
                   <Loader2 size={18} color="#FFFFFF" className="animate-spin" />
-                  <span>Processing Checkout...</span>
+                  <span>Opening Secure Razorpay...</span>
                 </>
               ) : (
                 <>
-                  <Zap size={18} />
-                  <span>Proceed with {selectedPlanSlug.toUpperCase()}</span>
+                  <Zap size={18} fill="#FFFFFF" />
+                  <span>Pay ₹2,999 & Activate Growth Plan</span>
                 </>
               )}
             </button>
+
+            {/* Trust Badges Footer */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', color: '#64748B' }}>
+                <ShieldCheck size={13} color="#16A34A" />
+                <span>256-Bit SSL Encrypted</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', color: '#64748B' }}>
+                <Lock size={12} color="#64748B" />
+                <span>Razorpay Verified</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', color: '#64748B' }}>
+                <CheckCircle2 size={12} color="#7C3AED" />
+                <span>Instant Activation</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* ================================================== */}
-      {/* MODAL 3: CONVERSION SUCCESS */}
+      {/* MODAL 3: CONVERSION SUCCESS & RECEIPT */}
       {/* ================================================== */}
       {conversionSuccess && (
         <div className="report-modal-backdrop">
-          <div className="report-modal-dialog" style={{ textAlign: 'center' }}>
+          <div className="report-modal-dialog" style={{ textAlign: 'center', maxWidth: '440px', borderRadius: '24px', padding: '28px 24px' }}>
             <div
               style={{
-                width: '56px',
-                height: '56px',
+                width: '64px',
+                height: '64px',
                 borderRadius: '50%',
-                background: '#F0FDF4',
+                background: '#DCFCE7',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px',
+                boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)',
               }}
             >
-              <CheckCircle2 size={32} color="#16A34A" />
+              <CheckCircle2 size={36} color="#16A34A" strokeWidth={2.5} />
             </div>
 
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '0 0 8px' }}>
-              Welcome to Optigo AI!
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: '0 0 6px' }}>
+              Payment Successful!
             </h3>
-            <p style={{ fontSize: '0.85rem', color: '#64748B', lineHeight: 1.5, margin: '0 0 20px' }}>
-              Your Google Business Profile optimization engine is now live. We are ready to fix your reviews, rank higher on Google Maps, and win new customers.
+            <p style={{ fontSize: '0.84rem', color: '#64748B', lineHeight: 1.5, margin: '0 0 16px' }}>
+              Your Growth Plan is now active for <strong>{report?.business?.name || leadMeta?.business_name || 'your business'}</strong>.
             </p>
+
+            {/* Payment Receipt Pill */}
+            <div style={{
+              background: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: '14px',
+              padding: '12px 14px',
+              marginBottom: '20px',
+              textAlign: 'left',
+              fontSize: '0.78rem',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ color: '#64748B' }}>Plan:</span>
+                <span style={{ fontWeight: 700, color: '#0F172A' }}>Optigo AI Growth Plan</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ color: '#64748B' }}>Amount Paid:</span>
+                <span style={{ fontWeight: 700, color: '#16A34A' }}>₹2,999.00</span>
+              </div>
+              {conversionSuccess.payment_id && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#64748B' }}>Payment ID:</span>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#334155' }}>
+                    {conversionSuccess.payment_id}
+                  </span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748B' }}>Status:</span>
+                <span style={{ fontWeight: 700, color: '#16A34A', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={12} strokeWidth={3} /> Paid & Verified
+                </span>
+              </div>
+            </div>
 
             <a
               href="/login"
               style={{
                 display: 'block',
-                background: '#7C3AED',
+                background: 'linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)',
                 color: '#FFFFFF',
-                padding: '12px',
+                padding: '13px',
                 borderRadius: '12px',
                 fontWeight: 700,
                 textDecoration: 'none',
                 fontSize: '0.92rem',
+                boxShadow: '0 4px 14px rgba(124, 58, 237, 0.3)',
               }}
             >
               Open Merchant Dashboard

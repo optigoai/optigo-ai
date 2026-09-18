@@ -41,6 +41,14 @@ class LeadRepository:
         )
         return result.scalars().first()
 
+    async def get_by_payment_id(self, payment_id: str) -> Optional[Lead]:
+        if not payment_id:
+            return None
+        result = await self.db.execute(
+            select(Lead).where(Lead.payment_id == payment_id).order_by(Lead.created_at.desc())
+        )
+        return result.scalars().first()
+
     async def list_leads(
         self,
         status: Optional[str] = None,

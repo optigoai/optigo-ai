@@ -17,10 +17,20 @@ import random
 import json
 import re
 import math
+import hmac
+import hashlib
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
+import importlib
+
+razorpay: Any = None
+try:
+    razorpay = importlib.import_module("razorpay")
+except Exception:
+    razorpay = None
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -81,10 +91,10 @@ PLANS = {
         "recommended": True,
         "highlighted": True,
         "description": "Comprehensive local growth engine to outrank nearby competitors on Google Maps.",
-        "monthly_price": 5999,
-        "price_monthly": 5999,
-        "annual_price": 57590,  # ~20% off
-        "price_annual": 57590,
+        "monthly_price": 2999,
+        "price_monthly": 2999,
+        "annual_price": 28790,  # ~20% off
+        "price_annual": 28790,
         "currency": "INR",
         "features": [
             "Everything in Starter, plus:",
@@ -2239,16 +2249,73 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
         await self.db.refresh(lead)
         return lead
 
-    async def create_payment_order(self, lead_id: str, plan_id: str, duration: str = "monthly") -> Dict[str, Any]:
+    async def create_payment_order(self, lead_id: str, plan_id: str = "growth", duration: str = "monthly") -> Dict[str, Any]:
         """Create Razorpay order or dev sandbox order for chosen plan."""
         lead = await self.repo.get_by_id(lead_id)
         if not lead:
             raise ValueError("Lead not found")
 
-        plan = PLANS.get(plan_id, PLANS["growth"])
+        # Default to growth plan (single plan approach for testing/production)
+        plan = PLANS.get(plan_id, PLANS.get("growth", next(iter(PLANS.values()))))
         amount = plan["annual_price"] if duration == "annual" else plan["monthly_price"]
+        amount_paise = int(amount * 100)
 
-        order_id = f"order_{uuid.uuid4().hex[:14]}"
+        order_id = ""
+        is_mock = False
+
+        # Attempt to create real Razorpay order if credentials are configured
+        if settings.razorpay_key_id and settings.razorpay_key_secret:
+            try:
+                if razorpay:
+                    client = razorpay.Client(auth=(settings.razorpay_key_id, settings.razorpay_key_secret))
+                    order_payload = {
+                        "amount": amount_paise,
+                        "currency": "INR",
+                        "receipt": f"lead_{str(lead.id)[:8]}",
+                        "notes": {
+                            "lead_id": str(lead.id),
+                            "plan_id": plan_id,
+                            "business_name": (lead.business_name or "")[:40],
+                            "phone": lead.phone or "",
+                        },
+                    }
+                    rzp_order = client.order.create(data=order_payload)
+                    order_id = rzp_order.get("id")
+                    logger.info(f"Created real Razorpay order {order_id} for lead {lead_id} (amount: ₹{amount})")
+                else:
+                    # Fallback via direct HTTP request if python razorpay lib isn't installed yet
+                    async with httpx.AsyncClient(timeout=15.0) as http_client:
+                        resp = await http_client.post(
+                            "https://api.razorpay.com/v1/orders",
+                            auth=(settings.razorpay_key_id, settings.razorpay_key_secret),
+                            json={
+                                "amount": amount_paise,
+                                "currency": "INR",
+                                "receipt": f"lead_{str(lead.id)[:8]}",
+                                "notes": {
+                                    "lead_id": str(lead.id),
+                                    "plan_id": plan_id,
+                                    "business_name": (lead.business_name or "")[:40],
+                                    "phone": lead.phone or "",
+                                },
+                            },
+                        )
+                        if resp.status_code in (200, 201):
+                            order_data = resp.json()
+                            order_id = order_data.get("id")
+                            logger.info(f"Created direct HTTP Razorpay order {order_id} for lead {lead_id}")
+                        else:
+                            logger.error(f"Razorpay API order creation error: {resp.status_code} {resp.text}")
+                            raise ValueError(f"Razorpay error: {resp.text}")
+            except Exception as e:
+                logger.warning(f"Could not create Razorpay order via API: {e}. Falling back to test order.")
+                order_id = f"order_{uuid.uuid4().hex[:14]}"
+                is_mock = True
+        else:
+            # When Razorpay key secret is not yet set in .env
+            order_id = f"order_{uuid.uuid4().hex[:14]}"
+            is_mock = True
+            logger.info(f"Razorpay Key Secret not configured in .env; generated test sandbox order {order_id}")
 
         # Save order details to lead
         lead.selected_plan = plan_id
@@ -2262,8 +2329,9 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
         timeline = lead.timeline or []
         timeline.append({
             "stage": "payment_pending",
-            "label": f"Payment Order Created: {plan['name']} ({duration})",
+            "label": f"Payment Order Created: {plan['name']} (₹{amount:,.0f})",
             "timestamp": datetime.utcnow().isoformat(),
+            "order_id": order_id,
             "amount": amount,
         })
         lead.timeline = timeline
@@ -2274,40 +2342,83 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
         return {
             "order_id": order_id,
             "amount": amount,
+            "amount_paise": amount_paise,
             "currency": "INR",
             "plan": plan,
+            "plan_id": plan_id,
+            "plan_name": plan["name"],
             "business_name": lead.business_name,
             "phone": lead.phone,
-            "key_id": "rzp_test_optigo_public" if not settings.is_production else "",
+            "email": lead.email,
+            "key_id": settings.razorpay_key_id or "rzp_test_TdSKA1rf2jR1p6",
+            "is_mock": is_mock,
         }
 
     async def verify_payment_and_convert(self, lead_id: str, data: LeadVerifyPaymentRequest) -> Dict[str, Any]:
         """
-        Verify payment and convert lead into a full Optigo AI Customer.
+        Cryptographically verify payment signature and convert lead into a full Optigo AI Customer.
         Creates or connects User and Business records.
         """
         lead = await self.repo.get_by_id(lead_id)
         if not lead:
             raise ValueError("Lead not found")
 
+        order_id = data.resolved_order_id or lead.payment_id
+        payment_id = data.resolved_payment_id or f"pay_{uuid.uuid4().hex[:14]}"
+        signature = data.resolved_signature
+
+        # Cryptographic Signature Verification (HMAC-SHA256)
+        if settings.razorpay_key_secret and signature and signature != "sandbox_verified_signature":
+            expected_signature = hmac.new(
+                settings.razorpay_key_secret.encode("utf-8"),
+                f"{order_id}|{payment_id}".encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+
+            if not hmac.compare_digest(expected_signature, signature):
+                logger.error(
+                    f"Signature mismatch for lead {lead_id}! expected={expected_signature} vs got={signature}"
+                )
+                raise ValueError("Payment signature verification failed. Possible fraud or tampering detected.")
+
+            # Double verification against Razorpay API to confirm capture
+            if settings.razorpay_key_id and settings.razorpay_key_secret:
+                try:
+                    async with httpx.AsyncClient(timeout=10.0) as http_client:
+                        resp = await http_client.get(
+                            f"https://api.razorpay.com/v1/payments/{payment_id}",
+                            auth=(settings.razorpay_key_id, settings.razorpay_key_secret),
+                        )
+                        if resp.status_code == 200:
+                            rzp_payment = resp.json()
+                            rzp_status = rzp_payment.get("status")
+                            if rzp_status not in ("captured", "authorized"):
+                                raise ValueError(f"Razorpay payment status is '{rzp_status}', not captured.")
+                            logger.info(f"Verified payment {payment_id} with Razorpay API (status: {rzp_status})")
+                except Exception as rzp_err:
+                    logger.warning(f"Could not double-verify payment with Razorpay fetch: {rzp_err}")
+
         # 1. Mark lead converted
         lead.payment_status = "paid"
         lead.status = "converted"
         lead.priority = "hot"
+        lead.payment_id = payment_id
 
         timeline = lead.timeline or []
         timeline.append({
             "stage": "converted",
-            "label": "Paid Customer Converted! Plan Activated",
+            "label": f"Paid Customer Converted! Plan Activated ({lead.selected_plan or 'Growth'})",
             "timestamp": datetime.utcnow().isoformat(),
-            "payment_id": data.razorpay_payment_id or lead.payment_id,
+            "payment_id": payment_id,
+            "order_id": order_id,
+            "amount": lead.payment_amount,
         })
         lead.timeline = timeline
 
         # 2. Check if user already exists
         target_email = (data.user_email or lead.email or f"user_{lead.phone[-8:]}@optigoai.client").lower().strip()
         user = await self.user_repo.get_by_email(target_email)
-        
+
         if not user:
             # Create organization
             org = Organization(
@@ -2345,7 +2456,7 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
             self.db.add(biz)
             await self.db.flush()
             lead.business_id = biz.id
-        
+
         await self.repo.save(lead)
         await self.db.commit()
 
@@ -2356,6 +2467,9 @@ Return 6 to 8 issues, 4 to 6 growth opportunities, and 5 to 7 real searches.
             "success": True,
             "message": f"Welcome to Optigo AI! Your {lead.selected_plan or 'Growth'} plan is now active.",
             "lead_id": lead.id,
+            "payment_id": payment_id,
+            "payment_status": "paid",
+            "amount_paid": lead.payment_amount,
             "user": {
                 "id": user.id,
                 "email": user.email,

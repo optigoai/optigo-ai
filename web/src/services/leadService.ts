@@ -358,30 +358,47 @@ export const leadService = {
   async selectPlan(leadId: string, plan: string, duration: string = 'monthly'): Promise<LeadResponse> {
     return await apiRequest<LeadResponse>(`/leads/${leadId}/select-plan`, {
       method: 'POST',
-      body: JSON.stringify({ plan, duration }),
+      body: JSON.stringify({ plan, plan_id: plan, duration }),
     });
   },
 
-  async createPaymentOrder(leadId: string, plan: string, duration: string = 'monthly'): Promise<any> {
+  async createPaymentOrder(leadId: string, plan: string = 'growth', duration: string = 'monthly'): Promise<any> {
     return await apiRequest(`/leads/${leadId}/create-order`, {
       method: 'POST',
-      body: JSON.stringify({ plan, duration }),
+      body: JSON.stringify({ plan, plan_id: plan, duration }),
     });
   },
 
   async verifyPayment(
     leadId: string,
     paymentDetails: {
-      order_id: string;
-      payment_id: string;
+      order_id?: string;
+      razorpay_order_id?: string;
+      payment_id?: string;
+      razorpay_payment_id?: string;
       signature?: string;
+      razorpay_signature?: string;
       create_account?: boolean;
       password?: string;
+      user_email?: string;
+      user_full_name?: string;
     }
   ): Promise<any> {
+    const payload = {
+      order_id: paymentDetails.order_id || paymentDetails.razorpay_order_id,
+      razorpay_order_id: paymentDetails.razorpay_order_id || paymentDetails.order_id,
+      payment_id: paymentDetails.payment_id || paymentDetails.razorpay_payment_id,
+      razorpay_payment_id: paymentDetails.razorpay_payment_id || paymentDetails.payment_id,
+      signature: paymentDetails.signature || paymentDetails.razorpay_signature,
+      razorpay_signature: paymentDetails.razorpay_signature || paymentDetails.signature,
+      create_account: paymentDetails.create_account,
+      password: paymentDetails.password,
+      user_email: paymentDetails.user_email,
+      user_full_name: paymentDetails.user_full_name,
+    };
     return await apiRequest(`/leads/${leadId}/verify-payment`, {
       method: 'POST',
-      body: JSON.stringify(paymentDetails),
+      body: JSON.stringify(payload),
     });
   },
 };
