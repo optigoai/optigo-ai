@@ -350,14 +350,17 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
 
   // Progressive section entrance cascade
   useEffect(() => {
-    if (animationStage === 2) {
-      const t = setTimeout(() => setAnimationStage(3), 550);
+    if (animationStage === 1) {
+      const t = setTimeout(() => setAnimationStage(99), 100);
+      return () => clearTimeout(t);
+    } else if (animationStage === 2) {
+      const t = setTimeout(() => setAnimationStage(3), 300);
       return () => clearTimeout(t);
     } else if (animationStage === 3) {
-      const t = setTimeout(() => setAnimationStage(4), 500);
+      const t = setTimeout(() => setAnimationStage(4), 300);
       return () => clearTimeout(t);
     } else if (animationStage === 4) {
-      const t = setTimeout(() => setAnimationStage(99), 500);
+      const t = setTimeout(() => setAnimationStage(99), 300);
       return () => clearTimeout(t);
     }
   }, [animationStage]);
@@ -430,13 +433,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
             }
           }
 
-          if (shouldAnimate) {
-            setTimeout(() => {
-              if (isMounted) setAnimationStage(1);
-            }, 450);
-          } else {
-            setAnimationStage(99);
-          }
+          setAnimationStage(99);
         }
       } catch (err: any) {
         if (!isMounted) return;
@@ -1840,7 +1837,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
             )}
 
             {/* 3 Executive KPI Stat Cards */}
-            {animationStage >= 2 && report && !isGenerating && (
+            {report && !isGenerating && (
               <div className="wound-kpi-grid typewriter-section-enter">
                 {/* Card 1: Google Maps Position */}
                 <div className={`kpi-card ${userRank <= 3 ? 'kpi-card-good' : 'kpi-card-alert'}`}>
@@ -1901,7 +1898,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
             )}
 
             {/* Profile Completeness — Integrated horizontal banner */}
-            {animationStage >= 3 && report && !isGenerating && (
+            {report && !isGenerating && (
               <div className="wound-completeness-banner typewriter-section-enter">
                 <div className="completeness-bar-header">
                   <div className="completeness-bar-title-wrap">
@@ -1950,7 +1947,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           {/* ================================================== */}
           {/* SECTION 2: THE PROOF — Rank Leaderboard + Head-to-Head */}
           {/* ================================================== */}
-          {animationStage >= 4 && report && !isGenerating && (
+          {report && !isGenerating && (
             <section id="section-proof" className="report-section section-proof-flow typewriter-section-enter">
               {/* Rank Leaderboard */}
               <div className="section-title-wrap">
@@ -2214,7 +2211,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           {/* ================================================== */}
           {/* SECTION 3: REAL CUSTOMER SEARCHES                  */}
           {/* ================================================== */}
-          {animationStage >= 4 && report && !isGenerating && (
+          {report && !isGenerating && (
             <section id="section-searches" className="report-section section-searches-flow typewriter-section-enter">
               <div className="section-title-wrap">
                 <div className="section-title-row-with-badge">
@@ -2295,7 +2292,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           {/* ================================================== */}
           {/* SECTION 4: THE REASON — Merged Fix List            */}
           {/* ================================================== */}
-          {animationStage >= 5 && report && !isGenerating && (
+          {report && !isGenerating && (
             <section id="section-reason" className="report-section section-reason-flow typewriter-section-enter">
               <div className="section-title-wrap">
                 <div className="section-title-row-with-badge">
@@ -2388,7 +2385,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           {/* ================================================== */}
           {/* SECTION 5: COST OF WAITING + Free vs Paid          */}
           {/* ================================================== */}
-          {animationStage >= 5 && report && !isGenerating && (
+          {report && !isGenerating && (
             <section id="section-cost" className="report-section section-cost-flow typewriter-section-enter">
               <div className="section-title-wrap">
                 <div className="section-title-row-with-badge">
@@ -2464,7 +2461,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
           {/* ================================================== */}
           {/* SECTION 6: THE FIX — Single Conversion Card        */}
           {/* ================================================== */}
-          {animationStage >= 5 && report && !isGenerating && (
+          {report && !isGenerating && (
             <section id="section-fix" className="report-section section-fix-flow typewriter-section-enter">
               <div className="solution-conversion-card">
                 <div className="solution-icon-wrap">
@@ -2545,7 +2542,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
       {/* ================================================== */}
       {/* SINGLE STICKY BOTTOM BAR — One CTA + WhatsApp Share */}
       {/* ================================================== */}
-      {animationStage >= 2 && report && !isGenerating && (
+      {report && !isGenerating && (
         <div className="mobile-floating-cta-bar">
           <button className="whatsapp-share-btn" onClick={handleWhatsAppShare} title="Share on WhatsApp">
             <WhatsAppIcon size={18} />
