@@ -580,23 +580,6 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
             contact: leadMeta?.phone || '',
             email: leadMeta?.email || '',
           },
-          config: {
-            display: {
-              blocks: {
-                preferred: {
-                  name: 'Pay using UPI or Card',
-                  instruments: [
-                    { method: 'upi' },
-                    { method: 'card' },
-                  ],
-                },
-              },
-              sequence: ['block.preferred'],
-              preferences: {
-                show_default_blocks: true,
-              },
-            },
-          },
           theme: {
             color: '#7C3AED',
             backdrop_color: 'rgba(15, 23, 42, 0.75)',
@@ -2496,7 +2479,7 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   onClick={() => setIsPlanModalOpen(true)}
                   className="solution-card-btn"
                 >
-                  <span>View Plans & Pricing</span>
+                  <span>Get Growth Plan</span>
                   <ArrowRight size={16} strokeWidth={2.5} />
                 </button>
 
@@ -2649,32 +2632,15 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
       {/* ================================================== */}
       {isPlanModalOpen && (
         <div className="report-modal-backdrop" onClick={() => setIsPlanModalOpen(false)}>
-          <div className="report-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px', borderRadius: '24px', padding: '24px' }}>
+          <div className="report-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px', borderRadius: '20px', padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div>
-                <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(99, 102, 241, 0.12) 100%)',
-                  color: '#7C3AED',
-                  fontSize: '0.72rem',
-                  fontWeight: 800,
-                  padding: '4px 10px',
-                  borderRadius: '999px',
-                  marginBottom: '6px',
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase'
-                }}>
-                  <Sparkles size={12} color="#7C3AED" />
-                  <span>All-In-One Local Growth Engine</span>
-                </div>
-                <h3 style={{ fontSize: '1.28rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: '0 0 4px', letterSpacing: '-0.01em' }}>
                   Optigo AI Growth Plan
                 </h3>
-                <span style={{ fontSize: '0.82rem', color: '#64748B' }}>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0, lineHeight: 1.4 }}>
                   Outrank nearby rivals, automate reviews, and win local customers.
-                </span>
+                </p>
               </div>
               <button
                 onClick={() => setIsPlanModalOpen(false)}
@@ -2684,48 +2650,27 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
               </button>
             </div>
 
-            {/* Single Plan Pricing Card */}
+            {/* Plan Card */}
             <div
               style={{
-                background: 'linear-gradient(145deg, #FFFFFF 0%, #FAF8FF 100%)',
-                border: '2px solid #7C3AED',
-                borderRadius: '20px',
-                padding: '20px',
+                background: '#FAF8FF',
+                border: '1.5px solid #EBE4F7',
+                borderRadius: '16px',
+                padding: '18px',
                 marginBottom: '16px',
-                boxShadow: '0 8px 24px -4px rgba(124, 58, 237, 0.12)',
-                position: 'relative',
               }}
             >
-              <div style={{
-                position: 'absolute',
-                top: '-11px',
-                right: '18px',
-                background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)',
-                color: '#FFFFFF',
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                padding: '3px 10px',
-                borderRadius: '999px',
-                boxShadow: '0 2px 8px rgba(124, 58, 237, 0.4)',
-                letterSpacing: '0.03em',
-              }}>
-                TEST MODE • 50% OFF
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '1.9rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.03em' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '1.9rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.02em' }}>
                   ₹2,999
                 </span>
-                <span style={{ fontSize: '1.05rem', color: '#94A3B8', textDecoration: 'line-through', fontWeight: 500 }}>
-                  ₹5,999
-                </span>
-                <span style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.84rem', color: '#64748B', fontWeight: 600 }}>
                   /month
                 </span>
               </div>
 
               {/* Feature Checklist */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', marginBottom: '16px' }}>
                 {[
                   'Google Maps 3-Pack Rank Booster & Keyword Injection',
                   'AI Automated Review Responder (Up to 100 reviews/mo)',
@@ -2735,41 +2680,33 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
                   'WhatsApp & SMS Instant Lead & Review Alerts',
                 ].map((feature, idx) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: '#334155' }}>
-                    <div style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      background: '#DCFCE7',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
-                    }}>
-                      <Check size={12} color="#16A34A" strokeWidth={3} />
-                    </div>
-                    <span style={{ fontWeight: idx === 0 ? 700 : 500 }}>{feature}</span>
+                    <Check size={14} color="#7C3AED" strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                    <span style={{ fontWeight: 500 }}>{feature}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Supported Payment Methods Banner */}
+              {/* Payment Methods */}
               <div style={{
-                background: '#F8FAFC',
-                borderRadius: '12px',
+                background: '#FFFFFF',
+                borderRadius: '10px',
                 padding: '10px 12px',
-                border: '1px solid #E2E8F0',
+                border: '1px solid #EAE6F4',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                fontSize: '0.74rem',
+                color: '#475569',
+                fontWeight: 600,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Smartphone size={15} color="#7C3AED" />
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#1E293B' }}>UPI: GPay, PhonePe, Paytm</span>
+                  <Smartphone size={14} color="#7C3AED" />
+                  <span>UPI: GPay, PhonePe, Paytm</span>
                 </div>
-                <div style={{ width: '1px', height: '14px', background: '#CBD5E1' }} />
+                <div style={{ width: '1px', height: '14px', background: '#E2E8F0' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <CreditCard size={15} color="#7C3AED" />
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#1E293B' }}>Cards: Visa, MC, RuPay</span>
+                  <CreditCard size={14} color="#7C3AED" />
+                  <span>Cards: Visa, MC, RuPay</span>
                 </div>
               </div>
             </div>
@@ -2781,49 +2718,29 @@ export const AiBusinessReportView: React.FC<AiBusinessReportViewProps> = ({ lead
               className="vibrant-purple-btn"
               style={{
                 width: '100%',
-                padding: '14px',
-                borderRadius: '14px',
+                padding: '13px',
+                borderRadius: '12px',
                 fontSize: '0.94rem',
-                fontWeight: 800,
+                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                background: 'linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)',
+                background: '#7C3AED',
                 color: '#FFFFFF',
                 border: 'none',
                 cursor: isProcessingCheckout ? 'not-allowed' : 'pointer',
-                boxShadow: '0 4px 16px rgba(124, 58, 237, 0.3)',
               }}
             >
               {isProcessingCheckout ? (
                 <>
                   <Loader2 size={18} color="#FFFFFF" className="animate-spin" />
-                  <span>Opening Secure Razorpay...</span>
+                  <span>Processing...</span>
                 </>
               ) : (
-                <>
-                  <Zap size={18} fill="#FFFFFF" />
-                  <span>Pay ₹2,999 & Activate Growth Plan</span>
-                </>
+                <span>Pay ₹2,999</span>
               )}
             </button>
-
-            {/* Trust Badges Footer */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginTop: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', color: '#64748B' }}>
-                <ShieldCheck size={13} color="#16A34A" />
-                <span>256-Bit SSL Encrypted</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', color: '#64748B' }}>
-                <Lock size={12} color="#64748B" />
-                <span>Razorpay Verified</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', color: '#64748B' }}>
-                <CheckCircle2 size={12} color="#7C3AED" />
-                <span>Instant Activation</span>
-              </div>
-            </div>
           </div>
         </div>
       )}
